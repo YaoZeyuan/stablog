@@ -1,85 +1,12 @@
 {
   "configList": [
     {
-      "type": "author-ask-question",
-      "id": "bingo-liu-66",
-      "rawInputText": "https://www.zhihu.com/people/bingo-liu-66/activities",
-      "comment": "12"
-    },
-    {
-      "type": "author-answer",
-      "id": "bingo-liu-66",
-      "rawInputText": "https://www.zhihu.com/people/bingo-liu-66/activities",
-      "comment": "3"
-    },
-    {
-      "type": "author-pin",
-      "id": "bingo-liu-66",
-      "rawInputText": "https://www.zhihu.com/people/bingo-liu-66/activities",
-      "comment": ""
-    },
-    {
-      "type": "author-agree-answer",
-      "id": "bingo-liu-66",
-      "rawInputText": "https://www.zhihu.com/people/bingo-liu-66/activities",
-      "comment": ""
-    },
-    {
-      "type": "author-agree-article",
-      "id": "bingo-liu-66",
-      "rawInputText": "https://www.zhihu.com/people/bingo-liu-66/activities",
-      "comment": ""
-    },
-    {
-      "type": "author-watch-question",
-      "id": "bingo-liu-66",
-      "rawInputText": "https://www.zhihu.com/people/bingo-liu-66/activities",
-      "comment": ""
-    },
-    {
-      "type": "topic",
-      "id": "19847058",
-      "rawInputText": "https://www.zhihu.com/topic/19847058/hot",
-      "comment": ""
-    },
-    {
-      "type": "column",
-      "id": "c_1099361240064921600",
-      "rawInputText": "https://zhuanlan.zhihu.com/c_1099361240064921600",
-      "comment": ""
-    },
-    {
-      "type": "article",
-      "id": "70854476",
-      "rawInputText": "https://zhuanlan.zhihu.com/p/70854476",
-      "comment": ""
-    },
-    {
-      "type": "question",
-      "id": "330437383",
-      "rawInputText": "https://www.zhihu.com/question/330437383/answer/757819750",
-      "comment": ""
-    },
-    {
-      "type": "answer",
-      "id": "757819750",
-      "rawInputText": "https://www.zhihu.com/question/330437383/answer/757819750",
-      "comment": ""
-    },
-    {
-      "type": "pin",
-      "id": "1136744671454117888",
-      "rawInputText": "https://www.zhihu.com/pin/1136744671454117888",
-      "comment": ""
+      "uid": "6457400184",
+      "rawInputText": "https://www.weibo.com/u/6457400184",
+      "comment": "东港姐姐"
     }
   ],
-  "orderByList": [
-    {
-      "orderBy": "createAt",
-      "order": "desc"
-    }
-  ],
-  "maxQuestionOrArticleInBook": 1000,
+  "maxBlogInBook": 1000,
   "imageQuilty": "none",
   "bookTitle": "测试电子书",
   "comment": "测试"
