@@ -57,7 +57,7 @@ class FetchCustomer extends Base {
         continue
       }
       this.log(`开始抓取用户${userInfo.screen_name}微博记录`)
-      let mblogCardList = await ApiWeibo.asyncGetWeiboList(containerId)
+      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid)
       if (_.isEmpty(mblogCardList)) {
         this.log(`用户${userInfo.screen_name}微博记录为空,跳过抓取流程`)
         continue

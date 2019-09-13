@@ -1,6 +1,6 @@
 import path from 'path'
 class Database {
   static readonly version = '1.0.0'
-  static readonly uri: string = path.resolve(__dirname, `../../zhihu_v${Database.version}.sqlite`)
+  static readonly uri: string = path.resolve(__dirname, `../../mblog_v${Database.version}.sqlite`)
 }
 export default Database

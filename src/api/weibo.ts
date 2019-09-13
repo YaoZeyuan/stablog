@@ -1,7 +1,6 @@
 import _ from 'lodash'
 import Base from '~/src/api/base'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
-import moment from 'moment'
 
 /**
  * 用户信息部分容器 id
@@ -34,7 +33,11 @@ export default class Weibo extends Base {
     if (_.isEmpty(weiboResponse.data.cards)) {
       return []
     }
-    const recordList = weiboResponse.data.cards
+    const rawRecordList = weiboResponse.data.cards
+    // 需要按cardType进行过滤, 只要id为9的(微博卡片)
+    let recordList = rawRecordList.filter(item => {
+      return item.card_type === 9
+    })
     return recordList
   }
 
