@@ -1,3 +1,14 @@
+export type TypeUserInfoResponse_TabsInfo_Tab = {
+  id: 2
+  tabKey: 'weibo'
+  must_show: 1
+  hidden: 0
+  title: '微博'
+  tab_type: 'weibo'
+  containerid: '1076031245161127'
+  apipath: '/profile/statuses'
+  url: '/index/my'
+}
 export type TypeUserInfoResponse = {
   ok: 1
   data: {
@@ -108,78 +119,7 @@ export type TypeUserInfoResponse = {
     follow_scheme: 'https://m.weibo.cn/p/index?containerid=231051_-_followersrecomm_-_1245161127&luicode=10000011&lfid=1005051245161127'
     tabsInfo: {
       selectedTab: 1
-      tabs: [
-        {
-          id: 1
-          tabKey: 'profile'
-          must_show: 1
-          hidden: 0
-          title: '主页'
-          tab_type: 'profile'
-          containerid: '2302831245161127'
-        },
-        {
-          id: 2
-          tabKey: 'weibo'
-          must_show: 1
-          hidden: 0
-          title: '微博'
-          tab_type: 'weibo'
-          containerid: '1076031245161127'
-          apipath: '/profile/statuses'
-          url: '/index/my'
-        },
-        {
-          id: 4
-          tabKey: 'original_video'
-          must_show: 0
-          hidden: 0
-          title: '视频'
-          tab_type: 'video'
-          containerid: '2315671245161127'
-        },
-        {
-          id: 10
-          tabKey: 'album'
-          must_show: 0
-          hidden: 0
-          title: '相册'
-          tab_type: 'album'
-          containerid: '1078031245161127'
-          filter_group: [
-            {
-              name: '图片墙'
-              containerid: '1078031245161127'
-              title: '图片墙'
-              scheme: ''
-            },
-            {
-              name: '头像专辑'
-              containerid: '1078031245161127_526977500000001245161127_-_albumeachCard'
-              title: '头像专辑'
-              scheme: ''
-            },
-            {
-              name: '面孔专辑'
-              containerid: '1078031245161127_38166799609876190000001245161127_-_albumfaceCard'
-              title: '面孔专辑'
-              scheme: ''
-            },
-            {
-              name: '相册专辑'
-              containerid: '1078031245161127_-_albumlist'
-              title: '相册专辑'
-              scheme: ''
-            },
-          ]
-          filter_group_info: {
-            title: '全部照片(3160)'
-            icon: 'http://u1.sinaimg.cn/upload/2014/06/10/userinfo_icon_album.png'
-            icon_name: '专辑'
-            icon_scheme: ''
-          }
-        },
-      ]
+      tabs: Array<TypeUserInfoResponse_TabsInfo_Tab>
     }
     scheme: 'sinaweibo://userinfo?uid=1245161127&type=uid&value=1245161127&luicode=10000011&lfid=1076031245161127&v_p=42&fid=1005051245161127&uicode=10000011'
     showAppTips: 1

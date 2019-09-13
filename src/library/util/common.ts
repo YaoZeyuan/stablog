@@ -35,7 +35,12 @@ class Common {
    * 派发所有未发出的Promise请求
    */
   static async asyncDispatchAllPromiseInQueen() {
-    await Common.asyncAppendPromiseWithDebounce(true, true)
+    await Common.asyncAppendPromiseWithDebounce(
+      new Promise(() => {
+        return true
+      }),
+      true,
+    )
     return true
   }
 

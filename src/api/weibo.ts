@@ -3,44 +3,57 @@ import Base from '~/src/api/base'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import moment from 'moment'
 
+/**
+ * 用户信息部分容器 id
+ * 容器id为固定前缀, 容器id + 用户uid即为最终请求的数据, 可以考虑提取到配置接口中
+ */
+const UserInfo_Container_ID = 100505
+/**
+ * 全部微博容器 id
+ */
+const Total_Mblog_Container_Id = 230413
+
 export default class Weibo extends Base {
   /**
-   * 获取用户活动列表
-   * https://www.zhihu.com/api/v4/members/404-Page-Not-found/activities?limit=10&after_id=1547034952&desktop=True
-   * @param url_token
-   * @param afterTimeAt 从X时间后
-   * @param limit
-   * @param sortBy
+   * 获取用户微博列表
+   * demo => https://m.weibo.cn/api/container/getIndex?containerid=2304131668244557_-_WEIBO_SECOND_PROFILE_WEIBO&page_type=03&page=2
+   * @param author_uid
+   * @param page
    */
-  static async asyncGetWeiboList(
-    containerId: string = '2304131245161127_-_WEIBO_SECOND_PROFILE_WEIBO',
-    page_type: string = '03',
-    page: number = 0,
-  ): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
-    const baseUrl = `view-source:https://m.weibo.cn/api/container/getIndex`
+  static async asyncGetWeiboList(author_uid: string, page: number = 1): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
+    let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
+    const baseUrl = `https://m.weibo.cn/api/container/getIndex`
     const config = {
       containerid: containerId,
-      page_type: page_type,
+      page_type: '03',
       page: page,
     }
-    const weiboResponse = await Base.http.get(baseUrl, {
+    const weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
       params: config,
     })
-    const recordList = _.get(weiboResponse, ['data', 'cards'], [])
+    if (_.isEmpty(weiboResponse.data.cards)) {
+      return []
+    }
+    const recordList = weiboResponse.data.cards
     return recordList
   }
 
-  static async asyncGetUserInfo(uid: string) {
+  /**
+   * 首次请求, 先获取用户信息
+   * demo => https://m.weibo.cn/api/container/getIndex?uid=1221171697&containerid=1005051221171697
+   * @param author_uid
+   */
+  static async asyncGetUserInfoResponseData(author_uid: string) {
     const baseUrl = `https://m.weibo.cn/api/container/getIndex`
     const config = {
       type: 'uid',
-      value: uid,
-      containerid: 1005051245161127,
+      value: author_uid,
+      containerid: `${UserInfo_Container_ID}${author_uid}`,
     }
-    const record = await Base.http.get(baseUrl, {
+    const rawResponse = <TypeWeibo.TypeUserInfoResponse>await Base.http.get(baseUrl, {
       params: config,
     })
-    const activityList = _.get(record, ['data'], [])
-    return activityList
+    const responseData = rawResponse.data
+    return responseData
   }
 }
