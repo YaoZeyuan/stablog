@@ -8,6 +8,6 @@ CREATE TABLE  IF NOT EXISTS `total_mblog` (
 CREATE TABLE  IF NOT EXISTS `total_user` (
   `author_uid` varchar(30) NOT NULL , ---- COMMENT '博主uid',
   `raw_json` text, --- COMMENT '原始响应json'
-  PRIMARY KEY (`author_id`)
+  PRIMARY KEY (`author_uid`)
 ); 
 
