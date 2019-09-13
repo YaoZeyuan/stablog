@@ -35,34 +35,4 @@ export default class MblogUser extends Base {
     let userInfo = JSON.parse(record.raw_json)
     return userInfo
   }
-
-  static async asyncReplaceInto(author_uid: string, raw_json: string) {
-    // 先检查数据库中是否有该条记录
-    let recordList = <Array<TypeMblogUserRecord>>await this.db
-      .select(this.TABLE_COLUMN)
-      .from(this.TABLE_NAME)
-      .where('author_uid', '=', author_uid)
-      .catch(() => {
-        return []
-      })
-    let isSuccess = false
-    if (_.isEmpty(recordList) === false) {
-      // 存在记录, update
-      let record_id = recordList[0].author_uid
-      let updateRowCount = await this.db
-        .update({ author_uid, raw_json })
-        .from(this.TABLE_NAME)
-        .where('author_uid', '=', record_id)
-        .catch(() => {})
-      isSuccess = updateRowCount > 0
-    } else {
-      // 不存在记录, 直接插入
-      let insertId = await this.db
-        .insert({ author_uid, raw_json })
-        .into(this.TABLE_NAME)
-        .catch(() => {})
-      isSuccess = insertId > 0
-    }
-    return isSuccess
-  }
 }

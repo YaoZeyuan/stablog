@@ -42,34 +42,4 @@ export default class Mblog extends Base {
     }
     return mblogRecordList
   }
-
-  static async asyncReplaceInto(id: string, author_uid: string, raw_json: string) {
-    // 先检查数据库中是否有该条记录
-    let recordList = <Array<TypeMblogRecord>>await this.db
-      .select(this.TABLE_COLUMN)
-      .from(this.TABLE_NAME)
-      .where('id', '=', id)
-      .catch(() => {
-        return []
-      })
-    let isSuccess = false
-    if (_.isEmpty(recordList) === false) {
-      // 存在记录, update
-      let record_id = recordList[0].id
-      let updateRowCount = await this.db
-        .update({ id, author_uid, raw_json })
-        .from(this.TABLE_NAME)
-        .where('id', '=', record_id)
-        .catch(() => {})
-      isSuccess = updateRowCount > 0
-    } else {
-      // 不存在记录, 直接插入
-      let insertId = await this.db
-        .insert({ id, author_uid, raw_json })
-        .into(this.TABLE_NAME)
-        .catch(() => {})
-      isSuccess = insertId > 0
-    }
-    return isSuccess
-  }
 }
