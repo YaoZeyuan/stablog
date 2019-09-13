@@ -12,7 +12,7 @@ class BaseBatchFetch {
    * 获取单个回答,并存入数据库中
    * @param id
    */
-  async fetch(id: string) {
+  async fetch(...rest: any) {
     this.log(`需要子类覆盖该方法`)
   }
 
