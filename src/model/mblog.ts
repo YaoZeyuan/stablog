@@ -22,7 +22,7 @@ export default class Mblog extends Base {
     let recordList = <Array<TypeMblogRecord>>await this.db
       .select(this.TABLE_COLUMN)
       .from(this.TABLE_NAME)
-      .where('author_id', '=', uid)
+      .where('author_uid', '=', uid)
       .catch(() => {
         return []
       })
