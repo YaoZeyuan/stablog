@@ -21,12 +21,13 @@ export default class Weibo extends Base {
    */
   static async asyncGetWeiboList(author_uid: string, page: number = 1): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
     let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
-    const baseUrl = `https://m.weibo.cn/api/container/getIndex`
+    const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&page=${page}`
     const config = {
-      containerid: containerId,
-      page_type: '03',
-      page: page,
+      // containerid: containerId,
+      // page_type: '03',
+      // page: page,
     }
+    console.log('url =>', baseUrl)
     const weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
       params: config,
     })

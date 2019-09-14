@@ -10,6 +10,7 @@ import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
 import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
+import Util from '~/src/library/util/common'
 
 class FetchCustomer extends Base {
   static get signature() {
@@ -76,6 +77,10 @@ class FetchCustomer extends Base {
       this.log(`用户${userInfo.screen_name}共发布了${totalMblogCount}条微博, 正式开始抓取`)
       for (let page = 1; page < totalPageCount; page++) {
         await CommonUtil.asyncAppendPromiseWithDebounce(this.fetchMblogListAndSaveToDb(uid, page, totalPageCount))
+        if (page % 10 === 0) {
+          this.log(`已抓取${page}/${totalPageCount}页记录, 休眠61s, 避免被封`)
+          await Util.asyncSleep(10 * 1000)
+        }
       }
       await CommonUtil.asyncDispatchAllPromiseInQueen()
       this.log(`用户${userInfo.screen_name}微博抓取完毕`)

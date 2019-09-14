@@ -2,7 +2,11 @@ import axios, { AxiosRequestConfig } from 'axios'
 import RequestConfig from '~/src/config/request'
 import logger from '~/src/library/logger'
 import request from 'request-promise'
+import axiosCookieJarSupport from 'axios-cookiejar-support'
+import toughCookie from 'tough-cookie'
 import _ from 'lodash'
+
+axiosCookieJarSupport(axios)
 
 // 创建axios实例
 const http = axios.create({
@@ -10,10 +14,18 @@ const http = axios.create({
   headers: {
     // 加上ua
     'User-Agent': RequestConfig.ua,
-    cookie: RequestConfig.cookie,
+    // cookie: RequestConfig.cookie,
   },
 })
+let cookieJar = new toughCookie.CookieJar()
+let cookieStrList = RequestConfig.cookie
+for (let rawCookieStr of cookieStrList.split(';')) {
+  let cookieStr = rawCookieStr.trim()
+  cookieJar.setCookieSync(`${cookieStr}; domain=.weibo.cn`, 'http://m.weibo.cn')
+}
 
+// @ts-ignore
+// http.defaults.jar = cookieJar
 class Http {
   /**
    * 封装get方法
@@ -21,11 +33,24 @@ class Http {
    * @param config
    */
   static async get(url: string, config: AxiosRequestConfig = {}) {
-    const response = await http.get(url, config).catch(e => {
-      logger.log(`网络请求失败, 您的账号可能因抓取频繁被知乎认为有风险, 在浏览器中访问知乎首页,输入验证码即可恢复`)
-      logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
-      return {}
-    })
+    const response = await http
+      .get(
+        url,
+        // @ts-ignore
+        {
+          // @ts-ignore
+          ...config,
+          // @ts-ignore
+          jar: cookieJar, // tough.CookieJar or boolean
+          // @ts-ignore
+          withCredentials: true, // If true, send cookie stored in jar
+        },
+      )
+      .catch(e => {
+        logger.log(`网络请求失败, 您的账号可能因抓取频繁被知乎认为有风险, 在浏览器中访问知乎首页,输入验证码即可恢复`)
+        logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
+        return {}
+      })
     const record = _.get(response, ['data'], {})
     return record
   }
