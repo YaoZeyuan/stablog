@@ -1,5 +1,6 @@
 import Base from '~/src/command/generate/base'
 import TypeWeibo from '~/src/type/namespace/weibo'
+import TypeTaskConfig from '~/src/type/namespace/task_config'
 import PathConfig from '~/src/config/path'
 import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
@@ -14,12 +15,6 @@ import BaseView from '~/src/view/base'
 import fs from 'fs'
 import path from 'path'
 import StringUtil from '~/src/library/util/string'
-
-type EpubResourcePackage = {
-  questionList: Array<Array<TypeAnswer.Record>>
-  articleList: Array<TypeArticle.Record>
-  pinList: Array<TypePin.Record>
-}
 
 class GenerateCustomer extends Base {
   static get signature() {
@@ -41,15 +36,25 @@ class GenerateCustomer extends Base {
     let bookname = customerTaskConfig.bookTitle
     let comment = customerTaskConfig.comment
     let imageQuilty = customerTaskConfig.imageQuilty
-    let maxQuestionOrArticleInBook = customerTaskConfig.maxQuestionOrArticleInBook
-    let orderByList = customerTaskConfig.orderByList
+    let maxBlogInBook = customerTaskConfig.maxBlogInBook
+    let configList = customerTaskConfig.configList
+    let config = configList[0]
 
-    this.log(`开始输出自定义电子书, 共有${customerTaskConfig.configList.length}个任务`)
+    let author_uid = config.uid
+    let userInfo = await MMblogUser.asyncGetUserInfo(author_uid)
+    if (_.isEmpty(userInfo)) {
+      this.log(`未抓取到对应的用户数据, 自动跳过`)
+      return
+    }
+    let screenName = userInfo.screen_name
+    this.log(`开始输出用户${screenName}的微博备份数据`)
     // 将任务中的数据按照问题/文章/想法进行汇总
-    let answerList: Array<TypeAnswer.Record> = []
-    let questionList: Array<Array<TypeAnswer.Record>> = []
-    let articleList: Array<TypeArticle.Record> = []
-    let pinList: Array<TypePin.Record> = []
+
+    this.log(`获取数据记录`)
+
+    let mblogList = await MMblog.asyncGetMblogList(author_uid)
+    fs.writeFileSync(`${PathConfig.htmlOutputPath}/test.json`, JSON.stringify(mblogList, null, 4))
+    return
 
     this.log(`将任务中的数据按照问题/文章/想法进行汇总`)
     let taskIndex = 0

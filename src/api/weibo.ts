@@ -43,6 +43,42 @@ export default class Weibo extends Base {
   }
 
   /**
+   * 根据微博的的bid字段获取长微博详情
+   * @param bid
+   */
+  static async asyncGetLongTextWeibo(bid: string): Promise<TypeWeibo.TypeLongTextWeiboRecord | {}> {
+    const baseUrl = `https://m.weibo.cn/statuses/show?id=${bid}`
+    const config = {}
+    const weiboResponse = <TypeWeibo.TypeLongTextWeiboResponse>await Base.http.get(baseUrl, {
+      params: config,
+    })
+    if (_.isEmpty(weiboResponse.data)) {
+      return {}
+    }
+    return weiboResponse.data
+  }
+
+  /**
+   * 获取微博文章, 获取不到返回空对象
+   */
+  static async asyncGetWeiboArticle(url: string) {
+    let responseHtml = await Base.http.get(url)
+    let json: TypeWeibo.TypeWeiboArticleRecord
+    try {
+      let scriptContent = responseHtml.split('<router-view>')[1]
+      let rawJsContent = scriptContent.split('<script>')[1]
+      let jsContent = rawJsContent.split('</script>')[0]
+      let rawJson = jsContent.split('var $render_data = [')[1]
+      let jsonStr = rawJson.split('][0] || {};')[0]
+      json = JSON.parse(jsonStr)
+    } catch (e) {
+      json = <TypeWeibo.TypeWeiboArticleRecord>{}
+    }
+
+    return json
+  }
+
+  /**
    * 首次请求, 先获取用户信息
    * demo => https://m.weibo.cn/api/container/getIndex?uid=1221171697&containerid=1005051221171697
    * @param author_uid
