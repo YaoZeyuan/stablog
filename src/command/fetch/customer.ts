@@ -78,7 +78,7 @@ class FetchCustomer extends Base {
       for (let page = 1; page < totalPageCount; page++) {
         await CommonUtil.asyncAppendPromiseWithDebounce(this.fetchMblogListAndSaveToDb(uid, page, totalPageCount))
         // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
-        let sleep_s = 2
+        let sleep_s = 3
         this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
         await Util.asyncSleep(sleep_s * 1000)
       }
