@@ -4,6 +4,7 @@ import PathConfig from '~/src/config/path'
 import fs from 'fs'
 import _ from 'lodash'
 import json5 from 'json5'
+import moment from 'moment'
 
 import ApiWeibo from '~/src/api/weibo'
 import MMblog from '~/src/model/mblog'
@@ -96,7 +97,7 @@ class FetchCustomer extends Base {
       this.log(`第${page}/${totalPage}页微博记录抓取失败`)
       return
     }
-    let mblogList: Array<TypeWeibo.TypeWeiboRecord> = []
+    let mblogList: Array<TypeWeibo.TypenWeiboRecord_Mblog> = []
 
     // 此处要根据微博类型进行具体定制
     for (let rawMblog of rawMblogList) {
@@ -148,10 +149,15 @@ class FetchCustomer extends Base {
         }
         mblog.article = articleRecord
       }
+      mblogList.push(mblog)
+    }
 
+    this.log(`${target}抓取成功, 准备存入数据库`)
+    for (let mblog of mblogList) {
       // 处理完毕, 将数据存入数据库中
       let id = mblog.id
       let author_uid = mblog.user.id
+      mblog.created_timestamp_at = this.parseMblogCreateTimestamp(mblog)
       let raw_json = JSON.stringify(mblog)
       await MMblog.replaceInto({
         id,
@@ -159,19 +165,30 @@ class FetchCustomer extends Base {
         raw_json,
       })
     }
-
-    this.log(`${target}抓取成功, 准备存入数据库`)
-    for (let mblogRecord of mblogList) {
-      if (_.isEmpty(mblogRecord.mblog) || _.isEmpty(mblogRecord.mblog.user)) {
-        // 数据为空自动跳过
-        continue
-      }
-      let id = mblogRecord.mblog.id
-      let author_uid = mblogRecord.mblog.user.id
-      // 删掉字段中的user, 节约储存空间
-      delete mblogRecord.mblog.user
-    }
     this.log(`${target}成功存入数据库`)
+  }
+
+  /**
+   * 简单将微博发布时间解析为
+   * @param mlog
+   */
+  parseMblogCreateTimestamp(mlog: TypeWeibo.TypeLongTextWeiboRecord | TypeWeibo.TypenWeiboRecord_Mblog) {
+    let rawCreateAtStr = `${mlog.created_at}`
+    if (rawCreateAtStr.includes('-') === false) {
+      if (rawCreateAtStr.includes('+0800')) {
+        // 'Sun Sep 15 00:35:14 +0800 2019' 模式
+        return moment(rawCreateAtStr).unix()
+      }
+      // '12小时前' | '4分钟前' | '刚刚' | '1小时前' 模式
+      // 不含-符号, 表示是最近一天内, 直接认为是当前时间, 不进行细分
+      return moment().unix()
+    }
+    if (rawCreateAtStr.length === '08-07'.length) {
+      // 月日模式, 表示当前年份,手工补上年份
+      return moment(`${moment().format('YYYY')}-${rawCreateAtStr}`).unix()
+    }
+    // 否则, 为'2012-01-02'  模式, 直接解析即可
+    return moment(rawCreateAtStr).unix()
   }
 }
 

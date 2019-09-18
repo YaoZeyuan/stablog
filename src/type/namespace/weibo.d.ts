@@ -231,6 +231,10 @@ export type TypenWeiboRecord_Mblog = {
     list_id: 0
   }
   created_at: '09-08'
+  /**
+   * 需要主动解析为该值, 作为微博发表时间戳
+   */
+  created_timestamp_at?: number
   id: '4414052358656728'
   idstr: '4414052358656728'
   mid: '4414052358656728'
@@ -329,7 +333,11 @@ export type TypeLongTextWeiboRecord = {
     type: 0
     list_id: 0
   }
-  created_at: 'Sun Sep 15 00:35:14 +0800 2019'
+  created_at: 'Sun Sep 15 00:35:14 +0800 2019' | '08-16' | '2012-01-02' | '12小时前' | '4分钟前' | '刚刚' | '1小时前'
+  /**
+   * 需要主动解析为该值
+   */
+  created_timestamp_at?: number
   id: '4416583033738594'
   mid: '4416583033738594'
   can_edit: false
