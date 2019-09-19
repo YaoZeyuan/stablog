@@ -79,7 +79,7 @@ class FetchCustomer extends Base {
       for (let page = 1; page < totalPageCount; page++) {
         await CommonUtil.asyncAppendPromiseWithDebounce(this.fetchMblogListAndSaveToDb(uid, page, totalPageCount))
         // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
-        let sleep_s = 5
+        let sleep_s = 10
         this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
         await Util.asyncSleep(sleep_s * 1000)
       }
@@ -175,9 +175,10 @@ class FetchCustomer extends Base {
   parseMblogCreateTimestamp(mlog: TypeWeibo.TypeLongTextWeiboRecord | TypeWeibo.TypenWeiboRecord_Mblog) {
     let rawCreateAtStr = `${mlog.created_at}`
     if (rawCreateAtStr.includes('-') === false) {
+      // Mon Sep 16 01:13:45 +0800 2019
       if (rawCreateAtStr.includes('+0800')) {
         // 'Sun Sep 15 00:35:14 +0800 2019' 时区模式
-        return moment.parseZone(rawCreateAtStr).unix()
+        return moment(new Date(rawCreateAtStr)).unix()
       }
       // '12小时前' | '4分钟前' | '刚刚' | '1小时前' 模式
       // 不含-符号, 表示是最近一天内, 直接认为是当前时间, 不进行细分
