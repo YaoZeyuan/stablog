@@ -225,7 +225,7 @@ export type TypenWeiboRecord_Pic = {
   }
 }
 
-export type TypenWeiboRecord_Mblog = {
+export type TypeWeiboRecord_Mblog = {
   visible: {
     type: 0
     list_id: 0
@@ -301,14 +301,14 @@ export type TypenWeiboRecord_Mblog = {
   // 微博文章json, 仅当微博为文章类型时, 才添加到数据记录中
   article?: TypeWeiboArticleRecord
   // 被转发的微博
-  retweeted_status: TypenWeiboRecord_Mblog | TypeLongTextWeiboRecord
+  retweeted_status: TypeWeiboRecord_Mblog | TypeLongTextWeiboRecord
 }
 
 export type TypeWeiboRecord = {
   card_type: 9
   itemid: '1076031221171697_-_4414052358656728'
   scheme: 'https://m.weibo.cn/status/I5Tz5Ak0E?mblogid=I5Tz5Ak0E&luicode=10000011&lfid=1076031221171697'
-  mblog: TypenWeiboRecord_Mblog
+  mblog: TypeWeiboRecord_Mblog
   show_type: 0
   title: ''
 }
@@ -564,3 +564,4 @@ export type TypeWeiboArticleRecord = {
   reward_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=reward&luicode=10000370'
   pay_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=pay&luicode=10000370'
 }
+type TypeUniWeiboMblog = TypeWeiboRecord_Mblog | TypeLongTextWeiboRecord

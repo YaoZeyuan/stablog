@@ -97,7 +97,7 @@ class FetchCustomer extends Base {
       this.log(`第${page}/${totalPage}页微博记录抓取失败`)
       return
     }
-    let mblogList: Array<TypeWeibo.TypenWeiboRecord_Mblog> = []
+    let mblogList: Array<TypeWeibo.TypeWeiboRecord_Mblog> = []
 
     // 此处要根据微博类型进行具体定制
     for (let rawMblog of rawMblogList) {
@@ -172,7 +172,7 @@ class FetchCustomer extends Base {
    * 简单将微博发布时间解析为
    * @param mlog
    */
-  parseMblogCreateTimestamp(mlog: TypeWeibo.TypeLongTextWeiboRecord | TypeWeibo.TypenWeiboRecord_Mblog) {
+  parseMblogCreateTimestamp(mlog: TypeWeibo.TypeLongTextWeiboRecord | TypeWeibo.TypeWeiboRecord_Mblog) {
     let rawCreateAtStr = `${mlog.created_at}`
     if (rawCreateAtStr.includes('-') === false) {
       // Mon Sep 16 01:13:45 +0800 2019

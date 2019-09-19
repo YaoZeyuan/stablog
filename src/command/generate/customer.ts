@@ -1,9 +1,16 @@
 import Base from '~/src/command/generate/base'
-import TypeWeibo from '~/src/type/namespace/weibo'
+import TypeWeibo, {
+  TypeWeiboRecord,
+  TypeLongTextWeiboRecord,
+  TypeWeiboRecord_Mblog,
+  TypeUniWeiboMblog,
+  TypeWeiboUserInfo,
+} from '~/src/type/namespace/weibo'
 import TypeTaskConfig from '~/src/type/namespace/task_config'
 import PathConfig from '~/src/config/path'
 import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
+import DATE_FORMAT from '~/src/constant/date_format'
 
 import _ from 'lodash'
 import json5 from 'json5'
@@ -15,6 +22,32 @@ import BaseView from '~/src/view/base'
 import fs from 'fs'
 import path from 'path'
 import StringUtil from '~/src/library/util/string'
+import moment from 'moment'
+
+type TypeWeiboListByDay = {
+  weiboList: Array<TypeUniWeiboMblog>
+  // 时间(当天0点0分)
+  dayStartAt: number
+  // 字符串日期(YYYY-MM-DD)
+  dayStartAtStr: string
+}
+type TypeWeiboEpub = {
+  weiboDayList: Array<TypeWeiboListByDay>
+  // 作者信息. 便于生成封面等信息
+  userInfo: TypeWeiboUserInfo
+  // 作者名
+  screenName: string
+  startDayAt: number
+  endDayAt: number
+  // 本书是第几本
+  bookIndex: number
+  // 总共几本
+  totalBookCount: number
+  // 书中总共包含微博数
+  mblogInThisBookCount: number
+  // 收集到的总微博数
+  totalMblogCount: number
+}
 
 class GenerateCustomer extends Base {
   static get signature() {
@@ -53,344 +86,130 @@ class GenerateCustomer extends Base {
     this.log(`获取数据记录`)
 
     let mblogList = await MMblog.asyncGetMblogList(author_uid)
-    fs.writeFileSync(`${PathConfig.htmlOutputPath}/test.json`, JSON.stringify(mblogList, null, 4))
-    return
 
-    this.log(`将任务中的数据按照问题/文章/想法进行汇总`)
-    let taskIndex = 0
-    for (let taskConfig of customerTaskConfig.configList) {
-      taskIndex = taskIndex + 1
-      this.log(
-        `处理第${taskIndex}/${customerTaskConfig.configList.length}个任务, 任务类型:${taskConfig.type}, 任务备注:${taskConfig.comment}`,
-      )
-      let taskType = taskConfig.type
-      let targetId = `${taskConfig.id}`
-    }
-    // 将回答按照问题合并在一起
-    let uniqQuestionMap: {
-      [questionId: string]: {
-        [answerId: string]: TypeAnswer.Record
-      }
-    } = {}
-    for (let answer of answerList) {
-      if (uniqQuestionMap[answer.question.id]) {
-        uniqQuestionMap[answer.question.id][answer.id] = answer
-      } else {
-        uniqQuestionMap[answer.question.id] = {
-          [answer.id]: answer,
-        }
-      }
-    }
+    this.log(`数据获取完毕, 共收录${mblogList.length}条微博`)
 
-    for (let questionId of Object.keys(uniqQuestionMap)) {
-      let answerMap = uniqQuestionMap[questionId]
-      let answerList = []
-      for (let answerId of Object.keys(answerMap)) {
-        let answer = answerMap[answerId]
-        answerList.push(answer)
-      }
-      questionList.push(answerList)
-    }
-
-    this.log(`所有数据获取完毕, 最终结果为=>`)
-    this.log(`问题 => ${questionList.length}个`)
-    this.log(`文章 => ${articleList.length}篇`)
-    this.log(`想法 => ${pinList.length}条`)
-    this.log(`按配置排序`)
-    // 需要倒过来排, 这样排出来的结果才和预期一致
-    let reverseOrderByList = _.cloneDeep(orderByList)
-    reverseOrderByList.reverse()
-    for (let orderByConfig of reverseOrderByList) {
-      // 需要额外对questionList中的answerList进行排序
-      let bufQuestionList = []
-      switch (orderByConfig.orderBy) {
-        case 'voteUpCount':
-          for (let answerList of questionList) {
-            answerList.sort((item1, item2) => {
-              if (orderByConfig.order === 'asc') {
-                return item1.voteup_count - item2.voteup_count
-              } else {
-                return item2.voteup_count - item1.voteup_count
-              }
-            })
-            bufQuestionList.push(answerList)
-          }
-          questionList = bufQuestionList
-
-          questionList.sort((item1, item2) => {
-            let item1VoteUpCount = 0
-            let item2VoteUpCount = 0
-            for (let answerInItem1 of item1) {
-              item1VoteUpCount += answerInItem1.voteup_count
-            }
-            for (let answerInItem2 of item2) {
-              item2VoteUpCount += answerInItem2.voteup_count
-            }
-            if (orderByConfig.order === 'asc') {
-              return item1VoteUpCount - item2VoteUpCount
-            } else {
-              return item2VoteUpCount - item1VoteUpCount
-            }
-          })
-          articleList.sort((item1, item2) => {
-            let item1VoteUpCount = item1.voteup_count
-            let item2VoteUpCount = item2.voteup_count
-            if (orderByConfig.order === 'asc') {
-              return item1VoteUpCount - item2VoteUpCount
-            } else {
-              return item2VoteUpCount - item1VoteUpCount
-            }
-          })
-          pinList.sort((item1, item2) => {
-            let item1VoteUpCount = item1.like_count
-            let item2VoteUpCount = item2.like_count
-            if (orderByConfig.order === 'asc') {
-              return item1VoteUpCount - item2VoteUpCount
-            } else {
-              return item2VoteUpCount - item1VoteUpCount
-            }
-          })
-          break
-        case 'commentCount':
-          for (let answerList of questionList) {
-            answerList.sort((item1, item2) => {
-              if (orderByConfig.order === 'asc') {
-                return item1.comment_count - item2.comment_count
-              } else {
-                return item2.comment_count - item1.comment_count
-              }
-            })
-            bufQuestionList.push(answerList)
-          }
-          questionList = bufQuestionList
-
-          questionList.sort((item1, item2) => {
-            let item1CommentCount = 0
-            let item2CommentCount = 0
-            for (let answerInItem1 of item1) {
-              item1CommentCount += answerInItem1.comment_count
-            }
-            for (let answerInItem2 of item2) {
-              item2CommentCount += answerInItem2.comment_count
-            }
-            if (orderByConfig.order === 'asc') {
-              return item1CommentCount - item2CommentCount
-            } else {
-              return item2CommentCount - item1CommentCount
-            }
-          })
-          articleList.sort((item1, item2) => {
-            let item1CommentCount = item1.comment_count
-            let item2CommentCount = item2.comment_count
-            if (orderByConfig.order === 'asc') {
-              return item1CommentCount - item2CommentCount
-            } else {
-              return item2CommentCount - item1CommentCount
-            }
-          })
-          pinList.sort((item1, item2) => {
-            let item1CommentCount = item1.comment_count
-            let item2CommentCount = item2.comment_count
-            if (orderByConfig.order === 'asc') {
-              return item1CommentCount - item2CommentCount
-            } else {
-              return item2CommentCount - item1CommentCount
-            }
-          })
-          break
-        case 'createAt':
-          for (let answerList of questionList) {
-            answerList.sort((item1, item2) => {
-              if (orderByConfig.order === 'asc') {
-                return item1.created_time - item2.created_time
-              } else {
-                return item2.created_time - item1.created_time
-              }
-            })
-            bufQuestionList.push(answerList)
-          }
-          questionList = bufQuestionList
-
-          questionList.sort((item1, item2) => {
-            let item1MinCreateAt = 99999999999999999999999
-            let item1MaxCreateAt = 0
-            let item2MinCreateAt = 99999999999999999999999
-            let item2MaxCreateAt = 0
-            for (let answerInItem1 of item1) {
-              if (answerInItem1.created_time > item1MaxCreateAt) {
-                item1MaxCreateAt = answerInItem1.created_time
-              }
-              if (answerInItem1.created_time < item1MinCreateAt) {
-                item1MinCreateAt = answerInItem1.created_time
-              }
-            }
-            for (let answerInItem2 of item2) {
-              if (answerInItem2.created_time > item2MaxCreateAt) {
-                item2MaxCreateAt = answerInItem2.created_time
-              }
-              if (answerInItem2.created_time < item2MinCreateAt) {
-                item2MinCreateAt = answerInItem2.created_time
-              }
-            }
-            if (orderByConfig.order === 'asc') {
-              return item1MinCreateAt - item2MinCreateAt
-            } else {
-              return item1MaxCreateAt - item2MaxCreateAt
-            }
-          })
-          articleList.sort((item1, item2) => {
-            if (orderByConfig.order === 'asc') {
-              return item1.created - item2.created
-            } else {
-              return item2.created - item1.created
-            }
-          })
-          pinList.sort((item1, item2) => {
-            if (orderByConfig.order === 'asc') {
-              return item1.created - item2.created
-            } else {
-              return item2.created - item1.created
-            }
-          })
-          break
-        case 'updateAt':
-          for (let answerList of questionList) {
-            answerList.sort((item1, item2) => {
-              if (orderByConfig.order === 'asc') {
-                return item1.updated_time - item2.updated_time
-              } else {
-                return item2.updated_time - item1.updated_time
-              }
-            })
-            bufQuestionList.push(answerList)
-          }
-          questionList = bufQuestionList
-
-          questionList.sort((item1, item2) => {
-            let item1MinUpdateAt = 99999999999999999999999
-            let item1MaxUpdateAt = 0
-            let item2MinUpdateAt = 99999999999999999999999
-            let item2MaxUpdateAt = 0
-            for (let answerInItem1 of item1) {
-              if (answerInItem1.updated_time > item1MaxUpdateAt) {
-                item1MaxUpdateAt = answerInItem1.updated_time
-              }
-              if (answerInItem1.updated_time < item1MinUpdateAt) {
-                item1MinUpdateAt = answerInItem1.updated_time
-              }
-            }
-            for (let answerInItem2 of item2) {
-              if (answerInItem2.updated_time > item2MaxUpdateAt) {
-                item2MaxUpdateAt = answerInItem2.updated_time
-              }
-              if (answerInItem2.updated_time < item2MinUpdateAt) {
-                item2MinUpdateAt = answerInItem2.updated_time
-              }
-            }
-            if (orderByConfig.order === 'asc') {
-              return item1MinUpdateAt - item2MinUpdateAt
-            } else {
-              return item1MaxUpdateAt - item2MaxUpdateAt
-            }
-          })
-          articleList.sort((item1, item2) => {
-            if (orderByConfig.order === 'asc') {
-              return item1.updated - item2.updated
-            } else {
-              return item2.updated - item1.updated
-            }
-          })
-          pinList.sort((item1, item2) => {
-            if (orderByConfig.order === 'asc') {
-              return item1.updated - item2.updated
-            } else {
-              return item2.updated - item1.updated
-            }
-          })
-          break
-      }
-    }
-
-    // 按最大允许值切分列表
-    let epubResourceList: Array<EpubResourcePackage> = []
-    let fileCounter = 0
-
-    let splitQuestionList: Array<Array<TypeAnswer.Record>> = []
-    let splitArticleList: Array<TypeArticle.Record> = []
-    let splitPinList: Array<TypePin.Record> = []
-
-    for (let answerList of questionList) {
-      splitQuestionList.push(answerList)
-      fileCounter++
-      if (fileCounter >= maxQuestionOrArticleInBook) {
-        epubResourceList.push({
-          questionList: splitQuestionList,
-          articleList: splitArticleList,
-          pinList: splitPinList,
-        })
-        splitQuestionList = []
-        splitArticleList = []
-        splitPinList = []
-        fileCounter = 0
-      }
-    }
-
-    for (let article of articleList) {
-      splitArticleList.push(article)
-      fileCounter++
-      if (fileCounter >= maxQuestionOrArticleInBook) {
-        epubResourceList.push({
-          questionList: splitQuestionList,
-          articleList: splitArticleList,
-          pinList: splitPinList,
-        })
-        splitQuestionList = []
-        splitArticleList = []
-        splitPinList = []
-        fileCounter = 0
-      }
-    }
-
-    for (let pin of pinList) {
-      splitPinList.push(pin)
-      fileCounter++
-      if (fileCounter >= maxQuestionOrArticleInBook) {
-        epubResourceList.push({
-          questionList: splitQuestionList,
-          articleList: splitArticleList,
-          pinList: splitPinList,
-        })
-        splitQuestionList = []
-        splitArticleList = []
-        splitPinList = []
-        fileCounter = 0
-      }
-    }
-    // 将剩余未被收集的资源, 一起打成一个包
-    if (splitQuestionList.length || splitArticleList.length || splitPinList.length) {
-      epubResourceList.push({
-        questionList: splitQuestionList,
-        articleList: splitArticleList,
-        pinList: splitPinList,
-      })
-    }
+    let weiboEpubList = this.packageMblogList(mblogList, maxBlogInBook, userInfo)
 
     let bookCounter = 0
-    for (let resourcePackage of epubResourceList) {
+    for (let resourcePackage of weiboEpubList) {
       bookCounter++
       let booktitle = ''
-      if (epubResourceList.length <= 1) {
+      if (weiboEpubList.length <= 1) {
         booktitle = bookname
       } else {
         booktitle = `${bookname}-第${bookCounter}卷`
       }
       this.log(`输出电子书:${booktitle}`)
-      await this.generateEpub(booktitle, imageQuilty, resourcePackage)
+      await this.asyncGenerateEpub(booktitle, imageQuilty, resourcePackage)
       this.log(`电子书:${booktitle}输出完毕`)
     }
   }
 
-  async generateEpub(
+  /**
+   * 1. 将微博按时间顺序排列
+   * 2. 将微博按天合并到一起
+   * 3. 按配置单本电子书最大微博数, 切分成微博Epub列表
+   * @param mblogList
+   * @param maxBlogInBook
+   * @param userInfo
+   */
+  packageMblogList(mblogList: Array<TypeUniWeiboMblog>, maxBlogInBook: number, userInfo: TypeWeiboUserInfo) {
+    // 其次, 按天分隔微博
+    let mblogListByDayMap: Map<string, TypeWeiboListByDay> = new Map()
+    for (let mblog of mblogList) {
+      let mblogCreateAtTimestamp = <number>mblog.created_timestamp_at
+      let publishAtStr = moment.unix(mblogCreateAtTimestamp).format(DATE_FORMAT.DISPLAY_BY_DAY)
+      let record = mblogListByDayMap.get(publishAtStr)
+      if (record === undefined) {
+        let a: TypeWeiboListByDay = {
+          dayStartAt: moment
+            .unix(mblogCreateAtTimestamp)
+            .startOf(DATE_FORMAT.UNIT.DAY)
+            .unix(),
+          dayStartAtStr: publishAtStr,
+          weiboList: [mblog],
+        }
+        record = a
+      } else {
+        record.weiboList.push(mblog)
+      }
+      mblogListByDayMap.set(publishAtStr, record)
+    }
+    // 然后, 按日期先后对记录
+    let mblogListByDayList = []
+    for (let record of mblogListByDayMap.values()) {
+      record.weiboList.sort((itemA, itemB) => {
+        let intAId = parseInt(itemA.id)
+        let intBId = parseInt(itemB.id)
+        return intAId - intBId
+      })
+      mblogListByDayList.push(record)
+    }
+    mblogListByDayList.sort((itemA, itemB) => {
+      let intAStartAt = itemA.dayStartAt
+      let intBStartAt = itemB.dayStartAt
+      return intAStartAt - intBStartAt
+    })
+    // 解除引用依赖
+    mblogListByDayList = _.cloneDeep(mblogListByDayList)
+    // 最后, 按条目数拆分微博记录, 将微博列表分包
+    let rawWeiboEpubList: Array<TypeWeiboEpub> = []
+    let bookIndex = 0
+    let bookCounter = 1
+    let weiboEpubTemplate: TypeWeiboEpub = {
+      bookIndex: 0,
+      startDayAt: 0,
+      endDayAt: 0,
+      userInfo: userInfo,
+      screenName: userInfo.screen_name,
+      weiboDayList: [],
+      totalBookCount: 0,
+      mblogInThisBookCount: 0,
+      totalMblogCount: mblogList.length,
+    }
+    let weiboEpub = _.cloneDeep(weiboEpubTemplate)
+    let bufEndDayAt = moment().unix()
+    for (let mblogListByDay of mblogListByDayList) {
+      // 备份一下, 循环结束时使用
+      bufEndDayAt = mblogListByDay.dayStartAt
+
+      if (weiboEpub.weiboDayList.length === 0) {
+        // 首次添加
+        weiboEpub.weiboDayList.push(mblogListByDay)
+        weiboEpub.mblogInThisBookCount = mblogListByDay.weiboList.length
+        weiboEpub.startDayAt = mblogListByDay.dayStartAt
+        weiboEpub.bookIndex = bookIndex
+      } else {
+        weiboEpub.weiboDayList.push(mblogListByDay)
+        weiboEpub.mblogInThisBookCount += mblogListByDay.weiboList.length
+      }
+      if (weiboEpub.mblogInThisBookCount > maxBlogInBook) {
+        // 超出阈值, 该分卷了
+        weiboEpub.endDayAt = mblogListByDay.dayStartAt
+        let buffer = _.cloneDeep(weiboEpub)
+        rawWeiboEpubList.push(buffer)
+        // 重新起一个
+        bookCounter = bookCounter + 1
+        bookIndex = bookIndex + 1
+        weiboEpub = _.cloneDeep(weiboEpubTemplate)
+      }
+    }
+    // 循环结束, 记录最后一卷数据
+    weiboEpub.endDayAt = bufEndDayAt
+    let buffer = _.cloneDeep(weiboEpub)
+    rawWeiboEpubList.push(buffer)
+    // 最后, 格式化一下代码
+    let weiboEpubList = []
+    for (let record of rawWeiboEpubList) {
+      record.totalBookCount = bookCounter
+      weiboEpubList.push(_.cloneDeep(record))
+    }
+    // 得到最终结果, 可以渲染电子书了
+    return weiboEpubList
+  }
+
+  async asyncGenerateEpub(
     bookname: string,
     imageQuilty: TypeTaskConfig.imageQuilty,
     epubResourcePackage: EpubResourcePackage,

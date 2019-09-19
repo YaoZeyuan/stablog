@@ -18,7 +18,7 @@ export default class Mblog extends Base {
    * 从数据库中获取微博记录列表
    * @param id
    */
-  static async asyncGetMblogList(uid: string): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
+  static async asyncGetMblogList(uid: string): Promise<Array<TypeWeibo.TypeWeiboRecord_Mblog>> {
     let recordList = <Array<TypeMblogRecord>>await this.db
       .select(this.TABLE_COLUMN)
       .from(this.TABLE_NAME)
