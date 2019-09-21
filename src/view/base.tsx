@@ -394,11 +394,11 @@ class Base {
    * 生成单个回答的Element(只有回答, 不包括问题)
    * @param mblog
    */
-  static generateSingleWeiboElement(mblog: TypeWeibo.TypeWeiboRecord_Mblog) {
+  static generateSingleWeiboElement(mblog: TypeWeibo.TypeMblog) {
     if (_.isEmpty(mblog)) {
       return <div key={CommonUtil.getUuid()} />
     }
-    function generateMlogRecord(mblog: TypeWeibo.TypeWeiboRecord_Mblog) {
+    function generateMlogRecord(mblog: TypeWeibo.TypeMblog) {
       let mblogEle = null
       if (mblog) {
         let mblogPictureList = []

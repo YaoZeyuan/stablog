@@ -97,7 +97,7 @@ class FetchCustomer extends Base {
       this.log(`第${page}/${totalPage}页微博记录抓取失败`)
       return
     }
-    let mblogList: Array<TypeWeibo.TypeWeiboRecord_Mblog> = []
+    let mblogList: Array<TypeWeibo.TypeMblog> = []
 
     // 此处要根据微博类型进行具体定制
     for (let rawMblog of rawMblogList) {
@@ -111,7 +111,7 @@ class FetchCustomer extends Base {
       if (rawMblog.mblog.isLongText === true) {
         // 长微博需要调取api重新获得微博内容
         let bid = rawMblog.mblog.bid
-        let realMblog = <TypeWeibo.TypeLongTextWeiboRecord>await ApiWeibo.asyncGetLongTextWeibo(bid)
+        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
         if (_.isEmpty(realMblog)) {
           continue
         }
@@ -122,7 +122,7 @@ class FetchCustomer extends Base {
         if (rawMblog.mblog.retweeted_status.isLongText === true) {
           // 转发微博属于长微博
           let bid = rawMblog.mblog.retweeted_status.bid
-          let realRetweetMblog = <TypeWeibo.TypeLongTextWeiboRecord>await ApiWeibo.asyncGetLongTextWeibo(bid)
+          let realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
           mblog.retweeted_status = realRetweetMblog
         }
         if (rawMblog.mblog.retweeted_status.page_info && rawMblog.mblog.retweeted_status.page_info.type === 'article') {
@@ -172,7 +172,7 @@ class FetchCustomer extends Base {
    * 简单将微博发布时间解析为
    * @param mlog
    */
-  parseMblogCreateTimestamp(mlog: TypeWeibo.TypeLongTextWeiboRecord | TypeWeibo.TypeWeiboRecord_Mblog) {
+  parseMblogCreateTimestamp(mlog: TypeWeibo.TypeMblog) {
     let rawCreateAtStr = `${mlog.created_at}`
     if (rawCreateAtStr.includes('-') === false) {
       // Mon Sep 16 01:13:45 +0800 2019

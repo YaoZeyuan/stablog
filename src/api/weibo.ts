@@ -46,7 +46,7 @@ export default class Weibo extends Base {
    * 根据微博的的bid字段获取长微博详情
    * @param bid
    */
-  static async asyncGetLongTextWeibo(bid: string): Promise<TypeWeibo.TypeLongTextWeiboRecord | {}> {
+  static async asyncGetLongTextWeibo(bid: string): Promise<TypeWeibo.TypeMblog | {}> {
     const baseUrl = `https://m.weibo.cn/statuses/show?id=${bid}`
     const config = {}
     const weiboResponse = <TypeWeibo.TypeLongTextWeiboResponse>await Base.http.get(baseUrl, {

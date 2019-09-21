@@ -1,11 +1,5 @@
 import Base from '~/src/command/generate/base'
-import TypeWeibo, {
-  TypeWeiboRecord,
-  TypeLongTextWeiboRecord,
-  TypeWeiboRecord_Mblog,
-  TypeUniWeiboMblog,
-  TypeWeiboUserInfo,
-} from '~/src/type/namespace/weibo'
+import TypeWeibo, { TypeWeiboUserInfo, TypeMblog } from '~/src/type/namespace/weibo'
 import TypeTaskConfig from '~/src/type/namespace/task_config'
 import PathConfig from '~/src/config/path'
 import MMblog from '~/src/model/mblog'
@@ -16,6 +10,7 @@ import _ from 'lodash'
 import json5 from 'json5'
 
 import AnswerView from '~/src/view/answer'
+import WeiboView from '~/src/view/weibo'
 import PinView from '~/src/view/pin'
 import ArticleView from '~/src/view/article'
 import BaseView from '~/src/view/base'
@@ -25,7 +20,7 @@ import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
 
 type TypeWeiboListByDay = {
-  weiboList: Array<TypeUniWeiboMblog>
+  weiboList: Array<TypeMblog>
   // 时间(当天0点0分)
   dayStartAt: number
   // 字符串日期(YYYY-MM-DD)
@@ -114,7 +109,7 @@ class GenerateCustomer extends Base {
    * @param maxBlogInBook
    * @param userInfo
    */
-  packageMblogList(mblogList: Array<TypeUniWeiboMblog>, maxBlogInBook: number, userInfo: TypeWeiboUserInfo) {
+  packageMblogList(mblogList: Array<TypeMblog>, maxBlogInBook: number, userInfo: TypeWeiboUserInfo) {
     // 其次, 按天分隔微博
     let mblogListByDayMap: Map<string, TypeWeiboListByDay> = new Map()
     for (let mblog of mblogList) {
@@ -212,12 +207,12 @@ class GenerateCustomer extends Base {
   async asyncGenerateEpub(
     bookname: string,
     imageQuilty: TypeTaskConfig.imageQuilty,
-    epubResourcePackage: EpubResourcePackage,
+    epubResourcePackage: TypeWeiboEpub,
   ) {
     // 初始化资源, 重置所有静态类变量
     this.bookname = StringUtil.encodeFilename(`${bookname}`)
     this.imageQuilty = imageQuilty
-    let { questionList, articleList, pinList } = epubResourcePackage
+    let { weiboDayList } = epubResourcePackage
     this.imgUriPool = new Set()
 
     // 初始化文件夹
@@ -225,10 +220,10 @@ class GenerateCustomer extends Base {
 
     // 单独记录生成的元素, 以便输出成单页
     let totalElementListToGenerateSinglePage = []
-    this.log(`生成问题html列表`)
-    for (let answerRecordList of questionList) {
-      let title = answerRecordList[0].question.id
-      let content = AnswerView.render(answerRecordList)
+    this.log(`生成微博记录html列表`)
+    for (let weiboDayRecord of weiboDayList) {
+      let title = weiboDayRecord.dayStartAtStr
+      let content = AnswerView.render(weiboDayRecord.weiboList)
       content = this.processContent(content)
       fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `${title}.html`), content)
       this.epub.addHtml(answerRecordList[0].question.title, path.resolve(this.htmlCacheHtmlPath, `${title}.html`))

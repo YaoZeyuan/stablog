@@ -13,7 +13,7 @@ export default class Weibo extends Base {
    * 生成单个问题对应的react元素
    * @param mblogRecordList
    */
-  private static generateSingleItemElement(mblogRecordList: Array<TypeWeibo.TypeUniWeiboMblog>) {
+  private static generateSingleItemElement(mblogRecordList: Array<TypeWeibo.TypeMblog>) {
     let baseAnswerRecord: TypeAnswer.Record = _.get(mblogRecordList, [0])
     let answerElementList = []
     for (let answerRecord of mblogRecordList) {
@@ -24,9 +24,9 @@ export default class Weibo extends Base {
     return questionElement
   }
 
-  static render(mblogList: Array<TypeWeibo.TypeUniWeiboMblog>) {
+  static render(mblogList: Array<TypeWeibo.TypeMblog>) {
     // 都是同一个
-    let baseWeiboRecord: TypeWeibo.TypeUniWeiboMblog = _.get(mblogList, [0])
+    let baseWeiboRecord: TypeWeibo.TypeMblog = _.get(mblogList, [0])
     let created_timestamp_at = baseWeiboRecord.created_timestamp_at as number
     let title = moment.unix(created_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
     let mblogListElement = this.generateSingleItemElement(mblogList)
