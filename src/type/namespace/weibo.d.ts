@@ -484,3 +484,29 @@ export type TypeWeiboArticleRecord = {
   reward_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=reward&luicode=10000370'
   pay_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=pay&luicode=10000370'
 }
+
+
+export type TypeWeiboListByDay = {
+  weiboList: Array<TypeMblog>
+  // 时间(当天0点0分)
+  dayStartAt: number
+  // 字符串日期(YYYY-MM-DD)
+  dayStartAtStr: string
+}
+export type TypeWeiboEpub = {
+  weiboDayList: Array<TypeWeiboListByDay>
+  // 作者信息. 便于生成封面等信息
+  userInfo: TypeWeiboUserInfo
+  // 作者名
+  screenName: string
+  startDayAt: number
+  endDayAt: number
+  // 本书是第几本
+  bookIndex: number
+  // 总共几本
+  totalBookCount: number
+  // 书中总共包含微博数
+  mblogInThisBookCount: number
+  // 收集到的总微博数
+  totalMblogCount: number
+}

@@ -1,5 +1,5 @@
 import Base from '~/src/command/generate/base'
-import TypeWeibo, { TypeWeiboUserInfo, TypeMblog } from '~/src/type/namespace/weibo'
+import TypeWeibo, { TypeWeiboUserInfo, TypeMblog, TypeWeiboEpub, TypeWeiboListByDay } from '~/src/type/namespace/weibo'
 import TypeTaskConfig from '~/src/type/namespace/task_config'
 import PathConfig from '~/src/config/path'
 import MMblog from '~/src/model/mblog'
@@ -18,31 +18,6 @@ import fs from 'fs'
 import path from 'path'
 import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
-
-type TypeWeiboListByDay = {
-  weiboList: Array<TypeMblog>
-  // 时间(当天0点0分)
-  dayStartAt: number
-  // 字符串日期(YYYY-MM-DD)
-  dayStartAtStr: string
-}
-type TypeWeiboEpub = {
-  weiboDayList: Array<TypeWeiboListByDay>
-  // 作者信息. 便于生成封面等信息
-  userInfo: TypeWeiboUserInfo
-  // 作者名
-  screenName: string
-  startDayAt: number
-  endDayAt: number
-  // 本书是第几本
-  bookIndex: number
-  // 总共几本
-  totalBookCount: number
-  // 书中总共包含微博数
-  mblogInThisBookCount: number
-  // 收集到的总微博数
-  totalMblogCount: number
-}
 
 class GenerateCustomer extends Base {
   static get signature() {
@@ -223,67 +198,32 @@ class GenerateCustomer extends Base {
     this.log(`生成微博记录html列表`)
     for (let weiboDayRecord of weiboDayList) {
       let title = weiboDayRecord.dayStartAtStr
-      let content = AnswerView.render(weiboDayRecord.weiboList)
+      let content = WeiboView.render(weiboDayRecord.weiboList)
       content = this.processContent(content)
       fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `${title}.html`), content)
-      this.epub.addHtml(answerRecordList[0].question.title, path.resolve(this.htmlCacheHtmlPath, `${title}.html`))
+      this.epub.addHtml(weiboDayRecord.dayStartAtStr, path.resolve(this.htmlCacheHtmlPath, `${title}.html`))
 
       // 单独记录生成的元素, 以便输出成单页文件
-      let contentElementList = []
-      for (let answerRecord of answerRecordList) {
-        let contentElement = BaseView.generateSingleAnswerElement(answerRecord)
-        contentElementList.push(contentElement)
-      }
-      let elememt = BaseView.generateQuestionElement(answerRecordList[0].question, contentElementList)
-      totalElementListToGenerateSinglePage.push(elememt)
+      // let contentElementList = []
+      // for (let weiboDayRecord of weiboDayList) {
+      //   let contentElement = BaseView.generateSingleAnswerElement(weiboDayRecord)
+      //   contentElementList.push(contentElement)
+      // }
+      // let elememt = BaseView.generateQuestionElement(weiboDayRecord, contentElementList)
+      // totalElementListToGenerateSinglePage.push(elememt)
     }
 
-    this.log(`生成文章列表`)
-    for (let articleRecord of articleList) {
-      let title = articleRecord.id
-      let content = ArticleView.render(articleRecord)
-      content = this.processContent(content)
-      fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `${title}.html`), content)
-      this.epub.addHtml(articleRecord.title, path.resolve(this.htmlCacheHtmlPath, `${title}.html`))
-
-      // 单独记录生成的元素, 以便输出成单页文件
-      let elememt = BaseView.generateSingleArticleElement(articleRecord)
-      totalElementListToGenerateSinglePage.push(elememt)
-    }
-
-    this.log(`生成想法列表`)
-    for (let pinRecord of pinList) {
-      let title = pinRecord.id
-      let content = PinView.render(pinRecord)
-      content = this.processContent(content)
-      fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `${title}.html`), content)
-      this.epub.addHtml(pinRecord.excerpt_title, path.resolve(this.htmlCacheHtmlPath, `${title}.html`))
-
-      // 单独记录生成的元素, 以便输出成单页文件
-      let elememt = BaseView.generateSinglePinElement(pinRecord)
-      totalElementListToGenerateSinglePage.push(elememt)
-    }
-
-    this.log(`生成单一html文件`)
-    // 生成全部文件
-    let pageElement = BaseView.generatePageElement(this.bookname, totalElementListToGenerateSinglePage)
-    let content = BaseView.renderToString(pageElement)
-    this.log(`内容渲染完毕, 开始对内容进行输出前预处理`)
-    content = this.processContent(content)
-    fs.writeFileSync(path.resolve(this.htmlCacheSingleHtmlPath, `${this.bookname}.html`), content)
+    // this.log(`生成单一html文件`)
+    // // 生成全部文件
+    // let pageElement = BaseView.generatePageElement(this.bookname, totalElementListToGenerateSinglePage)
+    // let content = BaseView.renderToString(pageElement)
+    // this.log(`内容渲染完毕, 开始对内容进行输出前预处理`)
+    // content = this.processContent(content)
+    // fs.writeFileSync(path.resolve(this.htmlCacheSingleHtmlPath, `${this.bookname}.html`), content)
 
     //  生成目录
     this.log(`生成目录`)
-    let firstAnswerInQuestionToRenderIndexList = []
-    for (let answerRecordList of questionList) {
-      // 只取回答列表中的第一个元素, 以便生成目录
-      firstAnswerInQuestionToRenderIndexList.push(answerRecordList[0])
-    }
-    let indexContent = BaseView.renderIndex(this.bookname, [
-      ...firstAnswerInQuestionToRenderIndexList,
-      ...articleList,
-      ...pinList,
-    ])
+    let indexContent = BaseView.renderIndex(this.bookname, weiboDayList)
     fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `index.html`), indexContent)
     this.epub.addIndexHtml('目录', path.resolve(this.htmlCacheHtmlPath, `index.html`))
 

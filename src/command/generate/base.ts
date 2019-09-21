@@ -192,6 +192,8 @@ class FetchBase extends Base {
       let processedHtml = strMergeList.join('')
       return processedHtml
     }
+    // @todo(yaozeyuan) 临时hack
+    return content
     content = removeNoScript(content)
     let tinyContentList = content.split(`<div data-key='single-page'`).map(value => {
       return replaceImgSrc(value)

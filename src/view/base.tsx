@@ -1,8 +1,7 @@
 import React from 'react'
 import ReactDomServer from 'react-dom/server'
 import TypeAnswer from '~/src/type/namespace/answer'
-import TypeWeibo, { TypeWeiboRecord_Mblog } from '~/src/type/namespace/weibo'
-import TypeAuthor from '~/src/type/namespace/author'
+import TypeWeibo, { TypeWeiboListByDay } from '~/src/type/namespace/weibo'
 import TypeActivity from '~/src/type/namespace/activity'
 import TypeArticle from '~/src/type/namespace/article'
 import TypeColumn from '~/src/type/namespace/column'
@@ -60,50 +59,13 @@ class Base {
     return title
   }
 
-  static renderIndex(
-    bookname: string,
-    recordList: Array<TypeAnswer.Record | TypeArticle.Record | TypeActivity.Record | TypePin.Record>,
-  ) {
+  static renderIndex(bookname: string, recordList: Array<TypeWeiboListByDay>) {
     let indexList: Array<React.ReactElement<any>> = []
     for (let record of recordList) {
-      let id = 0
-      let title = ''
-      // 判断数据类别
-      if (_.has(record, ['target'])) {
-        // activity类
-        if (_.has(record, ['target', 'question'])) {
-          let answerActivityRecord: TypeActivity.AnswerVoteUpActivityRecord = record
-          id = answerActivityRecord.target.question.id
-          title = answerActivityRecord.target.question.title
-        } else if (_.has(record, ['target', 'column'])) {
-          let articleActivityRecord: TypeActivity.ArticleVoteUpActivityRecord = record
-          id = articleActivityRecord.id
-          title = articleActivityRecord.target.title
-        } else {
-          Logger.warn(`出现了未能识别的活动记录类型, 自动跳过`)
-          Logger.warn(`请在知乎上联系@姚泽源 进行反馈`)
-        }
-      } else {
-        if (_.has(record, ['question'])) {
-          // 问题
-          let answerRecord: TypeAnswer.Record = record
-          id = answerRecord.question.id
-          title = answerRecord.question.title
-        } else if (_.has(record, ['column'])) {
-          let articleRecord: TypeArticle.Record = record
-          id = articleRecord.id
-          title = articleRecord.title
-        } else {
-          // 想法
-          id = record.id
-          title = Base.getPinTitle(record)
-        }
-      }
-
       let indexItem = (
         <li key={CommonUtil.getUuid()}>
-          <a className="list-group-item" href={`./${id}.html`}>
-            {title}
+          <a className="list-group-item" href={`./${record.dayStartAtStr}.html`}>
+            {record.dayStartAtStr}
           </a>
         </li>
       )
