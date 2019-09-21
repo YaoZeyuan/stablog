@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDomServer from 'react-dom/server'
 import TypeAnswer from '~/src/type/namespace/answer'
+import TypeWeibo, { TypeWeiboRecord_Mblog } from '~/src/type/namespace/weibo'
 import TypeAuthor from '~/src/type/namespace/author'
 import TypeActivity from '~/src/type/namespace/activity'
 import TypeArticle from '~/src/type/namespace/article'
@@ -387,6 +388,119 @@ class Base {
         <body>{contentElementList}</body>
       </html>
     )
+  }
+
+  /**
+   * 生成单个回答的Element(只有回答, 不包括问题)
+   * @param mblog
+   */
+  static generateSingleWeiboElement(mblog: TypeWeibo.TypeWeiboRecord_Mblog) {
+    if (_.isEmpty(mblog)) {
+      return <div key={CommonUtil.getUuid()} />
+    }
+    function generateMlogRecord(mblog: TypeWeibo.TypeWeiboRecord_Mblog) {
+      let mblogEle = null
+      if (mblog) {
+        let mblogPictureList = []
+        if (mblog.pics) {
+          let picIndex = 0
+          for (let picture of mblog.pics) {
+            let picEle = (
+              <li key={picIndex} className="m-auto-box">
+                <div className="m-img-box m-imghold-square">
+                  <img src={picture.large.url} />
+                </div>
+              </li>
+            )
+            mblogPictureList.push(picEle)
+          }
+        }
+        mblogEle = (
+          <div className="weibo-rp">
+            <div className="weibo-text">
+              <span>
+                <a href={mblog.user.profile_url}>@{mblog.user.screen_name}</a>:
+              </span>
+              <div>{mblog.text}</div>
+            </div>
+            <div>
+              {/* 如果是图片的话, 需要展示九张图 */}
+              <div className="weibo-media-wraps weibo-media media-b">
+                <ul className="m-auto-list">{mblogPictureList}</ul>
+              </div>
+            </div>
+          </div>
+        )
+      }
+      return mblogEle
+    }
+    let retweetEle = null
+    if (mblog.retweeted_status !== undefined) {
+      retweetEle = generateMlogRecord(mblog.retweeted_status)
+    }
+
+    const mblogElement = (
+      <div key={CommonUtil.getUuid()}>
+        <div className="card m-panel card9 weibo-member card-vip">
+          <div className="card-wrap">
+            <div className="card-main">
+              {/*以下html结构整理自微博m站*/}
+              {/*用户头像*/}
+              <header className="weibo-top m-box m-avatar-box" />
+              <a className="m-img-box">
+                <img src={mblog.user.avatar_hd} />
+                <i className="m-icon m-icon-goldv-static" />
+              </a>
+              <div className="m-box-col m-box-dir m-box-center">
+                <div className="m-text-box">
+                  <a>
+                    <h3 className="m-text-cut">{mblog.user.screen_name}</h3>
+                  </a>
+                  <h4 className="m-text-cut">
+                    <span className="time">
+                      {moment.unix(mblog.created_timestamp_at as number).format(DATE_FORMAT.DISPLAY_BY_DAY)}
+                    </span>
+                  </h4>
+                </div>
+              </div>
+              {/*微博正文*/}
+              {/*转发文字*/}
+              <article className="weibo-main">
+                <div className="weibo-og">
+                  <div className="weibo-text">
+                    {/* 微博评论内容 */}
+                    {mblog.text}
+                  </div>
+                </div>
+                {/* 所转发的微博 */}
+                {retweetEle}
+              </article>
+              <footer className="m-ctrl-box m-box-center-a">
+                <div className="m-diy-btn m-box-col m-box-center m-box-center-a">
+                  <i className="m-font m-font-forward"></i>
+                  {/* 转发数 */}
+                  <h4>{mblog.reposts_count}</h4>
+                </div>
+                <span className="m-line-gradient"></span>
+                <div className="m-diy-btn m-box-col m-box-center m-box-center-a">
+                  <i className="m-font m-font-comment"></i>
+                  {/* 评论数 */}
+                  <h4>{mblog.comments_count}</h4>
+                </div>
+                <span className="m-line-gradient"></span>
+                <div className="m-diy-btn m-box-col m-box-center m-box-center-a">
+                  <i className="m-icon m-icon-like"></i>
+                  {/* 点赞数 */}
+                  <h4>{mblog.attitudes_count}</h4>
+                </div>
+              </footer>
+            </div>
+          </div>
+        </div>
+        <hr />
+      </div>
+    )
+    return mblogElement
   }
 
   static renderToString(contentElement: React.ReactElement<any>) {
