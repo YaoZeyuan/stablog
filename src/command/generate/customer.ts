@@ -133,10 +133,11 @@ class GenerateCustomer extends Base {
     mblogListByDayList = _.cloneDeep(mblogListByDayList)
     // 最后, 按条目数拆分微博记录, 将微博列表分包
     let rawWeiboEpubList: Array<TypeWeiboEpub> = []
-    let bookIndex = 0
+    // book index 应该从1开始
+    let bookIndex = 1
     let bookCounter = 1
     let weiboEpubTemplate: TypeWeiboEpub = {
-      bookIndex: 0,
+      bookIndex: bookIndex,
       startDayAt: 0,
       endDayAt: 0,
       userInfo: userInfo,
