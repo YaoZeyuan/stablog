@@ -14,14 +14,12 @@ export default class Weibo extends Base {
    * @param mblogRecordList
    */
   private static generateSingleItemElement(mblogRecordList: Array<TypeWeibo.TypeMblog>) {
-    let baseAnswerRecord: TypeAnswer.Record = _.get(mblogRecordList, [0])
-    let answerElementList = []
-    for (let answerRecord of mblogRecordList) {
-      let answerElement = this.generateSingleAnswerElement(answerRecord)
-      answerElementList.push(answerElement)
+    let mblogElementList = []
+    for (let mblogRecord of mblogRecordList) {
+      let mblogElement = this.generateSingleWeiboElement(mblogRecord)
+      mblogElementList.push(mblogElement)
     }
-    let questionElement = this.generateQuestionElement(baseAnswerRecord.question, answerElementList)
-    return questionElement
+    return mblogElementList
   }
 
   static render(mblogList: Array<TypeWeibo.TypeMblog>) {
@@ -29,8 +27,8 @@ export default class Weibo extends Base {
     let baseWeiboRecord: TypeWeibo.TypeMblog = _.get(mblogList, [0])
     let created_timestamp_at = baseWeiboRecord.created_timestamp_at as number
     let title = moment.unix(created_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
-    let mblogListElement = this.generateSingleItemElement(mblogList)
-    let pageElement = this.generatePageElement(title, [mblogListElement])
+    let mblogElementList = this.generateSingleItemElement(mblogList)
+    let pageElement = this.generatePageElement(title, mblogElementList)
     return this.renderToString(pageElement)
   }
 

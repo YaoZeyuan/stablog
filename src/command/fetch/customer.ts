@@ -118,14 +118,18 @@ class FetchCustomer extends Base {
         // @ts-ignore
         mblog = realMblog
       }
-      if (rawMblog.mblog.retweeted_status) {
+      if (_.isEmpty(rawMblog.mblog.retweeted_status) == false && rawMblog.mblog.retweeted_status !== undefined) {
         if (rawMblog.mblog.retweeted_status.isLongText === true) {
           // 转发微博属于长微博
           let bid = rawMblog.mblog.retweeted_status.bid
           let realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
           mblog.retweeted_status = realRetweetMblog
         }
-        if (rawMblog.mblog.retweeted_status.page_info && rawMblog.mblog.retweeted_status.page_info.type === 'article') {
+        if (
+          rawMblog.mblog.retweeted_status !== undefined &&
+          rawMblog.mblog.retweeted_status.page_info !== undefined &&
+          rawMblog.mblog.retweeted_status.page_info.type === 'article'
+        ) {
           // 转发的是微博文章
           let pageInfo = rawMblog.mblog.retweeted_status.page_info
           let articleUrl = pageInfo.page_url
@@ -134,7 +138,6 @@ class FetchCustomer extends Base {
             // 文章详情获取失败, 不储存该记录
             continue
           }
-          //
           mblog.retweeted_status.article = articleRecord
         }
       }

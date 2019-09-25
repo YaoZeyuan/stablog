@@ -66,9 +66,17 @@ class GenerateCustomer extends Base {
       bookCounter++
       let booktitle = ''
       if (weiboEpubList.length <= 1) {
-        booktitle = bookname
+        booktitle = `${resourcePackage.userInfo.screen_name}-微博记录(${moment
+          .unix(resourcePackage.startDayAt)
+          .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+          .unix(resourcePackage.endDayAt)
+          .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
       } else {
-        booktitle = `${bookname}-第${bookCounter}卷`
+        booktitle = `${resourcePackage.userInfo.screen_name}-微博记录-第${resourcePackage.bookIndex}/${
+          resourcePackage.totalBookCount
+        }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+          .unix(resourcePackage.endDayAt)
+          .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
       }
       this.log(`输出电子书:${booktitle}`)
       await this.asyncGenerateEpub(booktitle, imageQuilty, resourcePackage)

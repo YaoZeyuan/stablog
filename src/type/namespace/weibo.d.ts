@@ -232,6 +232,17 @@ export type TypeMblog = {
    * 需要主动解析为该值, 作为微博发表时间戳
    */
   created_timestamp_at?: number
+  /**
+   * 当delete值存在时,表示该微博已被删除. 此时created_timestamp_at不存在. 所有字段存在性都不能保证
+   */
+  deleted?: '1'
+  /**
+   * 微博状态, 当微博异常时, 会有该字段
+   * 7 => 抱歉，此微博已被作者删除
+   * 8 => 该微博因被多人投诉，根据《微博社区公约》，已被删除
+   *
+   */
+  state: 7
   id: '4414052358656728'
   idstr: '4414052358656728'
   mid: '4414052358656728'
@@ -485,6 +496,48 @@ export type TypeWeiboArticleRecord = {
   pay_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=pay&luicode=10000370'
 }
 
+/**
+ * 仅用于记录, 作为微博被删除的示例
+ */
+type TypeDeleteWeiboRecordDemo = {
+  visible: {
+    /**
+     * 0 => 已被删除/只在半年内可见
+     * 1 => 你没有查看这条微博的权限
+     */
+    type: 0 | 1
+    list_id: 0
+  }
+  created_at: '08-16'
+  id: '4405996207851235'
+  idstr: '4405996207851235'
+  mid: '4405996207851235'
+  text: "抱歉，此微博已被作者删除。查看帮助：<a href='http://t.cn/Rfd3rQV' data-hide=''><span class='url-icon'><img style='width: 1rem;height: 1rem' src='//h5.sinaimg.cn/upload/2015/09/25/3/timeline_card_small_web_default.png'></span> <span class='surl-text'>网页链接</span></a>"
+  state: 7
+  deleted: '1'
+  weibo_position: 2
+  show_attitude_bar: 0
+  retweeted: 1
+  user: null
+  bid: 'I2vZiwWsP'
+  source: ''
+}
+
+/**
+ * 仅用于记录, 作为被隐藏微博的示例
+ */
+type TypePrivateWeiboRecordDemo = {
+  visible: { type: 0; list_id: 3; list_idstr: '3' }
+  created_at: '2010-06-18'
+  id: '20110061812539159'
+  idstr: '730379578'
+  mid: '20110061812539159'
+  text: '抱歉，作者已设置仅展示半年内微博，此微博已不可见。 '
+  retweeted: 1
+  user: null
+  bid: '1b1AKe'
+  source: ''
+}
 
 export type TypeWeiboListByDay = {
   weiboList: Array<TypeMblog>
