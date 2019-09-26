@@ -1,11 +1,6 @@
 import React from 'react'
 import ReactDomServer from 'react-dom/server'
-import TypeAnswer from '~/src/type/namespace/answer'
 import TypeWeibo, { TypeWeiboListByDay } from '~/src/type/namespace/weibo'
-import TypeActivity from '~/src/type/namespace/activity'
-import TypeArticle from '~/src/type/namespace/article'
-import TypeColumn from '~/src/type/namespace/column'
-import TypePin from '~/src/type/namespace/pin'
 import CommonUtil from '~/src/library/util/common'
 import moment from 'moment'
 import _ from 'lodash'
@@ -98,8 +93,6 @@ class Base {
       let mblogEle = null
       if (mblog) {
         if (mblog.state === 7 || mblog.state === 8 || _.isEmpty(mblog.user) === true) {
-          console.log('mblog.text =>', mblog.text)
-          console.log('mblog.state =>', mblog.state)
           // 微博不可见(已被删除/半年内可见/主动隐藏/etc)
           mblogEle = (
             <div className="weibo-rp">
@@ -107,7 +100,8 @@ class Base {
                 <span>
                   <a>---</a>:
                 </span>
-                <div>{mblog.text}</div>
+                {/* <div>${mblog.text}</div> */}
+                <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }}></div>
               </div>
               <div>
                 {/* 如果是图片的话, 需要展示九张图 */}
@@ -141,7 +135,8 @@ class Base {
               <span>
                 <a href={mblog.user.profile_url}>@{mblog.user.screen_name}</a>:
               </span>
-              <div>{mblog.text}</div>
+              <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }}></div>
+              {/* <div>${mblog.text}</div> */}
             </div>
             <div>
               {/* 如果是图片的话, 需要展示九张图 */}
@@ -187,9 +182,8 @@ class Base {
               {/*转发文字*/}
               <article className="weibo-main">
                 <div className="weibo-og">
-                  <div className="weibo-text">
+                  <div className="weibo-text" dangerouslySetInnerHTML={{ __html: `${mblog.text}` }}>
                     {/* 微博评论内容 */}
-                    {mblog.text}
                   </div>
                 </div>
                 {/* 所转发的微博 */}
