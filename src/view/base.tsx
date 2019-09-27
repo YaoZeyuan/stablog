@@ -119,8 +119,32 @@ class Base {
         return mblogEle
       }
       let articleRecord = mblog.article
+      let articleElement = null
       if (articleRecord) {
-        articleRecord.callUinversalLink
+        // 渲染文章元素
+        let isExistCoverImg = articleRecord && articleRecord.config && articleRecord.config.cover_img
+        let coverImgEle = isExistCoverImg ? (
+          <div className="main_toppic">
+            <div className="picbox">
+              <img node-type="articleHeaderPic" src={articleRecord.config.cover_img} />
+            </div>
+          </div>
+        ) : null
+        articleElement = (
+          <div className="WB_artical">
+            {coverImgEle}
+            <div className="main_editor " node-type="articleContent">
+              <div className="title" node-type="articleTitle">
+                {articleRecord.title}
+              </div>
+              <div className="WB_editor_iframe_new" node-type="contentBody">
+                {/* 正文 */}
+                <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }}></div>
+                <div className="DCI_v2 clearfix"></div>
+              </div>
+            </div>
+          </div>
+        )
       }
       // 正常微博
       let mblogPictureList = []
@@ -147,11 +171,15 @@ class Base {
             <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }}></div>
             {/* <div>${mblog.text}</div> */}
           </div>
-          <div>
+          <div className="weibo-img-list-container">
             {/* 如果是图片的话, 需要展示九张图 */}
             <div className="weibo-media-wraps weibo-media media-b">
               <ul className="m-auto-list">{mblogPictureList}</ul>
             </div>
+          </div>
+          <div className="weibo-article-container">
+            {/* 文章内容 */}
+            {articleElement}
           </div>
         </div>
       )
