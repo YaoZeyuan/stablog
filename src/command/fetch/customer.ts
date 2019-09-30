@@ -166,6 +166,7 @@ class FetchCustomer extends Base {
         id,
         author_uid,
         raw_json,
+        post_publish_at: mblog.created_timestamp_at,
       })
     }
     this.log(`${target}成功存入数据库`)
