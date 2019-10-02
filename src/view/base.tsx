@@ -190,7 +190,52 @@ class Base {
       retweetEle = generateMlogRecord(mblog.retweeted_status!)
     }
 
-    const mblogElement = (
+    let articleRecord = mblog.article
+    let articleElement = null
+    if (articleRecord) {
+      // 渲染文章元素
+      let isExistCoverImg = articleRecord && articleRecord.config && articleRecord.config.cover_img
+      let coverImgEle = isExistCoverImg ? (
+        <div className="main_toppic">
+          <div className="picbox">
+            <img node-type="articleHeaderPic" src={articleRecord.config.cover_img} />
+          </div>
+        </div>
+      ) : null
+      articleElement = (
+        <div className="WB_artical">
+          {coverImgEle}
+          <div className="main_editor " node-type="articleContent">
+            <div className="title" node-type="articleTitle">
+              {articleRecord.title}
+            </div>
+            <div className="WB_editor_iframe_new" node-type="contentBody">
+              {/* 正文 */}
+              <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }}></div>
+              <div className="DCI_v2 clearfix"></div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+    // 正常微博
+    let mblogPictureList = []
+    if (mblog.pics) {
+      // 是否有图片
+      let picIndex = 0
+      for (let picture of mblog.pics) {
+        let picEle = (
+          <li key={picIndex} className="m-auto-box">
+            <div className="m-img-box m-imghold-square">
+              <img src={picture.large.url} />
+            </div>
+          </li>
+        )
+        mblogPictureList.push(picEle)
+      }
+    }
+
+    let mblogElement = (
       <div key={CommonUtil.getUuid()} className="mblog-container">
         <div className="card m-panel card9 weibo-member card-vip">
           <div className="card-wrap">
@@ -223,6 +268,14 @@ class Base {
                     {/* 微博评论内容 */}
                   </div>
                 </div>
+                {/* 所发布九图内容 */}
+                <div className="weibo-img-list-container">
+                  <div className="weibo-media-wraps weibo-media media-b">
+                    <ul className="m-auto-list">{mblogPictureList}</ul>
+                  </div>
+                </div>
+                {/* 所发布文章内容 */}
+                <div className="weibo-article-container">{articleElement}</div>
                 {/* 所转发的微博 */}
                 {retweetEle}
               </article>
