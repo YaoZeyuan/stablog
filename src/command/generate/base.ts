@@ -114,53 +114,20 @@ class FetchBase extends Base {
       }
       // 单条rawHtml直接replace替换性能开销太大, 所以应该先拆分, 然后再整体合成一个字符串
       let rawHtmlWithoutImgContentList = rawHtml.split(/<img.+?>/g)
-      let index = 0
       for (let imgContent of imgContentList) {
-        index++
-        // this.log(`处理第${index}/${imgContentList.length}个img标签`)
+        let imgSrc = _.get(imgContent.match(`(?<=src=["']).+(?=["'])`), 0, '')
         let processedImgContent = imgContent
-        let matchImgRawHeight = imgContent.match(/(?<=data-rawheight=")\d+/)
-        let imgRawHeight = parseInt(_.get(matchImgRawHeight, [0], '0'))
-        let matchImgRawWidth = imgContent.match(/(?<=data-rawwidth=")\d+/)
-        let imgRawWidth = parseInt(_.get(matchImgRawWidth, [0], '0'))
-        let hasRawImg = imgContent.indexOf(`data-original="`) !== -1
-        if (that.imageQuilty === 'raw') {
-          // 原始图片
-          if (imgContent.includes('data-original')) {
-            // 没有指定属性就不需要再处理了
-            // 先替换掉原先的src地址
-            processedImgContent = _.replace(imgContent, / src="https:.+?"/g, '')
-            // 再改成原图地址
-            processedImgContent = _.replace(processedImgContent, /data-original="https:/g, 'src="https:')
-          }
-        } else if (that.imageQuilty === 'none') {
+        if (that.imageQuilty === 'none' || imgSrc === '') {
           // 无图
           processedImgContent = ''
         } else {
-          // if (that.imageQuilty === 'hd' || that.imageQuilty === 'default') {
-          // 高度大于宽度4倍的图, 一般属于条图, 默认作为原图进行展示
-          let needDisplayRawImg = imgRawWidth !== 0 && imgRawHeight > imgRawWidth * 4
-          // 是否需要展示为原图(判断逻辑: 有原图属性 && (需要展示为原图 或 通过配置强制指定为原图)
-          let isDisplayAsRawImg = hasRawImg && (needDisplayRawImg || isRaw)
-          if (isDisplayAsRawImg) {
-            // 原始图片
-            if (imgContent.includes('data-original')) {
-              // 先替换掉原先的src地址
-              processedImgContent = _.replace(imgContent, / src="https:.+?"/g, '')
-              // 再改成原图地址
-              processedImgContent = _.replace(processedImgContent, /data-original="https:/g, 'src="https:')
-            }
-          } else {
-            // 高清图
-            if (imgContent.includes('data-actualsrc')) {
-              // 先替换掉原先的src地址
-              processedImgContent = _.replace(imgContent, / src="https:.+?"/g, '')
-              // 再改成标清图地址
-              processedImgContent = _.replace(processedImgContent, /data-actualsrc="https:/g, 'src="https:')
-            }
+          if (imgSrc.startsWith('//')) {
+            imgSrc = 'https:' + imgSrc
           }
+          processedImgContent = `<img src="${imgSrc}"/>`
+          // 统一处理图片
+          //<img style='width: 1rem;height: 1rem' src='//h5.sinaimg.cn/upload/2015/09/25/3/timeline_card_small_web_default.png'>
         }
-
         // 支持多看内读图
         processedImgContent = `<div class="duokan-image-single">${processedImgContent}</div>`
 
@@ -192,8 +159,6 @@ class FetchBase extends Base {
       let processedHtml = strMergeList.join('')
       return processedHtml
     }
-    // @todo(yaozeyuan) 临时hack
-    return content
     content = removeNoScript(content)
     let tinyContentList = content.split(`<div data-key='single-page'`).map(value => {
       return replaceImgSrc(value)
