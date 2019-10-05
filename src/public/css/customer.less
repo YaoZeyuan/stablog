@@ -2,7 +2,8 @@
 body {
   background: #f2f2f2;
   text-indent: 0em !important;
-  duokan-text-indent: 0em !important;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue,
+    PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
   word-wrap: break-word; /* 自动折行 */
 }
 .container {
@@ -22,21 +23,20 @@ body {
     background-color: #ffffff;
     border-bottom-color: #e6e6e6;
     .m-avatar-box {
-      @default-height: 2rem;
       // 头像容器
       display: flex;
       flex-direction: row;
-      width: @default-height;
+      width: 40px;
       padding-top: 0.9375rem;
       margin-left: 0.75rem;
       margin-right: 0.75rem;
       .m-img-box {
         // 头像
-        width: @default-height;
-        height: @default-height;
+        width: 40px;
+        height: 50px;
         img {
-          width: @default-height;
-          height: @default-height;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
         }
       }
@@ -44,20 +44,26 @@ body {
         // 用户名
         display: flex;
         width: 10rem;
-        height: @default-height;
+        height: 40px;
         flex-direction: column;
+        justify-content: space-between;
         margin-left: 0.5rem;
         a {
           h3.m-text-cut {
-            height: @default-height / 2;
-            font-size: 14px;
+            @head-line-text: 20px;
+            height: @head-line-text;
+            line-height: 100%;
+            font-size: @head-line-text;
+
             margin: 0;
             font-weight: normal;
           }
         }
         h4.m-text-cut {
-          height: @default-height / 2;
-          font-size: 14px;
+          @head-post-at-text: 15px;
+          color: #939393;
+          height: @head-post-at-text;
+          font-size: @head-post-at-text;
           margin: 0;
           font-weight: normal;
         }
@@ -68,16 +74,29 @@ body {
       margin-left: 0.75rem;
       margin-right: 0.75rem;
       height: 100%;
-      .weibo-og {
-        padding: 0.75rem 0 0 0.25rem;
-        font-size: 1rem;
-        .weibo-text {
-          line-height: 1.5;
-          word-wrap: break-word;
-          a {
-            color: #3c6e9e;
+      font-size: 20px;
+      color: #333;
+      .weibo-text {
+        line-height: 1.5;
+        word-wrap: break-word;
+        a {
+          color: #3c6e9e;
+        }
+        .url-icon {
+          display: inline-block;
+          vertical-align: middle;
+          margin-right: 0.125rem;
+          width: 1rem;
+          height: 1.2rem;
+          line-height: 1.2rem;
+          img {
+            width: 1rem;
+            height: 1rem;
           }
         }
+      }
+      .weibo-og {
+        padding: 0.75rem 0 0 0.25rem;
       }
       ul.m-auto-list {
         list-style-type: none;
@@ -90,13 +109,51 @@ body {
       img {
         max-width: 720px;
       }
+      .weibo-img-list-container {
+        page-break-after: always;
+        img {
+          margin-bottom: 3px;
+          page-break-after: always;
+        }
+      }
       .weibo-rp {
         a {
           color: #3c6e9e;
+          text-decoration: none;
         }
         background-color: #f7f7f7;
         margin-top: 0.5rem;
         padding: 0.75rem;
+        line-height: 1.5;
+        .weibo-text {
+          margin-bottom: 14px;
+        }
+      }
+      .weibo-article-container {
+        // 微博文章
+        .main_toppic {
+          img {
+            width: 100%;
+          }
+        }
+        .main_editor {
+          .title {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.5rem;
+            color: #333;
+            line-height: 1.875rem;
+          }
+          .art-con,
+          .article-content {
+            p {
+              margin: 0 0 16px;
+              padding: 0;
+              font-size: 16px;
+              line-height: 1.65;
+            }
+          }
+        }
       }
     }
     .m-ctrl-box {
@@ -104,7 +161,7 @@ body {
       height: 1.1rem;
       padding: 1rem 0.375rem 1rem 0;
       margin: 0 0.75rem;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
       .m-box-center-a {
         display: flex;
@@ -124,43 +181,6 @@ body {
   }
 }
 
-/* color */
-.bg-zhihu-blue-light {
-  background-color: #428ece;
-}
-
-.bg-zhihu-blue-deep {
-  background-color: #3982c6;
-}
-
-.bg-duokan-yellow {
-  /*多看阅读默认背景色*/
-  background-color: #f2f2f2;
-}
-
-/* 清除浮动 */
-div.clear-float {
-  clear: both;
-}
-
-/* 隐藏空图片 */
-img[src=""],
-img[src$="./images/"] {
-  display: none;
-}
-
-.text-center {
-  text-align: center;
-}
-
-.v-center {
-  vertical-align: middle;
-}
-
-.margin-center {
-  margin: 0 auto;
-}
-
 /* 目录页面 */
 /* 隐藏多余的『目录』两字 */
 div.index-content > li {
@@ -173,148 +193,5 @@ div.index-content a {
 
 div.index-content ul > li > a {
   font-size: 1em;
-  font-family: "DK-HEITI", "Microsoft Yahei", STHeiti, Hei, "Heiti SC";
   color: #3d3e45;
-}
-
-/* 首页描述信息 */
-div.front-page.description {
-  margin: 2em 0;
-}
-
-div.comment {
-  margin: 1em 0;
-}
-div.comment .info-flex-line {
-  display: block;
-}
-/** 多看上暂不支持flex容器, 因此只能使用float **/
-div.comment .info-flex-line .float-left {
-  /* display: inline-block; */
-  /* width: 50%; */
-  float: left;
-}
-div.comment .info-flex-line .float-right {
-  float: right;
-}
-
-/* 用户信息 */
-div.author-base {
-  margin: 1em 0;
-  font-size: 16px;
-  vertical-align: middle;
-}
-
-span.author-sign {
-  font-family: "DK-KAITI", "楷体";
-}
-
-span.author-name a {
-  font-family: "DK-HEITI", "Microsoft Yahei", STHeiti, Hei, "Heiti SC";
-  color: #3d3e45;
-  font-weight: bold;
-}
-
-div.author-logo {
-  float: right;
-}
-
-div.author-logo img {
-  vertical-align: middle;
-  margin-left: 0.2em;
-  margin-bottom: 0.2em;
-}
-
-/* 问题详情 */
-
-/* 实现知乎周刊的全屏效果*/
-@media handheld {
-  div.question {
-    margin: -10em -4em 0 -4em; /*上、右、下、左，顺时针*/
-    padding: 10em 2em 0 4em;
-  }
-}
-
-div.question-title {
-  width: 100%;
-  overflow: hidden;
-}
-
-div.question-title h1 {
-  font-family: "DK-HEITI", "Microsoft Yahei", STHeiti, Hei, "Heiti SC";
-  color: #ffffff;
-  vertical-align: middle;
-  text-align: left;
-  padding: 1em;
-  width: 70%;
-  margin: 3em 0 3em 0;
-  float: right;
-  font-size: 1.5em;
-}
-
-@media handheld {
-  div.question-title h1 {
-    margin: 0 0 3em 0;
-    padding-right: 3em;
-  }
-}
-
-div.question-info {
-  font-family: "DK-SONGTI", "Microsoft Yahei", STHeiti, Hei, "Heiti SC";
-  color: #fff !important;
-  font-size: 1em;
-  margin: 0 1em;
-  padding-bottom: 1em;
-}
-
-@media handheld {
-  div.question-info {
-    margin: 0 -4em 0 -4em;
-    padding: 0 5em 2em 5em;
-  }
-}
-
-div.question-info a {
-  color: #ccc;
-}
-
-/* 答案内容 */
-div.content {
-  font-family: "DK-SONGTI", "Microsoft Yahei", STHeiti, Hei, "Heiti SC";
-  color: #000;
-  font-size: 16px;
-}
-
-div.content img {
-  max-width: 100%;
-  margin-bottom: 2em;
-}
-
-/* article */
-div.title-image {
-  text-align: center;
-}
-
-div.title-image img {
-  width: 100%;
-}
-
-/* 想法 */
-div.answer div.content div.pin div.origin-pin {
-  margin-top: 1em;
-  background-color: #faebcc;
-}
-
-/* 禁止信息页中的详情表格分页 */
-div.front-page.detail-info table.margin-center {
-  page-break-inside: avoid;
-}
-
-/* 禁止目录panel分页 */
-div.index-content.panel {
-  page-break-inside: avoid;
-}
-
-a.list-group-item {
-  border: none;
 }
