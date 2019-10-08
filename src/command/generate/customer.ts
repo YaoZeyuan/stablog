@@ -16,6 +16,29 @@ import path from 'path'
 import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
 
+// 将本地html渲染为img
+const electron = require('electron')
+// const { app, BrowserWindow } = require('electron')
+
+// function createWindow() {
+//   // 创建浏览器窗口
+//   let win = new BrowserWindow({
+//     width: 800,
+//     height: 600,
+//     webPreferences: {
+//       nodeIntegration: true,
+//     },
+//   })
+
+//   // 加载index.html文件
+//   win.loadFile('index.html')
+// }
+// console.log('app =>', app)
+// app.on('ready', createWindow)
+
+// 将img输出为pdf
+import PDFKit from 'pdfkit'
+
 class GenerateCustomer extends Base {
   static get signature() {
     return `
@@ -35,49 +58,52 @@ class GenerateCustomer extends Base {
 
     let bookname = customerTaskConfig.bookTitle
     let comment = customerTaskConfig.comment
+    let mergeBy = customerTaskConfig.mergeBy
+    let mergeCount = customerTaskConfig.mergeCount
+    let postAtOrderBy = customerTaskConfig.postAtOrderBy
     let imageQuilty = customerTaskConfig.imageQuilty
     let maxBlogInBook = customerTaskConfig.maxBlogInBook
     let configList = customerTaskConfig.configList
-    let config = configList[0]
-
-    let author_uid = config.uid
-    let userInfo = await MMblogUser.asyncGetUserInfo(author_uid)
-    if (_.isEmpty(userInfo)) {
-      this.log(`未抓取到对应的用户数据, 自动跳过`)
-      return
-    }
-    let screenName = userInfo.screen_name
-    this.log(`开始输出用户${screenName}的微博备份数据`)
-    // 将任务中的数据按照问题/文章/想法进行汇总
-
-    this.log(`获取数据记录`)
-
-    let mblogList = await MMblog.asyncGetMblogList(author_uid)
-
-    this.log(`数据获取完毕, 共收录${mblogList.length}条微博`)
-
-    let weiboEpubList = this.packageMblogList(mblogList, maxBlogInBook, userInfo)
-
-    let bookCounter = 0
-    for (let resourcePackage of weiboEpubList) {
-      bookCounter++
-      let booktitle = ''
-      if (weiboEpubList.length <= 1) {
-        booktitle = `${resourcePackage.userInfo.screen_name}-微博记录(${moment
-          .unix(resourcePackage.startDayAt)
-          .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-          .unix(resourcePackage.endDayAt)
-          .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
-      } else {
-        booktitle = `${resourcePackage.userInfo.screen_name}-微博记录-第${resourcePackage.bookIndex}/${
-          resourcePackage.totalBookCount
-        }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-          .unix(resourcePackage.endDayAt)
-          .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+    for (let config of configList) {
+      let author_uid = config.uid
+      let userInfo = await MMblogUser.asyncGetUserInfo(author_uid)
+      if (_.isEmpty(userInfo)) {
+        this.log(`未抓取到对应的用户数据, 自动跳过`)
+        return
       }
-      this.log(`输出电子书:${booktitle}`)
-      await this.asyncGenerateEpub(booktitle, imageQuilty, resourcePackage)
-      this.log(`电子书:${booktitle}输出完毕`)
+      let screenName = userInfo.screen_name
+      this.log(`开始输出用户${screenName}的微博备份数据`)
+      // 将任务中的数据按照问题/文章/想法进行汇总
+
+      this.log(`获取数据记录`)
+
+      let mblogList = await MMblog.asyncGetMblogList(author_uid)
+
+      this.log(`数据获取完毕, 共收录${mblogList.length}条微博`)
+
+      let weiboEpubList = this.packageMblogList(mblogList, maxBlogInBook, userInfo)
+
+      let bookCounter = 0
+      for (let resourcePackage of weiboEpubList) {
+        bookCounter++
+        let booktitle = ''
+        if (weiboEpubList.length <= 1) {
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博记录(${moment
+            .unix(resourcePackage.startDayAt)
+            .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+            .unix(resourcePackage.endDayAt)
+            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+        } else {
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博记录-第${resourcePackage.bookIndex}/${
+            resourcePackage.totalBookCount
+          }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+            .unix(resourcePackage.endDayAt)
+            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+        }
+        this.log(`输出电子书:${booktitle}`)
+        await this.asyncGenerateEpub(booktitle, imageQuilty, resourcePackage)
+        this.log(`电子书:${booktitle}输出完毕`)
+      }
     }
   }
 
@@ -199,6 +225,14 @@ class GenerateCustomer extends Base {
     // 初始化文件夹
     this.initStaticRecource()
 
+    // hello
+    // let { BrowserWindow: mainWindow } = electron
+    // console.log('mainWindow =>', mainWindow)
+    // 初始化渲染器, 使用iphone的格式
+    // let win = new mainWindow({ show: false, width: 375 * 3, height: 667 * 3 })
+    let pdfDocument = new PDFKit()
+    pdfDocument.pipe(fs.createWriteStream(path.resolve(this.htmlCacheHtmlPath, `${'测试pdf'}.pdf`)))
+
     // 单独记录生成的元素, 以便输出成单页
     let totalElementListToGenerateSinglePage = []
     this.log(`生成微博记录html列表`)
@@ -206,9 +240,22 @@ class GenerateCustomer extends Base {
       let title = weiboDayRecord.dayStartAtStr
       let content = WeiboView.render(weiboDayRecord.weiboList)
       content = this.processContent(content)
-      fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `${title}.html`), content)
-      this.epub.addHtml(weiboDayRecord.dayStartAtStr, path.resolve(this.htmlCacheHtmlPath, `${title}.html`))
-
+      let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${title}.html`)
+      fs.writeFileSync(htmlUri, content)
+      this.epub.addHtml(weiboDayRecord.dayStartAtStr, htmlUri)
+      // 渲染页面
+      // await win.webContents.loadFile(htmlUri)
+      // await new Promise((resolve, reject) => {
+      //   win.webContents.capturePage(nativeImg => {
+      //     let pngBuffer = nativeImg.toPNG()
+      //     pdfDocument.addPage({
+      //       margin: 50,
+      //     })
+      //     // 将图片数据添加到pdf文件中
+      //     pdfDocument.image(pngBuffer)
+      //     resolve()
+      //   })
+      // })
       // 单独记录生成的元素, 以便输出成单页文件
       // let contentElementList = []
       // for (let weiboDayRecord of weiboDayList) {
@@ -218,6 +265,7 @@ class GenerateCustomer extends Base {
       // let elememt = BaseView.generateQuestionElement(weiboDayRecord, contentElementList)
       // totalElementListToGenerateSinglePage.push(elememt)
     }
+    pdfDocument.end()
 
     // this.log(`生成单一html文件`)
     // // 生成全部文件

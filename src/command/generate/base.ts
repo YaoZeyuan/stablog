@@ -24,15 +24,15 @@ class FetchBase extends Base {
   bookname = ''
 
   get epubCachePath() {
-    return path.resolve(PathConfig.epubCachePath, this.bookname)
+    return path.resolve(PathConfig.epubCachePath)
   }
 
   get epubOutputPath() {
-    return path.resolve(PathConfig.epubOutputPath, this.bookname)
+    return path.resolve(PathConfig.epubOutputPath)
   }
 
   get htmlCachePath() {
-    return path.resolve(PathConfig.htmlCachePath, this.bookname)
+    return path.resolve(PathConfig.htmlCachePath)
   }
   get htmlCacheHtmlPath() {
     return path.resolve(this.htmlCachePath, 'html')
@@ -48,7 +48,7 @@ class FetchBase extends Base {
   }
 
   get htmlOutputPath() {
-    return path.resolve(PathConfig.htmlOutputPath, this.bookname)
+    return path.resolve(PathConfig.htmlOutputPath)
   }
 
   static get signature() {

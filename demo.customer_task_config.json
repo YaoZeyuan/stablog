@@ -1,6 +1,11 @@
 {
   "configList": [
     {
+      "uid": "1221171697",
+      "rawInputText": "https://www.weibo.com/u/1221171697",
+      "comment": "兔主席"
+    },
+    {
       "uid": "6457400184",
       "rawInputText": "https://www.weibo.com/u/6457400184",
       "comment": "东港姐姐"
@@ -9,5 +14,8 @@
   "maxBlogInBook": 1000,
   "imageQuilty": "none",
   "bookTitle": "测试电子书",
-  "comment": "测试"
+  "comment": "测试",
+  "mergeBy": "count",
+  "mergeCount": 100,
+  "postAtOrderBy": "desc"
 }
