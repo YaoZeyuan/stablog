@@ -7,6 +7,18 @@
     {
       "type": "node",
       "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+      "name": "测试electron",
+      "program": "${workspaceFolder}/src/command/generate/customer.ts",
+      "args": [
+        // 抓取数据
+        "Generate:Customer"
+      ],
+      "outFiles": ["${workspaceFolder}/**/*.js"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "抓取数据",
       "program": "${workspaceFolder}/src/ace.ts",
       "args": [
