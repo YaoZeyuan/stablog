@@ -23,7 +23,6 @@ export default class Mblog extends Base {
       .select(this.TABLE_COLUMN)
       .from(this.TABLE_NAME)
       .where('author_uid', '=', uid)
-      .limit(100)
       .catch(() => {
         return []
       })

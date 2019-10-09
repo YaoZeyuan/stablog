@@ -1,11 +1,11 @@
 import Base from '~/src/command/generate/base'
-import TypeWeibo, { TypeWeiboUserInfo, TypeMblog, TypeWeiboEpub, TypeWeiboListByDay } from '~/src/type/namespace/weibo'
+import { TypeWeiboUserInfo, TypeMblog, TypeWeiboEpub, TypeWeiboListByDay } from '~/src/type/namespace/weibo'
 import TypeTaskConfig from '~/src/type/namespace/task_config'
 import PathConfig from '~/src/config/path'
 import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
 import DATE_FORMAT from '~/src/constant/date_format'
-
+import imageSize from 'image-size'
 import _ from 'lodash'
 import json5 from 'json5'
 
@@ -17,24 +17,7 @@ import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
 
 // 将本地html渲染为img
-const electron = require('electron')
-// const { app, BrowserWindow } = require('electron')
-
-// function createWindow() {
-//   // 创建浏览器窗口
-//   let win = new BrowserWindow({
-//     width: 800,
-//     height: 600,
-//     webPreferences: {
-//       nodeIntegration: true,
-//     },
-//   })
-
-//   // 加载index.html文件
-//   win.loadFile('index.html')
-// }
-// console.log('app =>', app)
-// app.on('ready', createWindow)
+import puppeteer from 'puppeteer'
 
 // 将img输出为pdf
 import PDFKit from 'pdfkit'
@@ -225,17 +208,10 @@ class GenerateCustomer extends Base {
     // 初始化文件夹
     this.initStaticRecource()
 
-    // hello
-    // let { BrowserWindow: mainWindow } = electron
-    // console.log('mainWindow =>', mainWindow)
-    // 初始化渲染器, 使用iphone的格式
-    // let win = new mainWindow({ show: false, width: 375 * 3, height: 667 * 3 })
-    let pdfDocument = new PDFKit()
-    pdfDocument.pipe(fs.createWriteStream(path.resolve(this.htmlCacheHtmlPath, `${'测试pdf'}.pdf`)))
-
     // 单独记录生成的元素, 以便输出成单页
     let totalElementListToGenerateSinglePage = []
     this.log(`生成微博记录html列表`)
+    let htmlUriList = []
     for (let weiboDayRecord of weiboDayList) {
       let title = weiboDayRecord.dayStartAtStr
       let content = WeiboView.render(weiboDayRecord.weiboList)
@@ -244,19 +220,8 @@ class GenerateCustomer extends Base {
       fs.writeFileSync(htmlUri, content)
       this.epub.addHtml(weiboDayRecord.dayStartAtStr, htmlUri)
       // 渲染页面
-      // await win.webContents.loadFile(htmlUri)
-      // await new Promise((resolve, reject) => {
-      //   win.webContents.capturePage(nativeImg => {
-      //     let pngBuffer = nativeImg.toPNG()
-      //     pdfDocument.addPage({
-      //       margin: 50,
-      //     })
-      //     // 将图片数据添加到pdf文件中
-      //     pdfDocument.image(pngBuffer)
-      //     resolve()
-      //   })
-      // })
-      // 单独记录生成的元素, 以便输出成单页文件
+      htmlUriList.push(htmlUri)
+      // // 单独记录生成的元素, 以便输出成单页文件
       // let contentElementList = []
       // for (let weiboDayRecord of weiboDayList) {
       //   let contentElement = BaseView.generateSingleAnswerElement(weiboDayRecord)
@@ -265,7 +230,6 @@ class GenerateCustomer extends Base {
       // let elememt = BaseView.generateQuestionElement(weiboDayRecord, contentElementList)
       // totalElementListToGenerateSinglePage.push(elememt)
     }
-    pdfDocument.end()
 
     // this.log(`生成单一html文件`)
     // // 生成全部文件
@@ -283,8 +247,50 @@ class GenerateCustomer extends Base {
 
     // 处理静态资源
     await this.asyncProcessStaticResource()
-
+    await this.generatePdf(htmlUriList)
     this.log(`自定义电子书${this.bookname}生成完毕`)
+  }
+
+  async generatePdf(htmlUrlList: string[]) {
+    // hello
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+
+    let pdfDocument = new PDFKit()
+    pdfDocument.pipe(fs.createWriteStream(path.resolve(this.htmlCacheHtmlPath, `${'测试pdf_1'}.pdf`)))
+    let index = 0
+    for (let htmlUri of htmlUrlList) {
+      index++
+      this.log(`htmlUri =>`, htmlUri)
+      this.log(`正在处理第${index}/${htmlUrlList.length}张页面`)
+      await page.goto(htmlUri)
+      let imageBuffer = await page.screenshot({ type: 'png', fullPage: true })
+
+      if (imageBuffer.length < 1000) {
+        // DIDN’T CAPTURE
+        // NOTE - in my application we are manually scrolling the view and timing of the record
+        // is an issue - sometimes the captured image is empty, we delay a few hundred ms
+        // and capture again
+        // 图片渲染失败
+        this.log(`第${index}/${htmlUrlList.length}张页面渲染失败, 自动跳过`)
+        continue
+      } else {
+        this.log(`第${index}/${htmlUrlList.length}张页面渲染成功`)
+        let size = await imageSize.imageSize(imageBuffer)
+        this.log(`图片size=>`, { width: size.width, height: size.height })
+        pdfDocument.addPage({
+          margin: 10,
+          layout: 'landscape',
+          size: [size.height + 20, size.width + 20], // a smaller document for small badge printers
+        })
+        // 将图片数据添加到pdf文件中
+        pdfDocument.image(imageBuffer)
+      }
+    }
+    await page.close()
+    await browser.close()
+    pdfDocument.end()
+    this.log(`pdf输出完毕`)
   }
 }
 

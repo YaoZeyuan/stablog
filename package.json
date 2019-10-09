@@ -1,10 +1,10 @@
 {
-  "name": "zhihuhelp",
-  "version": "2.3.0",
-  "description": "知乎助手 & TypeScript",
+  "name": "micro_backup",
+  "version": "1.0.0",
+  "description": "微博备份助手 & TypeScript",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YaoZeyuan/zhihuhelp_with_node"
+    "url": "https://github.com/YaoZeyuan/micro_backup"
   },
   "main": "dist/index.js",
   "author": "姚泽源",
@@ -43,8 +43,7 @@
         {
           "target": "nsis",
           "arch": [
-            "x64",
-            "ia32"
+            "x64"
           ]
         }
       ],
@@ -69,6 +68,7 @@
     "cross-env": "^5.2.0",
     "dotenv": "^4.0.0",
     "element-ui": "^2.5.4",
+    "image-size": "^0.8.3",
     "joi": "^14.3.1",
     "json5": "^2.1.0",
     "knex": "^0.15.2",
@@ -76,6 +76,7 @@
     "md5": "^2.2.1",
     "moment": "^2.24.0",
     "pdfkit": "^0.10.0",
+    "puppeteer": "^1.20.0",
     "query-string": "^6.4.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
@@ -101,6 +102,7 @@
     "@types/archiver": "^2.1.2",
     "@types/async": "^2.0.45",
     "@types/dotenv": "^4.0.2",
+    "@types/image-size": "^0.7.0",
     "@types/jest": "^22.1.3",
     "@types/jquery": "^3.2.17",
     "@types/json5": "0.0.30",
@@ -109,6 +111,7 @@
     "@types/md5": "^2.1.33",
     "@types/node": "^9.4.6",
     "@types/pdfkit": "^0.10.3",
+    "@types/puppeteer": "^1.20.1",
     "@types/react": "^16.8.1",
     "@types/react-dom": "^16.0.11",
     "@types/request": "^2.48.1",
