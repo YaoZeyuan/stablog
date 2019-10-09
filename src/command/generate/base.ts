@@ -12,24 +12,14 @@ import DATE_FORMAT from '~/src/constant/date_format'
 import CommonUtil from '~/src/library/util/common'
 import logger from '~/src/library/logger'
 import StringUtil from '~/src/library/util/string'
-import Epub from '~/src/library/epub'
 import TypeTaskConfig from '~/src/type/namespace/task_config'
 
 class FetchBase extends Base {
-  epub: Epub | null = null
   imageQuilty: TypeTaskConfig.imageQuilty = 'hd'
 
   imgUriPool: Set<string> = new Set()
 
   bookname = ''
-
-  get epubCachePath() {
-    return path.resolve(PathConfig.epubCachePath)
-  }
-
-  get epubOutputPath() {
-    return path.resolve(PathConfig.epubOutputPath)
-  }
 
   get htmlCachePath() {
     return path.resolve(PathConfig.htmlCachePath)
@@ -64,12 +54,6 @@ class FetchBase extends Base {
   // 初始化静态资源(电子书 & html目录)
   initStaticRecource() {
     this.log(`删除旧目录`)
-    this.log(`删除旧epub缓存资源目录:${this.epubCachePath}`)
-    shelljs.rm('-rf', this.epubCachePath)
-    this.log(`旧epub缓存目录删除完毕`)
-    this.log(`删除旧epub输出资源目录:${this.epubOutputPath}`)
-    shelljs.rm('-rf', this.epubOutputPath)
-    this.log(`旧epub输出目录删除完毕`)
     this.log(`删除旧html资源目录:${this.htmlCachePath}`)
     shelljs.rm('-rf', this.htmlCachePath)
     this.log(`旧html资源目录删除完毕`)
@@ -78,8 +62,6 @@ class FetchBase extends Base {
     this.log(`旧html输出目录删除完毕`)
 
     this.log(`创建电子书:${this.bookname}对应文件夹`)
-    shelljs.mkdir('-p', this.epubCachePath)
-    shelljs.mkdir('-p', this.epubOutputPath)
 
     shelljs.mkdir('-p', this.htmlCachePath)
     shelljs.mkdir('-p', this.htmlCacheSingleHtmlPath)
@@ -88,8 +70,6 @@ class FetchBase extends Base {
     shelljs.mkdir('-p', this.htmlCacheImgPath)
     shelljs.mkdir('-p', this.htmlOutputPath)
     this.log(`电子书:${this.bookname}对应文件夹创建完毕`)
-
-    this.epub = new Epub(this.bookname, this.epubCachePath)
   }
   processContent(content: string) {
     let that = this
@@ -230,7 +210,6 @@ class FetchBase extends Base {
         this.log(`第${index}/${this.imgUriPool.size}张图片不存在, 自动跳过`)
         this.log(`src => ${src}`)
       }
-      this.epub.addImage(imgToUri)
     }
     this.log(`全部图片复制完毕`)
   }
@@ -241,21 +220,18 @@ class FetchBase extends Base {
       let copyFromUri = path.resolve(PathConfig.resourcePath, 'css', filename)
       let copyToUri = path.resolve(this.htmlCacheCssPath, filename)
       fs.copyFileSync(copyFromUri, copyToUri)
-      this.epub.addCss(copyToUri)
     }
     // 图片资源
     for (let filename of ['cover.jpg', 'kanshan.png']) {
       let copyFromUri = path.resolve(PathConfig.resourcePath, 'image', filename)
       let copyToUri = path.resolve(this.htmlCacheImgPath, filename)
       fs.copyFileSync(copyFromUri, copyToUri)
-      this.epub.addImage(copyToUri)
     }
 
     // 设置封面
     let coverCopyFromUri = path.resolve(PathConfig.resourcePath, 'image', 'cover.jpg')
     let coverCopyToUri = path.resolve(this.htmlCacheImgPath, 'cover.jpg')
     fs.copyFileSync(coverCopyFromUri, coverCopyToUri)
-    this.epub.addCoverImage(coverCopyToUri)
   }
 
   async asyncProcessStaticResource() {
@@ -272,17 +248,6 @@ class FetchBase extends Base {
     this.copyStaticResource()
     this.log(`静态资源完毕`)
 
-    this.log(`生成电子书`)
-    await this.epub.asyncGenerate()
-    this.log(`电子书生成完毕`)
-
-    this.log(`将生成文件复制到目标文件夹`)
-    this.log(`复制epub电子书`)
-    fs.copyFileSync(
-      path.resolve(this.epubCachePath, this.bookname + '.epub'),
-      path.resolve(this.epubOutputPath, this.bookname + '.epub'),
-    )
-    this.log(`epub电子书复制完毕`)
     this.log(`复制网页`)
     shelljs.cp('-r', path.resolve(this.htmlCachePath), path.resolve(this.htmlOutputPath))
     this.log(`网页复制完毕`)

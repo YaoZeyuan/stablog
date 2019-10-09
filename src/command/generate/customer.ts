@@ -218,17 +218,8 @@ class GenerateCustomer extends Base {
       content = this.processContent(content)
       let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${title}.html`)
       fs.writeFileSync(htmlUri, content)
-      this.epub.addHtml(weiboDayRecord.dayStartAtStr, htmlUri)
       // 渲染页面
       htmlUriList.push(htmlUri)
-      // // 单独记录生成的元素, 以便输出成单页文件
-      // let contentElementList = []
-      // for (let weiboDayRecord of weiboDayList) {
-      //   let contentElement = BaseView.generateSingleAnswerElement(weiboDayRecord)
-      //   contentElementList.push(contentElement)
-      // }
-      // let elememt = BaseView.generateQuestionElement(weiboDayRecord, contentElementList)
-      // totalElementListToGenerateSinglePage.push(elememt)
     }
 
     // this.log(`生成单一html文件`)
@@ -243,7 +234,6 @@ class GenerateCustomer extends Base {
     this.log(`生成目录`)
     let indexContent = BaseView.renderIndex(this.bookname, weiboDayList)
     fs.writeFileSync(path.resolve(this.htmlCacheHtmlPath, `index.html`), indexContent)
-    this.epub.addIndexHtml('目录', path.resolve(this.htmlCacheHtmlPath, `index.html`))
 
     // 处理静态资源
     await this.asyncProcessStaticResource()
