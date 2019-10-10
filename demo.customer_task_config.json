@@ -12,7 +12,7 @@
     }
   ],
   "maxBlogInBook": 1000,
-  "imageQuilty": "none",
+  "imageQuilty": "default",
   "bookTitle": "测试电子书",
   "comment": "测试",
   "mergeBy": "count",
