@@ -21,6 +21,7 @@ import puppeteer from 'puppeteer'
 
 // 将img输出为pdf
 import PDFKit from 'pdfkit'
+import TaskConfig from '~/src/type/namespace/task_config'
 
 class GenerateCustomer extends Base {
   static get signature() {
@@ -33,19 +34,49 @@ class GenerateCustomer extends Base {
     return '输出微博记录'
   }
 
+  /**
+   * 配置项
+   */
+  /**
+   * 分类依据
+   */
+  CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
+  CUSTOMER_CONFIG_bookname: TaskConfig.Customer['bookTitle'] = ''
+  CUSTOMER_CONFIG_comment: TaskConfig.Customer['comment'] = ''
+  CUSTOMER_CONFIG_mergeBy: TaskConfig.Customer['mergeBy'] = 'day'
+  CUSTOMER_CONFIG_mergeCount: TaskConfig.Customer['mergeCount'] = 1000
+  CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
+  CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
+  CUSTOMER_CONFIG_maxBlogInBook: TaskConfig.Customer['maxBlogInBook'] = 1000
+
   async execute(args: any, options: any): Promise<any> {
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
     let fetchConfigJSON = fs.readFileSync(PathConfig.customerTaskConfigUri).toString()
     this.log('content =>', fetchConfigJSON)
     let customerTaskConfig: TypeTaskConfig.Customer = json5.parse(fetchConfigJSON)
 
-    let bookname = customerTaskConfig.bookTitle
-    let comment = customerTaskConfig.comment
-    let mergeBy = customerTaskConfig.mergeBy
-    let mergeCount = customerTaskConfig.mergeCount
-    let postAtOrderBy = customerTaskConfig.postAtOrderBy
-    let imageQuilty = customerTaskConfig.imageQuilty
-    let maxBlogInBook = customerTaskConfig.maxBlogInBook
+    this.CUSTOMER_CONFIG_bookname = customerTaskConfig.bookTitle
+    this.CUSTOMER_CONFIG_comment = customerTaskConfig.comment
+    this.CUSTOMER_CONFIG_mergeBy = customerTaskConfig.mergeBy
+    // 根据mergeBy类别, 生成日期格式化参数
+    switch (this.CUSTOMER_CONFIG_mergeBy) {
+      case 'day':
+        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
+        break
+      case 'month':
+        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_MONTH
+        break
+      case 'year':
+        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_YEAR
+        break
+      default:
+        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
+        break
+    }
+    this.CUSTOMER_CONFIG_mergeCount = customerTaskConfig.mergeCount
+    this.CUSTOMER_CONFIG_postAtOrderBy = customerTaskConfig.postAtOrderBy
+    this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
+    this.CUSTOMER_CONFIG_maxBlogInBook = customerTaskConfig.maxBlogInBook
     let configList = customerTaskConfig.configList
     for (let config of configList) {
       let author_uid = config.uid
@@ -61,10 +92,24 @@ class GenerateCustomer extends Base {
       this.log(`获取数据记录`)
 
       let mblogList = await MMblog.asyncGetMblogList(author_uid)
+      mblogList.sort((a, b) => {
+        // 先进行排序
+        let aSortBy = a.created_timestamp_at
+        let bSortBy = b.created_timestamp_at
+        if (a.created_timestamp_at === b.created_timestamp_at) {
+          aSortBy = parseInt(a.id)
+          bSortBy = parseInt(b.id)
+        }
+        if (this.CUSTOMER_CONFIG_postAtOrderBy === 'asc') {
+          return aSortBy! - bSortBy!
+        } else {
+          return bSortBy! - aSortBy!
+        }
+      })
 
       this.log(`数据获取完毕, 共收录${mblogList.length}条微博`)
 
-      let weiboEpubList = this.packageMblogList(mblogList, maxBlogInBook, userInfo)
+      let weiboEpubList = this.packageMblogList(mblogList, userInfo)
 
       let bookCounter = 0
       for (let resourcePackage of weiboEpubList) {
@@ -83,58 +128,76 @@ class GenerateCustomer extends Base {
             .unix(resourcePackage.endDayAt)
             .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         }
-        this.log(`输出电子书:${booktitle}`)
-        await this.asyncGenerateEpub(booktitle, imageQuilty, resourcePackage)
-        this.log(`电子书:${booktitle}输出完毕`)
+        this.log(`输出第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}`)
+        await this.asyncGenerateEbook(bookCounter, booktitle, resourcePackage)
+        this.log(`第第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}输出完毕`)
       }
     }
   }
 
   /**
    * 1. 将微博按时间顺序排列
-   * 2. 将微博按天合并到一起
+   * 2. 将微博按配置合并到一起
    * 3. 按配置单本电子书最大微博数, 切分成微博Epub列表
    * @param mblogList
-   * @param maxBlogInBook
    * @param userInfo
    */
-  packageMblogList(mblogList: Array<TypeMblog>, maxBlogInBook: number, userInfo: TypeWeiboUserInfo) {
+  packageMblogList(mblogList: Array<TypeMblog>, userInfo: TypeWeiboUserInfo) {
     // 其次, 按天分隔微博
-    let mblogListByDayMap: Map<string, TypeWeiboListByDay> = new Map()
+    let mblogListByMergeBy: Map<string, TypeWeiboListByDay> = new Map()
+    let index = 0
     for (let mblog of mblogList) {
+      index++
+      let splitByStr = ''
       let mblogCreateAtTimestamp = <number>mblog.created_timestamp_at
-      let publishAtStr = moment.unix(mblogCreateAtTimestamp).format(DATE_FORMAT.DISPLAY_BY_DAY)
-      let record = mblogListByDayMap.get(publishAtStr)
+      if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
+        // 按条数分页
+        splitByStr = `${Math.ceil(index / this.CUSTOMER_CONFIG_mergeCount)}`
+      } else {
+        // 按日期分页
+        splitByStr = moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)
+      }
+      let record = mblogListByMergeBy.get(splitByStr)
       if (record === undefined) {
         let a: TypeWeiboListByDay = {
+          title:
+            this.CUSTOMER_CONFIG_mergeBy === 'count'
+              ? `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
+                  .unix(mblogCreateAtTimestamp)
+                  .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
+              : `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`,
           dayStartAt: moment
             .unix(mblogCreateAtTimestamp)
             .startOf(DATE_FORMAT.UNIT.DAY)
             .unix(),
-          dayStartAtStr: publishAtStr,
           weiboList: [mblog],
+          splitByStr: splitByStr,
+          postStartAt: mblogCreateAtTimestamp,
+          postEndAt: mblogCreateAtTimestamp,
         }
         record = a
       } else {
         record.weiboList.push(mblog)
+        // 更新文件标题
+        if (mblogCreateAtTimestamp > record.postEndAt) {
+          record.postEndAt = mblogCreateAtTimestamp
+        }
+        if (mblogCreateAtTimestamp < record.postStartAt) {
+          record.postStartAt = mblogCreateAtTimestamp
+        }
+        if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
+          record.title = `${moment.unix(record.postStartAt).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
+            .unix(record.postEndAt)
+            .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
+        }
       }
-      mblogListByDayMap.set(publishAtStr, record)
+      mblogListByMergeBy.set(splitByStr, record)
     }
     // 然后, 按日期先后对记录
     let mblogListByDayList = []
-    for (let record of mblogListByDayMap.values()) {
-      record.weiboList.sort((itemA, itemB) => {
-        let intAId = parseInt(itemA.id)
-        let intBId = parseInt(itemB.id)
-        return intAId - intBId
-      })
+    for (let record of mblogListByMergeBy.values()) {
       mblogListByDayList.push(record)
     }
-    mblogListByDayList.sort((itemA, itemB) => {
-      let intAStartAt = itemA.dayStartAt
-      let intBStartAt = itemB.dayStartAt
-      return intAStartAt - intBStartAt
-    })
     // 解除引用依赖
     mblogListByDayList = _.cloneDeep(mblogListByDayList)
     // 最后, 按条目数拆分微博记录, 将微博列表分包
@@ -169,7 +232,7 @@ class GenerateCustomer extends Base {
         weiboEpub.weiboDayList.push(mblogListByDay)
         weiboEpub.mblogInThisBookCount += mblogListByDay.weiboList.length
       }
-      if (weiboEpub.mblogInThisBookCount > maxBlogInBook) {
+      if (weiboEpub.mblogInThisBookCount > this.CUSTOMER_CONFIG_maxBlogInBook) {
         // 超出阈值, 该分卷了
         weiboEpub.endDayAt = mblogListByDay.dayStartAt
         let buffer = _.cloneDeep(weiboEpub)
@@ -194,26 +257,26 @@ class GenerateCustomer extends Base {
     return weiboEpubList
   }
 
-  async asyncGenerateEpub(
-    bookname: string,
-    imageQuilty: TypeTaskConfig.imageQuilty,
-    epubResourcePackage: TypeWeiboEpub,
-  ) {
+  /**
+   * 生成电子书(html/pdf)
+   * @param bookCounter
+   * @param bookname
+   * @param epubResourcePackage
+   */
+  async asyncGenerateEbook(bookCounter: number, bookname: string, epubResourcePackage: TypeWeiboEpub) {
     // 初始化资源, 重置所有静态类变量
     this.bookname = StringUtil.encodeFilename(`${bookname}`)
-    this.imageQuilty = imageQuilty
+    this.imageQuilty = this.CUSTOMER_CONFIG_imageQuilty
     let { weiboDayList } = epubResourcePackage
     this.imgUriPool = new Set()
 
     // 初始化文件夹
     this.initStaticRecource()
 
-    // 单独记录生成的元素, 以便输出成单页
-    let totalElementListToGenerateSinglePage = []
     this.log(`生成微博记录html列表`)
     let htmlUriList = []
     for (let weiboDayRecord of weiboDayList) {
-      let title = weiboDayRecord.dayStartAtStr
+      let title = weiboDayRecord.title
       let content = WeiboView.render(weiboDayRecord.weiboList)
       content = this.processContent(content)
       let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${title}.html`)
@@ -222,14 +285,6 @@ class GenerateCustomer extends Base {
       htmlUriList.push(htmlUri)
     }
 
-    // this.log(`生成单一html文件`)
-    // // 生成全部文件
-    // let pageElement = BaseView.generatePageElement(this.bookname, totalElementListToGenerateSinglePage)
-    // let content = BaseView.renderToString(pageElement)
-    // this.log(`内容渲染完毕, 开始对内容进行输出前预处理`)
-    // content = this.processContent(content)
-    // fs.writeFileSync(path.resolve(this.htmlCacheSingleHtmlPath, `${this.bookname}.html`), content)
-
     //  生成目录
     this.log(`生成目录`)
     let indexContent = BaseView.renderIndex(this.bookname, weiboDayList)
@@ -237,44 +292,65 @@ class GenerateCustomer extends Base {
 
     // 处理静态资源
     await this.asyncProcessStaticResource()
-    await this.generatePdf(htmlUriList)
-    this.log(`自定义电子书${this.bookname}生成完毕`)
+    await this.generatePdf(weiboDayList)
+    // 输出完毕后, 将结果复制到dist文件夹中
+    await this.asyncCopyToDist()
+    this.log(`第${bookCounter}本电子书${this.bookname}生成完毕`)
   }
 
-  async generatePdf(htmlUrlList: string[]) {
-    // hello
-    const browser = await puppeteer.launch()
-    const page = await browser.newPage()
+  async generatePdf(weiboDayList: TypeWeiboEpub['weiboDayList']) {
+    // 启动Chrome
+    const browser = await puppeteer.launch({
+      defaultViewport: {
+        width: 750,
+        height: 1, // 要设的足够小
+      },
+    })
+    let page = await browser.newPage()
 
     let pdfDocument = new PDFKit()
-    pdfDocument.pipe(fs.createWriteStream(path.resolve(this.htmlCacheHtmlPath, `${'测试pdf_1'}.pdf`)))
-    let index = 0
-    for (let htmlUri of htmlUrlList) {
-      index++
-      this.log(`htmlUri =>`, htmlUri)
-      this.log(`正在处理第${index}/${htmlUrlList.length}张页面`)
-      await page.goto(htmlUri)
-      let imageBuffer = await page.screenshot({ type: 'png', fullPage: true })
-
-      if (imageBuffer.length < 1000) {
-        // DIDN’T CAPTURE
-        // NOTE - in my application we are manually scrolling the view and timing of the record
-        // is an issue - sometimes the captured image is empty, we delay a few hundred ms
-        // and capture again
-        // 图片渲染失败
-        this.log(`第${index}/${htmlUrlList.length}张页面渲染失败, 自动跳过`)
-        continue
-      } else {
-        this.log(`第${index}/${htmlUrlList.length}张页面渲染成功`)
-        let size = await imageSize.imageSize(imageBuffer)
-        this.log(`图片size=>`, { width: size.width, height: size.height })
-        pdfDocument.addPage({
-          margin: 10,
-          layout: 'landscape',
-          size: [size.height + 20, size.width + 20], // a smaller document for small badge printers
+    pdfDocument.pipe(fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`)))
+    let dayIndex = 0
+    for (let weiboDayRecord of weiboDayList) {
+      dayIndex++
+      this.log(`正在处理第${dayIndex}/${weiboDayList.length}批微博记录`)
+      let weiboIndex = 0
+      for (let weiboRecord of weiboDayRecord.weiboList) {
+        weiboIndex++
+        this.log(
+          `正在处理第${dayIndex}/${weiboDayList.length}批下,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+        )
+        let content = WeiboView.render([weiboRecord])
+        content = this.processContent(content)
+        let htmlUri = path.resolve(this.htmlCacheHtmlPath, `demo.html`)
+        fs.writeFileSync(htmlUri, content)
+        await page.setViewport({
+          width: 750,
+          height: 1,
         })
-        // 将图片数据添加到pdf文件中
-        pdfDocument.image(imageBuffer)
+        await page.goto(htmlUri)
+        let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 70, fullPage: true, omitBackground: true })
+        if (imageBuffer.length < 1000) {
+          // 图片渲染失败
+          this.log(`第${dayIndex}/${weiboDayList.length}条微博渲染失败, 自动跳过`)
+          continue
+        } else {
+          this.log(`第${dayIndex}/${weiboDayList.length}条微博渲染成功`)
+          let size = await imageSize.imageSize(imageBuffer)
+          let { width, height } = size
+          this.log(`图片size=>`, { width, height })
+          if (!width || width <= 0 || !height || height <= 0) {
+            this.log(`第${dayIndex}/${weiboDayList.length}条微博截图捕获失败, 自动跳过`)
+            continue
+          }
+          // 将图片数据添加到pdf文件中
+          pdfDocument.addPage({
+            margin: 0,
+            layout: 'landscape',
+            size: [height, width], // a smaller document for small badge printers
+          })
+          pdfDocument.image(imageBuffer)
+        }
       }
     }
     await page.close()

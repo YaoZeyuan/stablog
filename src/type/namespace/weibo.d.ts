@@ -540,13 +540,32 @@ type TypePrivateWeiboRecordDemo = {
 }
 
 export type TypeWeiboListByDay = {
+  /**
+   * 微博列表
+   */
   weiboList: Array<TypeMblog>
-  // 时间(当天0点0分)
+  /**
+   * 时间(当天0点0分)
+   */
   dayStartAt: number
-  // 字符串日期(YYYY-MM-DD)
-  dayStartAtStr: string
-  // 分类标记
+  /**
+   * 分类标记
+   */
   splitByStr: string
+  /**
+   * 文件名.
+   * 如果分卷模式为count, 则文件名为`${开始日期}-${结束日期}`
+   * 如果分卷模式为其他, 则文件名为`${记录所在日期}`
+   */
+  title: string
+  /**
+   * 容器内微博开始时间
+   */
+  postStartAt: number
+  /**
+   * 容器内微博结束时间
+   */
+  postEndAt: number
 }
 export type TypeWeiboEpub = {
   weiboDayList: Array<TypeWeiboListByDay>

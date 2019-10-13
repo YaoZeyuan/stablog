@@ -43,8 +43,8 @@ class Base {
     for (let record of recordList) {
       let indexItem = (
         <li key={CommonUtil.getUuid()}>
-          <a className="list-group-item" href={`./${record.dayStartAtStr}.html`}>
-            {record.dayStartAtStr}
+          <a className="list-group-item" href={`./${record.title}.html`}>
+            {record.title}
           </a>
         </li>
       )

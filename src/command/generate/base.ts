@@ -22,14 +22,15 @@ class FetchBase extends Base {
   bookname = ''
 
   get htmlCachePath() {
-    return path.resolve(PathConfig.htmlCachePath)
+    return path.resolve(PathConfig.htmlCachePath, this.bookname)
   }
   get htmlCacheHtmlPath() {
     return path.resolve(this.htmlCachePath, 'html')
   }
-  get htmlCacheSingleHtmlPath() {
-    return path.resolve(this.htmlCachePath, '单文件版')
+  get htmlCachePdfPath() {
+    return path.resolve(this.htmlCachePath, 'pdf')
   }
+
   get htmlCacheCssPath() {
     return path.resolve(this.htmlCachePath, 'css')
   }
@@ -63,11 +64,12 @@ class FetchBase extends Base {
 
     this.log(`创建电子书:${this.bookname}对应文件夹`)
 
+    shelljs.mkdir('-p', PathConfig.imgCachePath)
     shelljs.mkdir('-p', this.htmlCachePath)
-    shelljs.mkdir('-p', this.htmlCacheSingleHtmlPath)
     shelljs.mkdir('-p', this.htmlCacheHtmlPath)
     shelljs.mkdir('-p', this.htmlCacheCssPath)
     shelljs.mkdir('-p', this.htmlCacheImgPath)
+    shelljs.mkdir('-p', this.htmlCachePdfPath)
     shelljs.mkdir('-p', this.htmlOutputPath)
     this.log(`电子书:${this.bookname}对应文件夹创建完毕`)
   }
@@ -247,10 +249,11 @@ class FetchBase extends Base {
     this.log(`复制静态资源`)
     this.copyStaticResource()
     this.log(`静态资源完毕`)
-
-    this.log(`复制网页`)
+  }
+  async asyncCopyToDist() {
+    this.log(`将输出电子书复制到结果目录中`)
     shelljs.cp('-r', path.resolve(this.htmlCachePath), path.resolve(this.htmlOutputPath))
-    this.log(`网页复制完毕`)
+    this.log(`输出电子书复制完毕`)
   }
 
   /**
