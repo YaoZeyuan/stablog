@@ -1,7 +1,7 @@
 {
-  "name": "micro_backup",
+  "name": "stablog",
   "version": "1.0.0",
-  "description": "微博备份助手 & TypeScript",
+  "description": "稳部落.专业备份微博,稳!",
   "repository": {
     "type": "git",
     "url": "https://github.com/YaoZeyuan/micro_backup"
@@ -24,8 +24,8 @@
     "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
   },
   "build": {
-    "productName": "知乎助手",
-    "appId": "zhihuhelp",
+    "productName": "稳部落",
+    "appId": "stablog",
     "copyright": "@姚泽源",
     "npmRebuild": true,
     "buildDependenciesFromSource": true,
@@ -50,7 +50,7 @@
       "icon": "src/public/icon/icon.png"
     },
     "mac": {
-      "category": "zhihuhelp.app.category.type",
+      "category": "stablog.app.category.type",
       "target": "dmg",
       "icon": "src/public/icon/icon.png"
     },
