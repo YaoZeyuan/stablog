@@ -308,8 +308,9 @@ class GenerateCustomer extends Base {
     })
     let page = await browser.newPage()
 
-    let pdfDocument = new PDFKit()
-    pdfDocument.pipe(fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`)))
+    let pdfDocument
+    let pdfSaveStream = fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`))
+    // 先加一页, 避免出现空白页
     let dayIndex = 0
     for (let weiboDayRecord of weiboDayList) {
       dayIndex++
@@ -343,19 +344,38 @@ class GenerateCustomer extends Base {
             this.log(`第${dayIndex}/${weiboDayList.length}条微博截图捕获失败, 自动跳过`)
             continue
           }
-          // 将图片数据添加到pdf文件中
-          pdfDocument.addPage({
-            margin: 0,
-            layout: 'landscape',
-            size: [height, width], // a smaller document for small badge printers
-          })
+          if (pdfDocument === undefined) {
+            // 初始化pdf类
+            pdfDocument = new PDFKit({
+              margin: 0,
+              layout: 'landscape',
+              size: [height, width], // a smaller document for small badge printers
+            })
+            pdfDocument.pipe(pdfSaveStream)
+          } else {
+            // 将图片数据添加到pdf文件中
+            pdfDocument.addPage({
+              margin: 0,
+              layout: 'landscape',
+              size: [height, width], // a smaller document for small badge printers
+            })
+          }
           pdfDocument.image(imageBuffer)
         }
       }
     }
     await page.close()
     await browser.close()
-    pdfDocument.end()
+    if (pdfDocument) {
+      pdfDocument.end()
+      // 等待pdf文件写入完毕
+      await new Promise((resolve, reject) => {
+        pdfSaveStream.on('finish', function() {
+          // do stuff with the PDF file
+          resolve()
+        })
+      })
+    }
     this.log(`pdf输出完毕`)
   }
 }
