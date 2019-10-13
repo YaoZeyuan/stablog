@@ -545,6 +545,8 @@ export type TypeWeiboListByDay = {
   dayStartAt: number
   // 字符串日期(YYYY-MM-DD)
   dayStartAtStr: string
+  // 分类标记
+  splitByStr: string
 }
 export type TypeWeiboEpub = {
   weiboDayList: Array<TypeWeiboListByDay>
