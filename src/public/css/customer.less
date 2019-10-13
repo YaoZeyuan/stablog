@@ -13,10 +13,16 @@ body {
   flex-direction: column;
 }
 
+// 微博记录
 .mblog-container {
   flex: 6;
   hr {
     display: none;
+  }
+  a{
+    // 整体的a标签下都不应有下划线
+    text-decoration: none;
+
   }
   border-bottom: 1px solid #e6e6e6;
   .card-wrap {
@@ -119,7 +125,6 @@ body {
       .weibo-rp {
         a {
           color: #3c6e9e;
-          text-decoration: none;
         }
         background-color: #f7f7f7;
         margin-top: 0.5rem;
@@ -149,8 +154,8 @@ body {
             p {
               margin: 0 0 16px;
               padding: 0;
-              font-size: 16px;
-              line-height: 1.65;
+              font-size: 22px;
+              line-height: 1.5;
             }
           }
         }
@@ -181,17 +186,42 @@ body {
   }
 }
 
-/* 目录页面 */
-/* 隐藏多余的『目录』两字 */
-div.index-content > li {
-  display: none;
+body{
+  // background-color: #ffffff;
 }
-
-div.index-content a {
-  font-size: 1em;
-}
-
-div.index-content ul > li > a {
-  font-size: 1em;
-  color: #3d3e45;
+// 项目目录
+.panel{
+  .panel-heading{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    margin:20px 0;
+  }
+  .list-group{
+    background-color: #ffffff;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    font-size: 20px;
+    border: 1px solid #ebedf0;
+    border-radius: 2px;
+    ol{
+      width:100%;
+      margin:0 20px ;
+    }
+    li{
+      // background-color: #f5f7f9;
+      width:100%;
+      border-bottom: 1px solid #eee;
+      // height: 37px;
+      padding: 16px 0;
+      // display: flex;
+      align-items: center;
+      a.list-group-item{
+        text-decoration: none;
+        color:rgb(92, 105, 117);
+      }
+    }
+  }
 }
