@@ -184,6 +184,10 @@ class GenerateCustomer extends Base {
         }
         if (mblogCreateAtTimestamp < record.postStartAt) {
           record.postStartAt = mblogCreateAtTimestamp
+          record.dayStartAt = moment
+            .unix(mblogCreateAtTimestamp)
+            .startOf(DATE_FORMAT.UNIT.DAY)
+            .unix()
         }
         if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
           record.title = `${moment.unix(record.postStartAt).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
@@ -220,7 +224,7 @@ class GenerateCustomer extends Base {
     let bufEndDayAt = moment().unix()
     for (let mblogListByDay of mblogListByDayList) {
       // 备份一下, 循环结束时使用
-      bufEndDayAt = mblogListByDay.dayStartAt
+      bufEndDayAt = mblogListByDay.postEndAt
 
       if (weiboEpub.weiboDayList.length === 0) {
         // 首次添加
@@ -234,7 +238,7 @@ class GenerateCustomer extends Base {
       }
       if (weiboEpub.mblogInThisBookCount > this.CUSTOMER_CONFIG_maxBlogInBook) {
         // 超出阈值, 该分卷了
-        weiboEpub.endDayAt = mblogListByDay.dayStartAt
+        weiboEpub.endDayAt = mblogListByDay.postEndAt
         let buffer = _.cloneDeep(weiboEpub)
         rawWeiboEpubList.push(buffer)
         // 重新起一个
