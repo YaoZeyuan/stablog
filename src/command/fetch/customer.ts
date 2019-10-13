@@ -14,6 +14,10 @@ import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
 
 class FetchCustomer extends Base {
+  requestConfig = {
+    st: '',
+  }
+
   static get signature() {
     return `
         Fetch:Customer
@@ -76,6 +80,13 @@ class FetchCustomer extends Base {
       let totalMblogCount = mblogUserInfo.statuses_count
       let totalPageCount = Math.ceil(totalMblogCount / 10)
       this.log(`用户${userInfo.screen_name}共发布了${totalMblogCount}条微博, 正式开始抓取`)
+
+      // 为抓取微博自定义一套流程
+      // 获取st
+      this.requestConfig.st = await ApiWeibo.asyncStep1FetchPageConfigSt()
+      // 拿着st, 获取api config中的st
+      this.requestConfig.st = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+
       for (let page = 1; page < totalPageCount; page++) {
         await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
         // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
@@ -92,7 +103,7 @@ class FetchCustomer extends Base {
   async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
-    let rawMblogList = await ApiWeibo.asyncGetWeiboList(author_uid, page)
+    let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
     if (_.isEmpty(rawMblogList)) {
       this.log(`第${page}/${totalPage}页微博记录抓取失败`)
       return

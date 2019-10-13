@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import Base from '~/src/api/base'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
+import Util from '~/src/library/util/common'
 
 /**
  * 用户信息部分容器 id
@@ -13,6 +14,97 @@ const UserInfo_Container_ID = 100505
 const Total_Mblog_Container_Id = 230413
 
 export default class Weibo extends Base {
+  /**
+   * 仅为抓取微博而设.
+   * 第一步, 获取初始st配置
+   */
+  static async asyncStep1FetchPageConfigSt() {
+    let url = 'https://m.weibo.cn/p/index'
+    let responseHtml = await Base.http.get(url)
+    let st = ''
+    try {
+      let scriptContent = responseHtml.split('<router-view>')[1]
+      let rawJsContent = scriptContent.split('<script>')[1]
+      let jsContent = rawJsContent.split('</script>')[0]
+      let rawJson = jsContent.split('var config = ')[1]
+      let jsonStr = rawJson.split('var $render_data ')[0]
+      let rawStStartStr = jsonStr.split(`st:`)[1]
+      let rawStStr = rawStStartStr.split(`,`)[0]
+      st = rawStStr.replace(/"|'| /g, '')
+    } catch (e) {}
+    return st
+  }
+  static async asyncStep2FetchApiConfig(st: string) {
+    let url = 'https://m.weibo.cn/api/config'
+    let responseConfig = await Base.http.get(url, {
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'MWeibo-Pwa': 1,
+        'Sec-Fetch-Mode': 'cors',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-XSRF-TOKEN': st,
+      },
+    })
+    let newSt: string = _.get(responseConfig, ['data', 'st'], '')
+    return newSt
+  }
+
+  /**
+   * 获取用户微博列表
+   * demo => https://m.weibo.cn/api/container/getIndex?containerid=2304131668244557_-_WEIBO_SECOND_PROFILE_WEIBO&page_type=03&page=2
+   * @param author_uid
+   * @param page
+   */
+  static async asyncStep3GetWeiboList(
+    st: string,
+    author_uid: string,
+    page: number = 1,
+  ): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
+    let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
+    const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&page=${page}`
+    const config = {
+      // containerid: containerId,
+      // page_type: '03',
+      // page: page,
+    }
+    console.log('url =>', baseUrl)
+    let weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
+      params: config,
+      headers: {
+        Accept: 'application/json, text/plain, */*',
+        'MWeibo-Pwa': 1,
+        'Sec-Fetch-Mode': 'cors',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-XSRF-TOKEN': st,
+      },
+    })
+    if (weiboResponse === undefined) {
+      // 被监控抓住了, 尝试重新获取配置
+      console.log(`被监控抓住了, 尝试重新获取配置, 自动修复`)
+      await Util.asyncSleep(1000)
+      let newSt = await Weibo.asyncStep2FetchApiConfig(st)
+      weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
+        params: config,
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          'MWeibo-Pwa': 1,
+          'Sec-Fetch-Mode': 'cors',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-XSRF-TOKEN': newSt,
+        },
+      })
+    }
+    if (_.isEmpty(weiboResponse.data.cards)) {
+      return []
+    }
+    const rawRecordList = weiboResponse.data.cards
+    // 需要按cardType进行过滤, 只要id为9的(微博卡片)
+    let recordList = rawRecordList.filter(item => {
+      return item.card_type === 9
+    })
+    return recordList
+  }
+
   /**
    * 获取用户微博列表
    * demo => https://m.weibo.cn/api/container/getIndex?containerid=2304131668244557_-_WEIBO_SECOND_PROFILE_WEIBO&page_type=03&page=2

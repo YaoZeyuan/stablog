@@ -14,15 +14,9 @@ const http = axios.create({
   headers: {
     // 加上ua
     'User-Agent': RequestConfig.ua,
-    // cookie: RequestConfig.cookie,
+    cookie: RequestConfig.cookie,
   },
 })
-let cookieJar = new toughCookie.CookieJar()
-let cookieStrList = RequestConfig.cookie
-for (let rawCookieStr of cookieStrList.split(';')) {
-  let cookieStr = rawCookieStr.trim()
-  cookieJar.setCookieSync(`${cookieStr}; domain=.weibo.cn`, 'http://m.weibo.cn')
-}
 
 // @ts-ignore
 // http.defaults.jar = cookieJar
@@ -40,15 +34,20 @@ class Http {
         {
           // @ts-ignore
           ...config,
-          // @ts-ignore
-          jar: cookieJar, // tough.CookieJar or boolean
-          // @ts-ignore
-          withCredentials: true, // If true, send cookie stored in jar
+          headers: {
+            // 加上ua
+            'User-Agent': RequestConfig.ua,
+            cookie: RequestConfig.cookie,
+            ...config.headers,
+          },
         },
       )
       .catch(e => {
         logger.log(`网络请求失败, 您的账号可能因抓取频繁被知乎认为有风险, 在浏览器中访问知乎首页,输入验证码即可恢复`)
         logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
+        if (e.response.status === 404) {
+          return undefined
+        }
         return {}
       })
     const record = _.get(response, ['data'], {})
