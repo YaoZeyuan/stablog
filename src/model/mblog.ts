@@ -26,7 +26,7 @@ export default class Mblog extends Base {
       .catch(() => {
         return []
       })
-      
+
     let mblogRecordList = []
     for (let record of recordList) {
       let mblogRecordJson = _.get(record, ['raw_json'], '{}')

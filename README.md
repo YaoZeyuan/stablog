@@ -1,8 +1,8 @@
-#   微备份
+#   稳部落
 
 ##  项目说明
 
-**微备份** 由 [姚泽源](http://www.yaozeyuan.online/) 创作，采用 [MIT](http://opensource.org/licenses/MIT) 协议进行许可。
+**稳部落** 由 [姚泽源](http://www.yaozeyuan.online/) 创作，采用 [MIT](http://opensource.org/licenses/MIT) 协议进行许可。
 
 *   项目基于微博现有接口+TypeScript构建，为微博网友提供方便的, 以供自己阅读/数据导出/自身结集整理为目的, 将微博内容转为Epub电子书的途径
 

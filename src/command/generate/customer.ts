@@ -330,7 +330,8 @@ class GenerateCustomer extends Base {
           height: 1,
         })
         await page.goto(htmlUri)
-        let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 70, fullPage: true, omitBackground: true })
+        // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
+        let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 60, fullPage: true, omitBackground: true })
         if (imageBuffer.length < 1000) {
           // 图片渲染失败
           this.log(`第${dayIndex}/${weiboDayList.length}条微博渲染失败, 自动跳过`)
