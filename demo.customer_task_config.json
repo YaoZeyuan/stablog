@@ -9,13 +9,20 @@
       "uid": "6457400184",
       "rawInputText": "https://www.weibo.com/u/6457400184",
       "comment": "东港姐姐"
+    },
+    {
+      "uid": "1687243315",
+      "rawInputText": "https://www.weibo.com/u/1687243315",
+      "comment": "孤鸿泽"
     }
   ],
   "maxBlogInBook": 1000,
   "imageQuilty": "default",
   "bookTitle": "测试电子书",
   "comment": "测试",
-  "mergeBy": "count",
+  "mergeBy": "month",
   "mergeCount": 100,
-  "postAtOrderBy": "desc"
+  "postAtOrderBy": "asc",
+  "fetchStartAtPageNo": 0,
+  "fetchEndAtPageNo": 100
 }
