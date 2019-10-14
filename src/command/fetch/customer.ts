@@ -85,7 +85,8 @@ class FetchCustomer extends Base {
       let totalMblogCount = mblogUserInfo.statuses_count
       let totalPageCount = Math.ceil(totalMblogCount / 10)
       this.log(`用户${userInfo.screen_name}共发布了${totalMblogCount}条微博, 正式开始抓取`)
-
+      let maxFetchPageNo = this.fetchEndAtPageNo <= totalPageCount ? this.fetchEndAtPageNo : totalPageCount
+      this.log(`本次抓取的页码范围为:${this.fetchStartAtPageNo}~${maxFetchPageNo}`)
       // 为抓取微博自定义一套流程
       // 获取st
       this.requestConfig.st = await ApiWeibo.asyncStep1FetchPageConfigSt()
