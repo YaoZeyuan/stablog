@@ -4,7 +4,7 @@
 
 **稳部落** 由 [姚泽源](http://www.yaozeyuan.online/) 创作，采用 [MIT](http://opensource.org/licenses/MIT) 协议进行许可。
 
-*   项目基于微博现有接口+TypeScript构建，为微博网友提供方便的, 以供自己阅读/数据导出/自身结集整理为目的, 将微博内容转为Epub电子书的途径
+*   项目基于微博现有接口+TypeScript构建，为微博网友提供一个方便的, 以供自己阅读/数据备份/自身结集整理的方式
 
 不考虑商业用途
 
@@ -14,7 +14,7 @@
 
 鉴于知乎世风日下, 还禁了项目前身[知乎助手](https://github.com/YaoZeyuan/zhihuhelp_with_node)的推广. 作者决定转战微博, 造福社会
 
-严肃保护以[@Aioros先生](https://weibo.com/u/6646798696?refer_flag=0000015010_&from=feed&loc=nickname&sudaref=www.weibo.com&is_all=1)为代表的野生读物博主
+严肃保护以[@Aioros先生](https://weibo.com/u/6646798696?refer_flag=0000015010_&from=feed&loc=nickname&sudaref=www.weibo.com&is_all=1)为代表的珍稀野生读物博主
 
 
 #   注意事项
@@ -64,8 +64,8 @@
 ##  基本思路
 
 1.  TypeScript提供类型支持, 在编写代码时可以自动提示变量下的属性 
-2.  Electron提供图形界面, 利用webview标签直接登陆知乎
-3.  利用知乎接口抓取数据
+2.  Electron提供图形界面, 利用webview标签直接登陆微博
+3.  利用微博接口抓取数据
 4.  ace/command提供命令行支持
 5.  sqlite3提供数据库支持
 
@@ -104,10 +104,10 @@
 
 #   功能建议
 
-欢迎通过[issue](https://github.com/YaoZeyuan/zhihuhelp_with_node/issues)提建议
+欢迎通过[issue](https://github.com/YaoZeyuan/stablog/issues)提建议
 
 #   支持作者
 
-![感谢支持](http://ww1.sinaimg.cn/large/6671cfa8ly1g08k8rm5grj20ri16sq4r.jpg)
+![老铁,谢谢了](http://ww1.sinaimg.cn/large/6671cfa8ly1g7y4zur0juj20ri16s41d.jpg)
 
-[致谢列表](https://www.easy-mock.com/mock/5c680a151b1cdb683581355c/zhihuhelp/thank_you/list)
+[致谢列表](https://www.easy-mock.com/mock/5d9b49fc896b9432186c1fa5/stablog/thank_you/list)

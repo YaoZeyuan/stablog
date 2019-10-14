@@ -1,10 +1,10 @@
 {
   "name": "stablog",
   "version": "1.0.0",
-  "description": "稳部落.专业备份微博,稳!",
+  "description": "稳部落. 专业备份微blog, 老铁, 稳!",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YaoZeyuan/micro_backup"
+    "url": "https://github.com/YaoZeyuan/stablog"
   },
   "main": "dist/index.js",
   "author": "姚泽源",
