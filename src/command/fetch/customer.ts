@@ -97,8 +97,8 @@ class FetchCustomer extends Base {
           page = this.fetchStartAtPageNo
           this.log(`从第${this.fetchStartAtPageNo}页数据开始抓取`)
         }
-        if (page > this.fetchStartAtPageNo) {
-          this.log(`已抓取至设定的第${this.fetchStartAtPageNo}页数据, 自动结束抓取`)
+        if (page > this.fetchEndAtPageNo) {
+          this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
           await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
           // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
@@ -107,7 +107,6 @@ class FetchCustomer extends Base {
           await Util.asyncSleep(sleep_s * 1000)
         }
       }
-      await CommonUtil.asyncDispatchAllPromiseInQueen()
       this.log(`用户${userInfo.screen_name}的微博数据抓取完毕`)
     }
     this.log(`所有任务抓取完毕`)
