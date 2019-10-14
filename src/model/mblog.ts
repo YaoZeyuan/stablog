@@ -27,7 +27,6 @@ export default class Mblog extends Base {
         return []
       })
 
-    recordList = recordList.slice(0, 1)
     let mblogRecordList = []
     for (let record of recordList) {
       let mblogRecordJson = _.get(record, ['raw_json'], '{}')
