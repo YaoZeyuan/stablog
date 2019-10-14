@@ -116,13 +116,13 @@ class GenerateCustomer extends Base {
         bookCounter++
         let booktitle = ''
         if (weiboEpubList.length <= 1) {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博记录(${moment
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理(${moment
             .unix(resourcePackage.startDayAt)
             .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
             .unix(resourcePackage.endDayAt)
             .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         } else {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博记录-第${resourcePackage.bookIndex}/${
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${
             resourcePackage.totalBookCount
           }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
             .unix(resourcePackage.endDayAt)
@@ -311,9 +311,50 @@ class GenerateCustomer extends Base {
       },
     })
     let page = await browser.newPage()
+    // 初始化pdf类
+    let pdfDocument = new PDFKit({
+      margin: 0,
+      layout: 'landscape',
+      size: [667, 375 * 2], // a smaller document for small badge printers
+    })
+    pdfDocument.font('./src/public/font/yangrendong_zhushi.ttf')
+    pdfDocument.fontSize(48)
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`\n`)
+    let rawBooktitle = this.bookname
+    let contentList = rawBooktitle.split(`-微博整理`)
+    // 调整展示格式
+    pdfDocument.text(`${contentList[0]}`, {
+      align: 'center',
+    })
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`微博整理`, {
+      align: 'center',
+    })
+    pdfDocument.text(`${contentList[1].replace(/^-/, '')}`, {
+      align: 'center',
+    })
+    pdfDocument.fontSize(20)
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`由稳部落自动生成`, {
+      align: 'center',
+    })
+    pdfDocument.text(`\n`)
+    pdfDocument.text(`项目主页`, {
+      align: 'center',
+    })
+    pdfDocument.text(`\n`)
+    pdfDocument.font('Times-Roman')
+    pdfDocument.fillColor('blue').text(`https://stablog.yaozeyuan.online`, {
+      align: 'center',
+      link: `https://stablog.yaozeyuan.online`,
+    })
 
-    let pdfDocument
     let pdfSaveStream = fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`))
+    pdfDocument.pipe(pdfSaveStream)
     // 先加一页, 避免出现空白页
     let dayIndex = 0
     for (let weiboDayRecord of weiboDayList) {
@@ -349,38 +390,27 @@ class GenerateCustomer extends Base {
             this.log(`第${dayIndex}/${weiboDayList.length}条微博截图捕获失败, 自动跳过`)
             continue
           }
-          if (pdfDocument === undefined) {
-            // 初始化pdf类
-            pdfDocument = new PDFKit({
-              margin: 0,
-              layout: 'landscape',
-              size: [height, width], // a smaller document for small badge printers
-            })
-            pdfDocument.pipe(pdfSaveStream)
-          } else {
-            // 将图片数据添加到pdf文件中
-            pdfDocument.addPage({
-              margin: 0,
-              layout: 'landscape',
-              size: [height, width], // a smaller document for small badge printers
-            })
-          }
+
+          // 将图片数据添加到pdf文件中
+          pdfDocument.addPage({
+            margin: 0,
+            layout: 'landscape',
+            size: [height, width], // a smaller document for small badge printers
+          })
           pdfDocument.image(imageBuffer)
         }
       }
     }
     await page.close()
     await browser.close()
-    if (pdfDocument) {
-      pdfDocument.end()
-      // 等待pdf文件写入完毕
-      await new Promise((resolve, reject) => {
-        pdfSaveStream.on('finish', function() {
-          // do stuff with the PDF file
-          resolve()
-        })
+    pdfDocument.end()
+    // 等待pdf文件写入完毕
+    await new Promise((resolve, reject) => {
+      pdfSaveStream.on('finish', function() {
+        // do stuff with the PDF file
+        resolve()
       })
-    }
+    })
     this.log(`pdf输出完毕`)
   }
 }
