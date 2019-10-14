@@ -14,6 +14,9 @@ import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
 
 class FetchCustomer extends Base {
+  fetchStartAtPageNo = 0
+  fetchEndAtPageNo = 10000
+
   requestConfig = {
     st: '',
   }
@@ -33,6 +36,8 @@ class FetchCustomer extends Base {
     let fetchConfigJSON = fs.readFileSync(PathConfig.customerTaskConfigUri).toString()
     this.log('content =>', fetchConfigJSON)
     let customerTaskConfig: TypeTaskConfig.Customer = json5.parse(fetchConfigJSON)
+    this.fetchStartAtPageNo = customerTaskConfig.fetchStartAtPageNo || this.fetchStartAtPageNo
+    this.fetchEndAtPageNo = customerTaskConfig.fetchEndAtPageNo || this.fetchEndAtPageNo
     this.log(`开始进行自定义抓取`)
     type TypeTaskPackage = {
       [key: string]: Array<string>
@@ -88,14 +93,22 @@ class FetchCustomer extends Base {
       this.requestConfig.st = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
 
       for (let page = 1; page < totalPageCount; page++) {
-        await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
-        // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
-        let sleep_s = 15
-        this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
-        await Util.asyncSleep(sleep_s * 1000)
+        if (page < this.fetchStartAtPageNo) {
+          page = this.fetchStartAtPageNo
+          this.log(`从第${this.fetchStartAtPageNo}页数据开始抓取`)
+        }
+        if (page > this.fetchStartAtPageNo) {
+          this.log(`已抓取至设定的第${this.fetchStartAtPageNo}页数据, 自动结束抓取`)
+        } else {
+          await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
+          // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
+          let sleep_s = 20
+          this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
+          await Util.asyncSleep(sleep_s * 1000)
+        }
       }
       await CommonUtil.asyncDispatchAllPromiseInQueen()
-      this.log(`用户${userInfo.screen_name}微博抓取完毕`)
+      this.log(`用户${userInfo.screen_name}的微博数据抓取完毕`)
     }
     this.log(`所有任务抓取完毕`)
   }

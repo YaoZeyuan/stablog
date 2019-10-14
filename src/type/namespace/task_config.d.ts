@@ -21,6 +21,14 @@ declare namespace TaskConfig {
      * 微博排序方式: 按发布事件升序排列, 按发布时间降序排列
      */
     postAtOrderBy: 'desc' | 'asc'
+    /**
+     * 开始抓取的页码数, 默认为0(方便抓取区间数据)
+     */
+    fetchStartAtPageNo: number
+    /**
+     * 结束抓取的页码数, 默认为10000(方便抓取区间数据)
+     */
+    fetchEndAtPageNo: number
   }
 }
 
