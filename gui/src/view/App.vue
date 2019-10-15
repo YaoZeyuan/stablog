@@ -12,7 +12,7 @@
           <el-tab-pane label="运行日志" :name="constant.tab.log">
             <Log />
           </el-tab-pane>
-          <el-tab-pane label="登陆知乎" :name="constant.tab.login">
+          <el-tab-pane label="登陆微博" :name="constant.tab.login">
             <Login />
           </el-tab-pane>
           <el-tab-pane label="使用说明" :name="constant.tab.helper">
@@ -29,7 +29,6 @@
 </template>
 
 <script>
-  import Dashboard from './dashboard/index.vue'
   import CustomerTask from './customer_task/index.vue'
   import Login from './login/index.vue'
   import Log from './log/index.vue'
@@ -40,7 +39,6 @@
   export default {
     name: 'App',
     components:{
-      Dashboard,
       CustomerTask,
       Log,
       Login,

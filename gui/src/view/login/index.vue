@@ -1,6 +1,6 @@
 <template>
   <div>
-    <webview name="zhihu" id="foo" src="https://www.zhihu.com/" style></webview>
+    <webview name="zhihu" id="foo" src="https://m.weibo.cn/" style></webview>
   </div>
 </template>
 

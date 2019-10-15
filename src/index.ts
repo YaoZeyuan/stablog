@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-import Electron,{Menu} from 'electron'
+import Electron, { Menu } from 'electron'
 import CommonUtil from '~/src/library/util/common'
 import ConfigHelperUtil from '~/src/library/util/config_helper'
 import PathConfig from '~/src/config/path'
@@ -19,19 +19,25 @@ function createWindow() {
   if (process.platform === 'darwin') {
     const template = [
       {
-        label: "Application",
+        label: 'Application',
         submenu: [
-          { label: "Quit", accelerator: "Command+Q", click: function() { app.quit(); }}
-        ]
-      }, 
+          {
+            label: 'Quit',
+            accelerator: 'Command+Q',
+            click: function() {
+              app.quit()
+            },
+          },
+        ],
+      },
       {
-        label: "Edit",
+        label: 'Edit',
         submenu: [
-          { label: "Copy", accelerator: "CmdOrCtrl+C", selector: "copy:" },
-          { label: "Paste", accelerator: "CmdOrCtrl+V", selector: "paste:" },
-        ]
-      }
-    ];
+          { label: 'Copy', accelerator: 'CmdOrCtrl+C', selector: 'copy:' },
+          { label: 'Paste', accelerator: 'CmdOrCtrl+V', selector: 'paste:' },
+        ],
+      },
+    ]
     Menu.setApplicationMenu(Menu.buildFromTemplate(template))
   } else {
     Menu.setApplicationMenu(null)
@@ -62,10 +68,10 @@ function createWindow() {
 
   // and load the index.html of the app.
   // 线上地址
-  mainWindow.loadFile('./gui/dist/index.html')
+  // mainWindow.loadFile('./gui/dist/index.html')
   // 本地调试 & 打开控制台
-  // mainWindow.loadURL('http://127.0.0.1:8080')
-  // mainWindow.webContents.openDevTools()
+  mainWindow.loadURL('http://127.0.0.1:8080')
+  mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {

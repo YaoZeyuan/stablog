@@ -10,9 +10,6 @@
     </el-row>
     <el-card>
       <el-form label-width="100px">
-        <el-form-item label="电子书名">
-          <el-input v-model="database.taskConfig.bookTitle"></el-input>
-        </el-form-item>
         <el-form-item label="抓取任务">
           <template v-if="database.taskConfig.configList.length">
             <el-table :data="database.taskConfig.configList" stripe border style="width: 100%">
@@ -399,10 +396,10 @@ export default Vue.extend({
     async asyncCheckIsLogin() {
       // 已登陆则返回用户信息 =>
       // {"id":"57842aac37ccd0de3965f9b6e17cb555","url_token":"404-Page-Not-found","name":"姚泽源"}
-      let record = await http.asyncGet('https://www.zhihu.com/api/v4/me')
-      this.status.isLogin = _.has(record, ['id'])
+      let record = await http.asyncGet('https://m.weibo.cn/api/config')
+      this.status.isLogin = _.get(record, ['data', 'login'], false)
       if (this.status.isLogin === false) {
-        this.$alert(`检测尚未登陆知乎, 请登陆后再开始执行任务`, {})
+        this.$alert(`检测到尚未登陆微博, 请登陆后再使用`, {})
         this.$emit('update:currentTab', 'login')
       }
       console.log('checkIsLogin: record =>', record)
