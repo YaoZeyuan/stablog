@@ -79,26 +79,11 @@
 2.  项目开发流程
     1.  `npm run watch` 启动监控, 将`ts`自动编译为`js`文件
     2.  `npm run startgui`, 启动前端界面(vue项目, 基于Element-UI简单构建)
-    3.  修改`src/index.ts`, 将代码由
-        ```js
-        // 线上地址
-        mainWindow.loadFile('./gui/dist/index.html')
-        // 本地调试 & 打开控制台
-        // mainWindow.loadURL('http://127.0.0.1:8080')
-        // mainWindow.webContents.openDevTools()
-        ```
-        替换为
-        ```js
-        // 线上地址
-        // mainWindow.loadFile('./gui/dist/index.html')
-        // 本地调试 & 打开控制台
-        mainWindow.loadURL('http://127.0.0.1:8080')
-        mainWindow.webContents.openDevTools()
-        ```
-        使用本地页面进行调试
-    4.  执行`npm run start`, 启动Electron
-        1.  前端点击`开始任务`按钮后, 将任务配置写入`task_config_list.json`, 再由Electron收集登陆后产生的知乎cookie, 存入`config.json`文件中, 随后启动`Dispatch:Command`命令, 开始执行任务
-3.  注意事项
+    3.  执行`npm run start`, 以调试模式启动Electron
+        1.  前端点击`开始任务`按钮后, 将任务配置写入`task_config_list.json`, 再由Electron收集登陆后产生的微博cookie, 存入`config.json`文件中, 随后启动`Dispatch:Command`命令, 开始执行任务
+3.  项目发布
+    1.  执行`npm run dist`
+4.  注意事项
     1.  Electron需要编译sqlite3后才能启动, 不容易搞, 建议直接使用`npm run ace`命令行方式进行调试
     2.  命令使用说明详见代码
 

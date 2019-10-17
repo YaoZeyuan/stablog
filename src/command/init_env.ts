@@ -10,7 +10,7 @@ import DatabaseConfig from '~/src/config/database'
 import PathConfig from '~/src/config/path'
 
 class InitEnv extends Base {
-  static get signature () {
+  static get signature() {
     return `
      Init:Env
 
@@ -18,25 +18,27 @@ class InitEnv extends Base {
      `
   }
 
-  static get description () {
+  static get description() {
     return '初始化运行环境'
   }
 
-  async execute (args: any, options: any) {
+  async execute(args: any, options: any) {
     let { rebase: isRebase } = options
 
     this.log(`检查更新`)
-    let remoteVersionConfig: TypeConfig.Version = await http.get(CommonConfig.checkUpgradeUri, {
-      params: {
-        'now': (new Date()).toISOString
-      }
-    }).catch(e => {
-      return {}
-    })
+    let remoteVersionConfig: TypeConfig.Version = await http
+      .get(CommonConfig.checkUpgradeUri, {
+        params: {
+          now: new Date().toISOString,
+        },
+      })
+      .catch(e => {
+        return {}
+      })
     // 已经通过Electron拿到了最新知乎cookie并写入了配置文件中, 因此不需要再填写配置文件了
     if (remoteVersionConfig.version > CommonConfig.version) {
       this.log('有新版本')
-      this.log(`请到${remoteVersionConfig.downloadUrl}下载最新版本知乎助手`)
+      this.log(`请到${remoteVersionConfig.downloadUrl}下载最新版: 稳部落`)
       this.log(`更新日期:${remoteVersionConfig.releaseAt}`)
       this.log(`更新说明:${remoteVersionConfig.releaseNote}`)
       return
@@ -64,7 +66,6 @@ class InitEnv extends Base {
       }
     }
     this.log('数据库初始化完毕')
-
   }
 }
 

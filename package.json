@@ -12,7 +12,8 @@
   "scripts": {
     "startgui": "node gui/script/dev-server.js",
     "buildgui": "node gui/script/build.js",
-    "start": "electron dist/index.js",
+    "start": "electron dist/index.js --debug",
+    "prod": "electron dist/index.js",
     "ace": "node dist/ace.js",
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",

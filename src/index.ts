@@ -8,6 +8,8 @@ import DispatchTaskCommand from '~/src/command/dispatch_task'
 import fs from 'fs'
 import _ from 'lodash'
 
+let argv = process.argv
+let isDebug = argv.includes('--debug')
 let { app, BrowserWindow, ipcMain, session, shell } = Electron
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -65,15 +67,20 @@ function createWindow() {
       allowRunningInsecureContent: true,
       // 启用node支持
       nodeIntegration: true,
+      // 启用webview标签
+      webviewTag: true,
     },
   })
 
   // and load the index.html of the app.
-  // 线上地址
-  // mainWindow.loadFile('./gui/dist/index.html')
-  // 本地调试 & 打开控制台
-  mainWindow.loadURL('http://127.0.0.1:8080')
-  mainWindow.webContents.openDevTools()
+  if (isDebug) {
+    // 本地调试 & 打开控制台
+    mainWindow.loadURL('http://127.0.0.1:8080')
+    mainWindow.webContents.openDevTools()
+  } else {
+    // 线上地址
+    mainWindow.loadFile('./gui/dist/index.html')
+  }
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {

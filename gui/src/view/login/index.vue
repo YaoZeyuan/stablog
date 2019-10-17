@@ -1,6 +1,6 @@
 <template>
   <div>
-    <webview name="zhihu" id="foo" src="https://m.weibo.cn/" style></webview>
+    <webview name="weibo" id="foo" src="https://m.weibo.cn/" style disablewebsecurity></webview>
   </div>
 </template>
 

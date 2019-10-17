@@ -266,6 +266,9 @@ export default Vue.extend({
       this.database.taskConfig.configList.push(_.clone(defaultConfigItem))
     }
     await this.asyncCheckIsLogin()
+    if (this.database.taskConfig.configList[0].rawInputText) {
+      await this.asyncData()
+    }
   },
   methods: {
     async asyncData() {
@@ -372,7 +375,7 @@ export default Vue.extend({
   },
   computed: {
     watchTaskConfig(): TypeTaskConfig.Customer {
-      if (this.database.taskConfig.configList.length > 0) {
+      if (this.database.taskConfig.configList[0].uid) {
         // 仅当配置列表中有值时, 才进行自动保存
         // 避免初始载入配置时被默认配置覆盖掉
         this.saveConfig()

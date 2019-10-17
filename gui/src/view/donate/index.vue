@@ -41,7 +41,10 @@
     },
     methods:{
       async asyncGetDonateList(){
-        this.database.thankYouList = await http.asyncGet("https://www.easy-mock.com/mock/5c680a151b1cdb683581355c/zhihuhelp/thank_you/list")
+        let thankYouList = await http.asyncGet("https://www.easy-mock.com/mock/5d9b49fc896b9432186c1fa5/stablog/thank_you/list") || []
+        if(thankYouList.length){
+          this.database.thankYouList = thankYouList
+        }
       }
     }
   }
