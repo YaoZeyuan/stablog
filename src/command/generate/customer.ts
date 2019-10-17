@@ -350,7 +350,7 @@ class GenerateCustomer extends Base {
     pdfDocument.font('Times-Roman')
     pdfDocument.fillColor('blue').text(`https://stablog.yaozeyuan.online`, {
       align: 'center',
-      link: `https://stablog.yaozeyuan.online`,
+      link: `https://www.yaozeyuan.online/stablog`,
     })
 
     let pdfSaveStream = fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`))
