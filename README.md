@@ -35,6 +35,9 @@
 
 #   开发说明
 
+0.  必须使用node12
+    1.  Electron版本必须和环境中的node版本一致, 才能正常编译sqlite
+        1.  目前使用的是Electron@6.0.12, 自带node为12.4.0, 因此要求环境node也需要为12.x.x
 1.  建议只开发命令版
     1.  使用`npm run ace`启动
 2.  GUI版需要为Electron编译sqlite3, 非常麻烦, 不建议尝试
