@@ -68,6 +68,8 @@ class Http {
       timeout: RequestConfig.timeoutMs,
     })
   }
+
+  static rawClient = http
 }
 
 export default Http

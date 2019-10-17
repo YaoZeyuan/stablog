@@ -3,10 +3,7 @@
     <el-container>
       <el-main>
         <el-tabs v-model="status.tab" @tab-click="handleClickTab">
-          <!-- <el-tab-pane label="任务面板" :name="constant.tab.dashboard">
-            <Dashboard :currentTab.sync="status.tab"/>
-          </el-tab-pane>-->
-          <el-tab-pane label="自定义任务" :name="constant.tab.customerTask">
+          <el-tab-pane label="系统设置" :name="constant.tab.customerTask">
             <CustomerTask :currentTab.sync="status.tab" />
           </el-tab-pane>
           <el-tab-pane label="运行日志" :name="constant.tab.log">

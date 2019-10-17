@@ -37,6 +37,17 @@
         "Generate:Customer"
       ],
       "outFiles": ["${workspaceFolder}/**/*.js"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "debug",
+      "program": "${workspaceFolder}/src/ace.ts",
+      "args": [
+        // 抓取数据
+        "Command:Demo"
+      ],
+      "outFiles": ["${workspaceFolder}/**/*.js"]
     }
   ]
 }

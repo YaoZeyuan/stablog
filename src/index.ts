@@ -63,6 +63,8 @@ function createWindow() {
       webSecurity: false,
       // 允许 https 页面运行 http url 里的资源
       allowRunningInsecureContent: true,
+      // 启用node支持
+      nodeIntegration: true,
     },
   })
 

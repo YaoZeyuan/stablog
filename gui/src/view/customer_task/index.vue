@@ -1,124 +1,128 @@
 <template>
   <div>
-    <el-row type="flex" align="middle" justify="center">
-      <el-col :span="20">
-        <h1>自定义任务</h1>
-      </el-col>
-      <el-col :span="4">
-        <el-button type="primary" round @click="asyncHandleStartTask">开始执行</el-button>
-      </el-col>
-    </el-row>
     <el-card>
       <el-form label-width="100px">
-        <el-form-item label="抓取任务">
-          <template v-if="database.taskConfig.configList.length">
-            <el-table :data="database.taskConfig.configList" stripe border style="width: 100%">
-              <el-table-column label="任务类型" width="220">
-                <template slot-scope="scope">
-                  <el-select v-model="scope.row.type" placeholder="请选择">
-                    <el-option
-                      v-for="itemKey in Object.keys(constant.TaskType)"
-                      :key="constant.TaskType[itemKey]"
-                      :label="itemKey"
-                      :value="constant.TaskType[itemKey]"
-                    ></el-option>
-                  </el-select>
-                </template>
-              </el-table-column>
-              <el-table-column label="待抓取url">
-                <template slot-scope="scope">
-                  <el-input v-model="scope.row.rawInputText" placeholder="请输入待抓取url"></el-input>
-                </template>
-              </el-table-column>
-              <el-table-column label="任务id">
-                <template slot-scope="scope">
-                  <span>{{scope.row.id ? scope.row.id : '未解析到任务id' }}</span>
-                </template>
-              </el-table-column>
-              <el-table-column label="备注">
-                <template slot-scope="scope">
-                  <el-input v-model="scope.row.comment" placeholder="备注信息"></el-input>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="130">
-                <template slot-scope="scope">
-                  <el-button size="mini" @click="addTask(scope.$index)" icon="el-icon-plus"></el-button>
-                  <el-button
-                    size="mini"
-                    type="danger"
-                    @click="removeTaskByIndex(scope.$index, scope.row)"
-                    icon="el-icon-minus"
-                  ></el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+        <el-form-item label="个人主页">
+          <div class="input-homepage-url">
+            <el-input
+              v-model="database.taskConfig.configList[0].rawInputText"
+              placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281"
+            />
+            <el-popover placement="bottom" trigger="click">
+              <div>
+                <p>请输入您的个人主页url</p>
+                <br />
+                <p>支持以下三种格式:</p>
+                <p>https://weibo.com/u/6646798696</p>
+                <p>https://weibo.com/guhongze</p>
+                <p>https://m.weibo.cn/u/1687243315</p>
+              </div>
+              <i class="el-icon-question" slot="reference"></i>
+            </el-popover>
+          </div>
+        </el-form-item>
+        <el-form-item label="用户信息">
+          <template v-if="database.taskConfig.configList[0].uid">
+            <el-card>
+              <div class="content">
+                <p>用户名:{{database.currentUserInfo.screen_name}}</p>
+                <p>微博总数:{{database.currentUserInfo.statuses_count}}</p>
+                <p>待抓取页数:{{database.currentUserInfo.total_page_count}}</p>
+                <p>
+                  备份全部微博预计耗时:
+                  <span
+                    style="color:red;"
+                  >{{database.currentUserInfo.total_page_count * 30 / 60}}分钟</span>
+                </p>
+                <p>粉丝数:{{database.currentUserInfo.followers_count}}</p>
+              </div>
+            </el-card>
           </template>
           <template v-else>
-            <el-button @click="addTask()">添加</el-button>
+            <span>数据待同步</span>
           </template>
         </el-form-item>
-        <el-form-item label="排序规则">
-          <template v-if="database.taskConfig.orderByList.length">
-            <el-table :data="database.taskConfig.orderByList" stripe border style="width: 100%">
-              <el-table-column label="排序指标(从上至下)" width="220">
-                <template slot-scope="scope">
-                  <el-select v-model="scope.row.orderBy" placeholder="请选择">
-                    <el-option
-                      v-for="itemKey in Object.keys(constant.OrderBy)"
-                      :key="constant.OrderBy[itemKey]"
-                      :label="itemKey"
-                      :value="constant.OrderBy[itemKey]"
-                    ></el-option>
-                  </el-select>
-                </template>
-              </el-table-column>
-              <el-table-column label="规则">
-                <template slot-scope="scope">
-                  <el-radio-group v-model="scope.row.order">
-                    <el-radio
-                      :label="'asc'"
-                    >{{(scope.row.orderBy === constant.OrderBy.创建时间 || scope.row.orderBy === constant.OrderBy.更新时间) ? '从旧到新' : '从低到高'}}</el-radio>
-                    <el-radio
-                      :label="'desc'"
-                    >{{(scope.row.orderBy === constant.OrderBy.创建时间 || scope.row.orderBy === constant.OrderBy.更新时间) ? '从新到旧' : '从高到低'}}</el-radio>
-                  </el-radio-group>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" width="130">
-                <template slot-scope="scope">
-                  <el-button size="mini" @click="addOrder(scope.$index)" icon="el-icon-plus"></el-button>
-                  <el-button
-                    size="mini"
-                    type="danger"
-                    @click="removeOrderByIndex(scope.$index, scope.row)"
-                    icon="el-icon-minus"
-                  ></el-button>
-                </template>
-              </el-table-column>
-            </el-table>
-          </template>
-          <template v-else>
-            <el-button @click="addTask()">添加</el-button>
-          </template>
+        <el-divider content-position="center">备份配置</el-divider>
+        <el-form-item label="备份页数">
+          <span>从第</span>
+          <el-input-number
+            placeholder
+            v-model="database.taskConfig.fetchStartAtPageNo"
+            :min="0"
+            :step="1"
+          ></el-input-number>
+          <span>页备份到第</span>
+          <el-input-number
+            placeholder
+            v-model="database.taskConfig.fetchEndAtPageNo"
+            :min="1"
+            :step="1"
+          ></el-input-number>
+          <span>页</span>
         </el-form-item>
-
-        <el-form-item label="图片质量">
+        <el-divider content-position="center">输出规则</el-divider>
+        <el-form-item label="微博排序">
+          <el-radio-group v-model="database.taskConfig.postAtOrderBy">
+            <el-radio :label="constant.Order.由旧到新">由旧到新</el-radio>
+            <el-radio :label="constant.Order.由新到旧">由新到旧</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="图片配置">
           <el-radio-group v-model="database.taskConfig.imageQuilty">
-            <el-radio :label="constant.ImageQuilty.高清">高清</el-radio>
+            <el-radio :label="constant.ImageQuilty.默认">有图</el-radio>
             <el-radio :label="constant.ImageQuilty.无图">无图</el-radio>
-            <el-radio :label="constant.ImageQuilty.原图">原图</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="自动分卷">
+          <span>每</span>
           <el-input-number
-            placeholder="每卷内最多包含n个问题/文章/想法"
-            v-model="database.taskConfig.maxQuestionOrArticleInBook"
+            placeholder="每n条微博自动分卷"
+            v-model="database.taskConfig.maxBlogInBook"
             :min="1"
             :step="100"
           ></el-input-number>
+          <span>条微博输出一本电子书</span>
         </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="database.taskConfig.comment"></el-input>
+        <el-form-item label="时间范围">
+          <span>只输出从</span>
+          <el-date-picker
+            v-model="database.taskConfig.outputStartAtMs"
+            type="date"
+            placeholder="选择日期"
+            value-format="timestamp"
+          ></el-date-picker>
+          <span>到</span>
+          <el-date-picker
+            v-model="database.taskConfig.outputEndAtMs"
+            type="date"
+            placeholder="选择日期"
+            value-format="timestamp"
+          ></el-date-picker>
+          <span>间发布的微博</span>
+        </el-form-item>
+        <el-form-item label="分页依据">
+          <span>按</span>
+          <el-select v-model="database.taskConfig.mergeBy" placeholder="请选择">
+            <el-option label="年" :value="constant.MergeBy['年']"></el-option>
+            <el-option label="月" :value="constant.MergeBy['月']"></el-option>
+            <el-option label="日" :value="constant.MergeBy['日']"></el-option>
+            <el-option label="微博条数" :value="constant.MergeBy['微博条数']"></el-option>
+          </el-select>
+          <span>汇集微博</span>
+          <template v-if="database.taskConfig.mergeBy === constant.MergeBy['微博条数']">
+            <span>, 每</span>
+            <el-input-number
+              placeholder="每n条微博一页"
+              v-model="database.taskConfig.mergeCount"
+              :min="1"
+              :step="100"
+            ></el-input-number>
+            <span>条微博一页</span>
+          </template>
+        </el-form-item>
+        <el-form-item label="操作">
+          <el-button plain type="primary" @click="asyncHandleStartTask">开始备份</el-button>
+          <el-button plain type="info" @click="asyncData()">同步数据</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -135,6 +139,7 @@
 import Vue from 'vue'
 
 import _ from 'lodash'
+import moment from 'moment'
 import fs from 'fs'
 import http from '~/gui/src/library/http'
 import util from '~/gui/src/library/util'
@@ -150,76 +155,46 @@ const remote = electron.remote
 
 let pathConfig = remote.getGlobal('pathConfig')
 
-const TaskType = {
-  用户提问过的所有问题: 'author-ask-question',
-  用户的所有回答: 'author-answer',
-  用户发布的所有想法: 'author-pin',
-  用户赞同过的所有回答: 'author-agree-answer',
-  用户赞同过的所有文章: 'author-agree-article',
-  用户关注过的所有问题: 'author-watch-question',
-  话题: 'topic',
-  收藏夹: 'collection',
-  专栏: 'column',
-  文章: 'article',
-  问题: 'question',
-  回答: 'answer',
-  想法: 'pin',
-}
-const OrderBy: {
-  创建时间: 'createAt'
-  更新时间: 'updateAt'
-  赞同数: 'voteUpCount'
-  评论数: 'commentCount'
-} = {
-  创建时间: 'createAt',
-  更新时间: 'updateAt',
-  赞同数: 'voteUpCount',
-  评论数: 'commentCount',
-}
 const Order: {
-  从低到高: 'asc'
-  从旧到新: 'asc'
-  从高到低: 'desc'
-  从新到旧: 'desc'
+  由旧到新: 'asc'
+  由新到旧: 'desc'
 } = {
-  从低到高: 'asc',
-  从旧到新: 'asc',
-  从高到低: 'desc',
-  从新到旧: 'desc',
+  由旧到新: 'asc',
+  由新到旧: 'desc',
 }
 const ImageQuilty = {
   无图: 'none',
-  原图: 'raw',
-  高清: 'hd',
-}
-
-const Translate_Task_Type = {
-  [TaskConfigType.CONST_Task_Type_用户提问过的所有问题]: '用户提问过的所有问题',
-  [TaskConfigType.CONST_Task_Type_用户的所有回答]: '用户的所有回答',
-  [TaskConfigType.CONST_Task_Type_问题]: '问题',
-  [TaskConfigType.CONST_Task_Type_回答]: '回答',
-  [TaskConfigType.CONST_Task_Type_想法]: '想法',
-  [TaskConfigType.CONST_Task_Type_用户发布的所有想法]: '用户发布的所有想法',
-  [TaskConfigType.CONST_Task_Type_用户赞同过的所有回答]: '用户赞同过的所有回答',
-  [TaskConfigType.CONST_Task_Type_用户赞同过的所有文章]: '用户赞同过的所有文章',
-  [TaskConfigType.CONST_Task_Type_用户关注过的所有问题]: '用户关注过的所有问题',
-  [TaskConfigType.CONST_Task_Type_话题]: '话题',
-  [TaskConfigType.CONST_Task_Type_收藏夹]: '收藏夹',
-  [TaskConfigType.CONST_Task_Type_专栏]: '专栏',
-  [TaskConfigType.CONST_Task_Type_文章]: '文章',
+  默认: 'default',
 }
 
 const Translate_Image_Quilty = {
-  [TaskConfigType.CONST_Image_Quilty_高清]: '高清',
-  [TaskConfigType.CONST_Image_Quilty_原图]: '原图',
+  [TaskConfigType.CONST_Image_Quilty_默认]: '默认',
   [TaskConfigType.CONST_Image_Quilty_无图]: '无图',
+}
+
+const defaultConfigItem = {
+  uid: '',
+  rawInputText: '',
+  comment: '',
+}
+const MergeBy: { [key: string]: string } = {
+  ['年']: 'year',
+  ['月']: 'month',
+  ['日']: 'day',
+  ['微博条数']: 'count',
 }
 
 export default Vue.extend({
   name: 'customerTask',
   data(): {
     database: {
-      taskConfig: TypeTaskConfig.Record
+      taskConfig: TypeTaskConfig.Customer
+      currentUserInfo: {
+        screen_name: string
+        statuses_count: number
+        total_page_count: number
+        followers_count: number
+      }
     }
     // 页面状态
     status: {
@@ -227,175 +202,165 @@ export default Vue.extend({
     }
     constant: {}
   } {
-    let configList: Array<TypeTaskConfig.ConfigItem> = []
-    let taskConfig: TypeTaskConfig.Record = {
-      configList: [],
-      imageQuilty: TaskConfigType.CONST_Image_Quilty_高清,
-      maxQuestionOrArticleInBook: 1000,
-      orderByList: [
-        {
-          orderBy: TaskConfigType.CONST_Order_By_创建时间,
-          order: TaskConfigType.CONST_Order_Desc,
-        },
-      ],
+    let taskConfig: TypeTaskConfig.Customer = {
+      configList: [_.clone(defaultConfigItem)],
+      imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
+      maxBlogInBook: 100000,
+      postAtOrderBy: TaskConfigType.CONST_Order_Asc,
       bookTitle: '',
       comment: '',
+      mergeBy: TaskConfigType.CONST_Merge_By_月,
+      mergeCount: 1000,
+      fetchStartAtPageNo: 0,
+      fetchEndAtPageNo: 100000,
+      outputStartAtMs: moment('2015-01-01 00:00:00').unix() * 1000,
+      outputEndAtMs: moment().unix() * 1000,
+    }
+    if (taskConfig.configList.length === 0) {
+      // 如果没有数据, 就要手工补上一个, 确保数据完整
+      taskConfig.configList.push(_.clone(defaultConfigItem))
     }
     return {
       // 页面数据
       database: {
         taskConfig: taskConfig,
+        currentUserInfo: {
+          screen_name: '',
+          statuses_count: 0,
+          total_page_count: 0,
+          followers_count: 0,
+        },
       },
       // 页面状态
       status: {
         isLogin: false,
       },
       constant: {
-        TaskType,
-        OrderBy,
         Order,
         ImageQuilty,
+        MergeBy,
       },
     }
   },
   async mounted() {
     let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri)
-    let taskConfig: TypeTaskConfig.Record = {
-      configList: [],
-      imageQuilty: TaskConfigType.CONST_Image_Quilty_高清,
+    let taskConfig: TypeTaskConfig.Customer = {
+      configList: [_.clone(defaultConfigItem)],
+      imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
+      maxBlogInBook: 100000,
+      postAtOrderBy: TaskConfigType.CONST_Order_Desc,
       bookTitle: '',
-      maxQuestionOrArticleInBook: 1000,
-      orderByList: [
-        {
-          orderBy: TaskConfigType.CONST_Order_By_创建时间,
-          order: TaskConfigType.CONST_Order_Desc,
-        },
-      ],
       comment: '',
+      mergeBy: TaskConfigType.CONST_Merge_By_月,
+      mergeCount: 1000,
+      fetchStartAtPageNo: 0,
+      fetchEndAtPageNo: 100000,
+      outputStartAtMs: moment('2015-01-01 00:00:00').unix() * 1000,
+      outputEndAtMs: moment().unix() * 1000,
     }
     try {
       taskConfig = JSON.parse(jsonContent)
     } catch (e) {}
     this.database.taskConfig = taskConfig
+    if (this.database.taskConfig.configList.length === 0) {
+      this.database.taskConfig.configList.push(_.clone(defaultConfigItem))
+    }
     await this.asyncCheckIsLogin()
   },
   methods: {
-    async saveConfig() {
-      // 只保存匹配到id值的记录
-      let rawTaskConfig = _.cloneDeep(this.database.taskConfig)
-      let taskConfigList = []
-      for (let config of rawTaskConfig.configList) {
-        if (config.id) {
-          taskConfigList.push(config)
-        }
+    async asyncData() {
+      let rawInputText = this.database.taskConfig.configList[0].rawInputText
+      if (!rawInputText) {
+        this.$alert(`请先输入待备份用户主页地址`)
+        return false
       }
-      rawTaskConfig.configList = taskConfigList
+      let uid = await this.asyncGetUid(rawInputText)
+      if (!uid) {
+        this.$alert(`用户不存在, 请确认用户主页地址是否正确`)
+        return false
+      }
+      let userInfo = await this.asyncGetUserInfo(uid)
+      Vue.set(this.database.taskConfig.configList, 0, {
+        rawInputText,
+        uid,
+        comment: '',
+      })
+      this.database.currentUserInfo = userInfo
+      return true
+    },
+    /**
+     * 将用户输入的主页url转为uid
+     */
+    async asyncGetUid(rawInputUrl: string) {
+      if (rawInputUrl.includes('m.weibo.cn/u/')) {
+        let rawUid = rawInputUrl.split(`m.weibo.cn/u/`)[1]
+        let uid = _.get(rawUid.match(/^\d+/), 0, '')
+        return uid
+      }
+      if (rawInputUrl.includes('weibo.com/u/')) {
+        let rawUid = rawInputUrl.split(`weibo.com/u/`)[1]
+        let uid = _.get(rawUid.match(/^\d+/), 0, '')
+        return uid
+      } else {
+        let rawAccount = rawInputUrl.split(`weibo.com/`)[1]
+        let account = rawAccount.split('?')[0]
+        // 新浪会将url重定向到
+        let response = await http.rawClient.get(
+          `https://m.weibo.cn/${account}?topnav=1&wvr=6&topsug=1&is_all=1&jumpfrom=weibocom&topnav=1&wvr=6&topsug=1&is_all=1`,
+        )
+        let url = response.request.responseURL || ''
+        let rawUid = url.split(`m.weibo.cn/u/`)[1]
+        let uid = _.get(rawUid.match(/^\d+/), 0, '')
+        return uid
+      }
+    },
+    /**
+     * 获取用户信息
+     */
+    async asyncGetUserInfo(uid: number | string) {
+      let response = await http.asyncGet(`https://m.weibo.cn/api/container/getIndex?&type=uid&value=${uid}`)
+      let userInfo = _.get(response, ['data', 'userInfo'], {})
+      let screen_name = userInfo.screen_name || ''
+      let statuses_count = userInfo.statuses_count || 0
+      let followers_count = userInfo.followers_count || 0
+      let total_page_count = Math.floor(statuses_count / 10)
+      return {
+        screen_name,
+        statuses_count,
+        total_page_count,
+        followers_count,
+      }
+    },
+    async saveConfig() {
+      let rawTaskConfig = _.cloneDeep(this.database.taskConfig)
       fs.writeFileSync(pathConfig.customerTaskConfigUri, JSON.stringify(rawTaskConfig, null, 4))
     },
     async asyncHandleStartTask() {
       this.saveConfig()
       await this.asyncCheckIsLogin()
       if (this.status.isLogin === false) {
-        console.log('尚未登陆知乎')
+        console.log('请先登录微博')
         return
       }
-
+      let asyncSuccess = await this.asyncData()
+      if (asyncSuccess !== true) {
+        return
+      }
       // 将当前任务配置发送给服务器
       ipcRenderer.sendSync('startCustomerTask')
       // 将面板切换到log上
       this.$emit('update:currentTab', 'log')
     },
-    addOrder(index: number) {
-      let newOrder: TypeTaskConfig.OrderConfig = {
-        orderBy: OrderBy.创建时间,
-        order: Order.从旧到新,
-      }
-      this.database.taskConfig.orderByList.splice(index + 1, 0, newOrder)
-    },
-    removeOrderByIndex(index: number) {
-      let oldConfigList = this.database.taskConfig.orderByList
-      oldConfigList.splice(index, 1)
-      this.database.taskConfig.orderByList = oldConfigList
-    },
-    addTask(index: number) {
-      let newTask: TypeTaskConfig.ConfigItem = {
-        type: _.get(
-          this.database.taskConfig.configList,
-          [index, 'type'],
-          TypeTaskConfig.CONST_Task_Type_用户的所有回答,
-        ),
-        id: '',
-        rawInputText: '',
-        comment: '',
-      }
-      this.database.taskConfig.configList.splice(index + 1, 0, newTask)
-    },
-    removeTaskByIndex(index: number) {
-      let oldConfigList = this.database.taskConfig.configList
-      oldConfigList.splice(index, 1)
-      this.database.taskConfig.configList = oldConfigList
-    },
-    matchTaskId(taskType: TypeTaskConfig.TaskType, content: string) {
+    matchTaskId(content: string) {
       let parseResult = querystring.parseUrl(content)
       let rawId = ''
       let id = ''
       let rawContent = parseResult.url
-      switch (taskType) {
-        case TaskConfigType.CONST_Task_Type_用户提问过的所有问题:
-        case TaskConfigType.CONST_Task_Type_用户的所有回答:
-        case TaskConfigType.CONST_Task_Type_用户发布的所有想法:
-        case TaskConfigType.CONST_Task_Type_用户赞同过的所有回答:
-        case TaskConfigType.CONST_Task_Type_用户赞同过的所有文章:
-        case TaskConfigType.CONST_Task_Type_用户关注过的所有问题:
-          // https://www.zhihu.com/people/404-Page-Not-found/activities
-          rawId = _.get(rawContent.split('www.zhihu.com/people/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-        case TaskConfigType.CONST_Task_Type_问题:
-          // https://www.zhihu.com/question/321773825
-          rawId = _.get(rawContent.split('www.zhihu.com/question/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-          break
-        case TaskConfigType.CONST_Task_Type_回答:
-          // https://www.zhihu.com/question/321773825/answer/664230128
-          rawId = _.get(rawContent.split('/answer/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-        case TaskConfigType.CONST_Task_Type_想法:
-          // https://www.zhihu.com/pin/1103720569358385152
-          rawId = _.get(rawContent.split('/pin/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-          break
-        case TaskConfigType.CONST_Task_Type_话题:
-          // https://www.zhihu.com/topic/19550517/hot
-          rawId = _.get(rawContent.split('/topic/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-        case TaskConfigType.CONST_Task_Type_收藏夹:
-          // https://www.zhihu.com/collection/20077047
-          rawId = _.get(rawContent.split('/collection/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-        case TaskConfigType.CONST_Task_Type_专栏:
-          // https://zhuanlan.zhihu.com/advancing-react
-          rawId = _.get(rawContent.split('zhuanlan.zhihu.com/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-        case TaskConfigType.CONST_Task_Type_文章:
-          // https://zhuanlan.zhihu.com/p/59993287
-          rawId = _.get(rawContent.split('zhuanlan.zhihu.com/p/'), [1], '')
-          id = _.get(rawId.split('/'), [0], '')
-          break
-        default:
-          id = ''
-      }
       return id
     },
     async asyncCheckIsLogin() {
       // 已登陆则返回用户信息 =>
-      // {"id":"57842aac37ccd0de3965f9b6e17cb555","url_token":"404-Page-Not-found","name":"姚泽源"}
+      // {"preferQuickapp":0,"data":{"login":true,"st":"ae34d2","uid":"1728335761"},"ok":1}
       let record = await http.asyncGet('https://m.weibo.cn/api/config')
       this.status.isLogin = _.get(record, ['data', 'login'], false)
       if (this.status.isLogin === false) {
@@ -406,15 +371,11 @@ export default Vue.extend({
     },
   },
   computed: {
-    watchTaskConfig(): TypeTaskConfig.Record {
+    watchTaskConfig(): TypeTaskConfig.Customer {
       if (this.database.taskConfig.configList.length > 0) {
         // 仅当配置列表中有值时, 才进行自动保存
         // 避免初始载入配置时被默认配置覆盖掉
         this.saveConfig()
-      }
-      // 监控configList值变动
-      for (let config of this.database.taskConfig.configList) {
-        config.id = this.matchTaskId(config.type, config.rawInputText)
       }
       return this.database.taskConfig
     },
@@ -423,4 +384,11 @@ export default Vue.extend({
 </script>
 
 <style scoped>
+.input-homepage-url {
+  display: flex;
+}
+.input-homepage-url .el-icon-question {
+  margin-left: 12px;
+  margin-right: 12px;
+}
 </style>

@@ -3,16 +3,16 @@ import _ from 'lodash'
 
 // 创建axios实例
 const http = axios.create({
-  timeout: 1000
+  timeout: 1000,
 })
 
 class Http {
-    /**
-     * 封装get方法
-     * @param url
-     * @param config
-     */
-  static async asyncGet (url: string, config: AxiosRequestConfig = {}) {
+  /**
+   * 封装get方法
+   * @param url
+   * @param config
+   */
+  static async asyncGet(url: string, config: AxiosRequestConfig = {}) {
     const response = await http.get(url, config).catch(() => {
       return {}
     })
@@ -20,6 +20,7 @@ class Http {
     return record
   }
 
+  static rawClient = http
 }
 
 export default Http
