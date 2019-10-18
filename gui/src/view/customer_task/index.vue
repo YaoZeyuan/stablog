@@ -121,8 +121,8 @@
           </template>
         </el-form-item>
         <el-form-item label="操作">
-          <el-button plain type="primary" @click="asyncHandleStartTask">开始备份</el-button>
-          <el-button plain type="info" @click="asyncData()">同步数据</el-button>
+          <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
+          <el-button type="success" @click="asyncData()">同步用户信息</el-button>
         </el-form-item>
       </el-form>
     </el-card>

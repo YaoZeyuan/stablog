@@ -5,6 +5,6 @@ let version = parseFloat(packageJson.version)
 class Common {
   static readonly version = version
   // 感谢github-page, 免费cdn
-  static readonly checkUpgradeUri = 'https://www.easy-mock.com/mock/5d9b49fc896b9432186c1fa5/stablog/version'
+  static readonly checkUpgradeUri = 'http://api.bookflaneur.cn/stablog/version'
 }
 export default Common
