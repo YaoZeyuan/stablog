@@ -183,7 +183,7 @@ class FetchCustomer extends Base {
     for (let mblog of mblogList) {
       // 处理完毕, 将数据存入数据库中
       let id = mblog.id
-      let author_uid = mblog.user.id
+      let author_uid = `${mblog.user.id}`
       mblog.created_timestamp_at = this.parseMblogCreateTimestamp(mblog)
       let raw_json = JSON.stringify(mblog)
       await MMblog.replaceInto({
