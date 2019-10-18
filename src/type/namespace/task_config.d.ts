@@ -29,6 +29,14 @@ declare namespace TaskConfig {
      * 结束抓取的页码数, 默认为10000(方便抓取区间数据)
      */
     fetchEndAtPageNo: number
+    /**
+     * 输出微博时间段-开始时间(毫秒)
+     */
+    outputStartAtMs: number
+    /**
+     * 输出微博时间段-结束时间(毫秒)
+     */
+    outputEndAtMs: number
   }
 }
 
