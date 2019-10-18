@@ -15,6 +15,9 @@ let { app, BrowserWindow, ipcMain, session, shell } = Electron
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow: Electron.BrowserWindow
 
+// 关闭https证书校验
+app.commandLine.appendSwitch('ignore-certificate-errors', 'true')
+
 let isRunning = false
 
 function createWindow() {
