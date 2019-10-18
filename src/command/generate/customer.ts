@@ -328,7 +328,8 @@ class GenerateCustomer extends Base {
       layout: 'landscape',
       size: [667, 375 * 2], // a smaller document for small badge printers
     })
-    pdfDocument.font('./src/public/font/yangrendong_zhushi.ttf')
+    let fontUri = path.resolve(__dirname, '../../public/font/yangrendong_zhushi.ttf')
+    pdfDocument.font(fontUri)
     pdfDocument.fontSize(48)
     pdfDocument.text(`\n`)
     pdfDocument.text(`\n`)
