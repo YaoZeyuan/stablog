@@ -247,7 +247,7 @@ export default Vue.extend({
       configList: [_.clone(defaultConfigItem)],
       imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
       maxBlogInBook: 100000,
-      postAtOrderBy: TaskConfigType.CONST_Order_Desc,
+      postAtOrderBy: TaskConfigType.CONST_Order_Asc,
       bookTitle: '',
       comment: '',
       mergeBy: TaskConfigType.CONST_Merge_By_月,

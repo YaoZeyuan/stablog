@@ -2,7 +2,8 @@
 body {
   background: #f2f2f2;
   text-indent: 0em !important;
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB,
+    Microsoft YaHei, Arial, sans-serif;
   word-wrap: break-word;
   /* 自动折行 */
 }
@@ -108,8 +109,12 @@ body {
 .mblog-container .card-wrap .weibo-main .weibo-img-list-container {
   page-break-after: always;
 }
+.mblog-container .card-wrap .weibo-main .weibo-img-list-container .m-img-box {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
 .mblog-container .card-wrap .weibo-main .weibo-img-list-container img {
-  margin-bottom: 3px;
   page-break-after: always;
 }
 .mblog-container .card-wrap .weibo-main .weibo-rp {
@@ -179,7 +184,7 @@ body {
 }
 .panel .list-group ol {
   width: 100%;
-  margin: 0 20px ;
+  margin: 0 20px;
 }
 .panel .list-group li {
   width: 100%;

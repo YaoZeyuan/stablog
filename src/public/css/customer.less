@@ -2,8 +2,8 @@
 body {
   background: #f2f2f2;
   text-indent: 0em !important;
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue,
-    PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB,
+    Microsoft YaHei, Arial, sans-serif;
   word-wrap: break-word; /* 自动折行 */
 }
 .container {
@@ -19,10 +19,9 @@ body {
   hr {
     display: none;
   }
-  a{
+  a {
     // 整体的a标签下都不应有下划线
     text-decoration: none;
-
   }
   border-bottom: 1px solid #e6e6e6;
   .card-wrap {
@@ -117,8 +116,12 @@ body {
       }
       .weibo-img-list-container {
         page-break-after: always;
+        .m-img-box {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 10px;
+        }
         img {
-          margin-bottom: 3px;
           page-break-after: always;
         }
       }
@@ -186,19 +189,19 @@ body {
   }
 }
 
-body{
+body {
   // background-color: #ffffff;
 }
 // 项目目录
-.panel{
-  .panel-heading{
+.panel {
+  .panel-heading {
     display: flex;
     justify-content: center;
     align-items: center;
     font-size: 32px;
-    margin:20px 0;
+    margin: 20px 0;
   }
-  .list-group{
+  .list-group {
     background-color: #ffffff;
     display: flex;
     justify-content: left;
@@ -206,21 +209,21 @@ body{
     font-size: 20px;
     border: 1px solid #ebedf0;
     border-radius: 2px;
-    ol{
-      width:100%;
-      margin:0 20px ;
+    ol {
+      width: 100%;
+      margin: 0 20px;
     }
-    li{
+    li {
       // background-color: #f5f7f9;
-      width:100%;
+      width: 100%;
       border-bottom: 1px solid #eee;
       // height: 37px;
       padding: 16px 0;
       // display: flex;
       align-items: center;
-      a.list-group-item{
+      a.list-group-item {
         text-decoration: none;
-        color:rgb(92, 105, 117);
+        color: rgb(92, 105, 117);
       }
     }
   }
