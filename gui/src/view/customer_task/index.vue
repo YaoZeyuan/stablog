@@ -145,7 +145,6 @@ import http from '~/gui/src/library/http'
 import util from '~/gui/src/library/util'
 import querystring from 'query-string'
 import { TypeTaskConfig } from './task_type'
-import { Task } from 'electron'
 
 let TaskConfigType = TypeTaskConfig
 
@@ -274,11 +273,13 @@ export default Vue.extend({
     async asyncData() {
       let rawInputText = this.database.taskConfig.configList[0].rawInputText
       if (!rawInputText) {
+        // @ts-ignore
         this.$alert(`请先输入待备份用户主页地址`)
         return false
       }
       let uid = await this.asyncGetUid(rawInputText)
       if (!uid) {
+        // @ts-ignore
         this.$alert(`用户不存在, 请确认用户主页地址是否正确`)
         return false
       }
@@ -367,6 +368,7 @@ export default Vue.extend({
       let record = await http.asyncGet('https://m.weibo.cn/api/config')
       this.status.isLogin = _.get(record, ['data', 'login'], false)
       if (this.status.isLogin === false) {
+        // @ts-ignore
         this.$alert(`检测到尚未登陆微博, 请登陆后再使用`, {})
         this.$emit('update:currentTab', 'login')
       }

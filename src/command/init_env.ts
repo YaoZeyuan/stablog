@@ -35,7 +35,7 @@ class InitEnv extends Base {
       .catch(e => {
         return {}
       })
-    // 已经通过Electron拿到了最新知乎cookie并写入了配置文件中, 因此不需要再填写配置文件了
+    // 已经通过Electron拿到了最新cookie并写入了配置文件中, 因此不需要再填写配置文件了
     if (remoteVersionConfig.version > CommonConfig.version) {
       this.log('有新版本')
       this.log(`请到${remoteVersionConfig.downloadUrl}下载最新版: 稳部落`)

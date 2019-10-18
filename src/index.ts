@@ -52,7 +52,7 @@ function createWindow() {
     // 自动隐藏菜单栏
     autoHideMenuBar: true,
     // 窗口的默认标题
-    title: '知乎助手',
+    title: '稳部落',
     // 在屏幕中间展示窗口
     center: true,
     // 展示原生窗口栏
