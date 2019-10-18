@@ -48,6 +48,8 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
   CUSTOMER_CONFIG_maxBlogInBook: TaskConfig.Customer['maxBlogInBook'] = 1000
+  CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
+  CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] = moment().unix() * 1000
 
   async execute(args: any, options: any): Promise<any> {
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
@@ -58,6 +60,8 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_bookname = customerTaskConfig.bookTitle
     this.CUSTOMER_CONFIG_comment = customerTaskConfig.comment
     this.CUSTOMER_CONFIG_mergeBy = customerTaskConfig.mergeBy
+    this.CUSTOMER_CONFIG_outputStartAtMs = customerTaskConfig.outputStartAtMs
+    this.CUSTOMER_CONFIG_outputEndAtMs = customerTaskConfig.outputEndAtMs
     // 根据mergeBy类别, 生成日期格式化参数
     switch (this.CUSTOMER_CONFIG_mergeBy) {
       case 'day':
@@ -91,7 +95,11 @@ class GenerateCustomer extends Base {
 
       this.log(`获取数据记录`)
 
-      let mblogList = await MMblog.asyncGetMblogList(author_uid)
+      let mblogList = await MMblog.asyncGetMblogList(
+        author_uid,
+        this.CUSTOMER_CONFIG_outputStartAtMs / 1000,
+        this.CUSTOMER_CONFIG_outputEndAtMs / 1000,
+      )
       mblogList.sort((a, b) => {
         // 先进行排序
         let aSortBy = a.created_timestamp_at

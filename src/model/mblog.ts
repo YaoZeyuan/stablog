@@ -8,6 +8,7 @@ type TypeMblogRecord = {
   id: string
   author_uid: string
   raw_json: string
+  post_publish_at: number
 }
 
 export default class Mblog extends Base {
@@ -18,11 +19,13 @@ export default class Mblog extends Base {
    * 从数据库中获取微博记录列表
    * @param id
    */
-  static async asyncGetMblogList(uid: string): Promise<Array<TypeWeibo.TypeMblog>> {
+  static async asyncGetMblogList(uid: string, startAt: number, endAt: number): Promise<Array<TypeWeibo.TypeMblog>> {
     let recordList = <Array<TypeMblogRecord>>await this.db
       .select(this.TABLE_COLUMN)
       .from(this.TABLE_NAME)
       .where('author_uid', '=', uid)
+      .andWhere('post_publish_at', '>=', startAt)
+      .andWhere('post_publish_at', '<=', endAt)
       .catch(() => {
         return []
       })

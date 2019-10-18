@@ -78,7 +78,7 @@ class FetchCustomer extends Base {
       let mblogUserInfo = mblog.user
       // 保存用户信息
       await MMblogUser.replaceInto({
-        author_uid: mblogUserInfo.id,
+        author_uid: `${mblogUserInfo.id}`,
         raw_json: JSON.stringify(mblogUserInfo),
       })
       // 用户总微博数
