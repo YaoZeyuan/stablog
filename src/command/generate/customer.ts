@@ -49,7 +49,10 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
   CUSTOMER_CONFIG_maxBlogInBook: TaskConfig.Customer['maxBlogInBook'] = 1000
   CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
-  CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] = moment().unix() * 1000
+  CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] =
+    moment()
+      .add(1, 'year')
+      .unix() * 1000
 
   async execute(args: any, options: any): Promise<any> {
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)

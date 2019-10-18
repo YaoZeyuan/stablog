@@ -213,7 +213,10 @@ export default Vue.extend({
       fetchStartAtPageNo: 0,
       fetchEndAtPageNo: 100000,
       outputStartAtMs: moment('2015-01-01 00:00:00').unix() * 1000,
-      outputEndAtMs: moment().unix() * 1000,
+      outputEndAtMs:
+        moment()
+          .add(1, 'year')
+          .unix() * 1000,
     }
     if (taskConfig.configList.length === 0) {
       // 如果没有数据, 就要手工补上一个, 确保数据完整
@@ -255,7 +258,10 @@ export default Vue.extend({
       fetchStartAtPageNo: 0,
       fetchEndAtPageNo: 100000,
       outputStartAtMs: moment('2015-01-01 00:00:00').unix() * 1000,
-      outputEndAtMs: moment().unix() * 1000,
+      outputEndAtMs:
+        moment()
+          .add(1, 'year')
+          .unix() * 1000,
     }
     try {
       taskConfig = JSON.parse(jsonContent)
