@@ -123,6 +123,7 @@
         <el-form-item label="操作">
           <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
           <el-button type="success" @click="asyncData()">同步用户信息</el-button>
+          <el-button type="danger" @click="asyncCheckUpdate">检查更新</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -144,7 +145,10 @@ import fs from 'fs'
 import http from '~/gui/src/library/http'
 import util from '~/gui/src/library/util'
 import querystring from 'query-string'
+import packageConfig from '~/gui/../package.json'
 import { TypeTaskConfig } from './task_type'
+
+let currentVersion = parseFloat(packageConfig.version)
 
 let TaskConfigType = TypeTaskConfig
 
@@ -379,6 +383,29 @@ export default Vue.extend({
         this.$emit('update:currentTab', 'login')
       }
       console.log('checkIsLogin: record =>', record)
+    },
+    async asyncCheckUpdate() {
+      let checkUpgradeUri = 'http://api.bookflaneur.cn/stablog/version'
+      let remoteVersionConfig = await http
+        .asyncGet(checkUpgradeUri, {
+          params: {
+            now: new Date().toISOString,
+          },
+        })
+        .catch(e => {
+          return {}
+        })
+      // 已经通过Electron拿到了最新cookie并写入了配置文件中, 因此不需要再填写配置文件了
+      if (remoteVersionConfig.version > currentVersion) {
+        this.$alert(`有新版本
+;请到${remoteVersionConfig.downloadUrl}下载最新版: 稳部落
+;更新日期:${remoteVersionConfig.releaseAt}
+;更新说明:${remoteVersionConfig.releaseNote}
+`)
+
+        return
+      }
+      console.log('check finish')
     },
   },
   computed: {
