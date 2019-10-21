@@ -7,6 +7,7 @@ import _ from 'lodash'
 import fs from 'fs'
 import path from 'path'
 import shelljs from 'shelljs'
+import decodeHtml from 'decode-html'
 import PathConfig from '~/src/config/path'
 import DATE_FORMAT from '~/src/constant/date_format'
 import CommonUtil from '~/src/library/util/common'
@@ -123,6 +124,8 @@ class FetchBase extends Base {
         // 将html内图片地址替换为html内的地址
         let matchImgSrc = processedImgContent.match(/(?<= src=")[^"]+/)
         let rawImgSrc = _.get(matchImgSrc, [0], '')
+        // 新浪微博旧代码中, 图片地址被html encode过, 导致拿不到图片, 因此需要反解码一下
+        rawImgSrc = decodeHtml(rawImgSrc)
         if (rawImgSrc.length > 0) {
           that.imgUriPool.add(rawImgSrc)
         }
