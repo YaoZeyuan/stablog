@@ -127,6 +127,27 @@
         </el-form-item>
       </el-form>
     </el-card>
+    <el-dialog
+      title="发现新版本"
+      :visible.sync="status.showUpgradeInfo"
+      width="80%"
+      :before-close="handleCloseDialog"
+    >
+      <p>发现新版本{{status.remoteVersionConfig.version}},请到</p>
+      <p>{{status.remoteVersionConfig.downloadUrl}}</p>
+      <p>下载最新版</p>
+      <br />
+      <p>更新日期:</p>
+      <p>{{status.remoteVersionConfig.releaseAt}}</p>
+      <br />
+      <p>更新说明:</p>
+      <p>{{status.remoteVersionConfig.releaseNote}}</p>
+      <span></span>
+      <span slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="jumpToUpgrade">下载更新</el-button>
+        <el-button @click="handleCloseDialog">取消</el-button>
+      </span>
+    </el-dialog>
     <div></div>
     <h1>配置文件内容:</h1>
     <pre>
@@ -153,6 +174,7 @@ let currentVersion = parseFloat(packageConfig.version)
 let TaskConfigType = TypeTaskConfig
 
 const electron = require('electron')
+const shell = electron.shell
 const ipcRenderer = electron.ipcRenderer
 const remote = electron.remote
 
@@ -202,6 +224,13 @@ export default Vue.extend({
     // 页面状态
     status: {
       isLogin: boolean
+      showUpgradeInfo: boolean
+      remoteVersionConfig: {
+        version: number
+        downloadUrl: string
+        releaseAt: string
+        releaseNote: string
+      }
     }
     constant: {}
   } {
@@ -240,6 +269,13 @@ export default Vue.extend({
       // 页面状态
       status: {
         isLogin: false,
+        showUpgradeInfo: false,
+        remoteVersionConfig: {
+          version: 1.0,
+          downloadUrl: '',
+          releaseAt: '',
+          releaseNote: '',
+        },
       },
       constant: {
         Order,
@@ -386,7 +422,7 @@ export default Vue.extend({
     },
     async asyncCheckUpdate() {
       let checkUpgradeUri = 'http://api.bookflaneur.cn/stablog/version'
-      let remoteVersionConfig = await http
+      this.status.remoteVersionConfig = await http
         .asyncGet(checkUpgradeUri, {
           params: {
             now: new Date().toISOString,
@@ -396,16 +432,18 @@ export default Vue.extend({
           return {}
         })
       // 已经通过Electron拿到了最新cookie并写入了配置文件中, 因此不需要再填写配置文件了
-      if (remoteVersionConfig.version > currentVersion) {
-        this.$alert(`有新版本
-;请到${remoteVersionConfig.downloadUrl}下载最新版: 稳部落
-;更新日期:${remoteVersionConfig.releaseAt}
-;更新说明:${remoteVersionConfig.releaseNote}
-`)
-
-        return
+      if (this.status.remoteVersionConfig.version > currentVersion) {
+        this.status.showUpgradeInfo = true
+      } else {
+        this.$alert(`当前已是最新版 => ${this.status.remoteVersionConfig.version}`)
       }
-      console.log('check finish')
+    },
+    handleCloseDialog() {
+      this.status.showUpgradeInfo = false
+    },
+    jumpToUpgrade() {
+      this.status.showUpgradeInfo = false
+      shell.openExternal(this.status.remoteVersionConfig.downloadUrl)
     },
   },
   computed: {
