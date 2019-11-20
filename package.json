@@ -8,10 +8,10 @@
     "react-scripts": "3.2.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -31,6 +31,10 @@
   "devDependencies": {
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.4",
+    "customize-cra": "^0.9.1",
+    "less": "^3.10.3",
+    "less-loader": "^5.0.0",
+    "react-app-rewired": "^2.1.5",
     "typescript": "^3.7.2"
   }
 }
