@@ -11,9 +11,10 @@
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
+    "build": "react-app-rewired build && cp -rf build/* ../",
     "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject"
+    "eject": "react-app-rewired eject",
+    "wsh": "babel script --copy-files -d script  --watch --verbose  --source-maps --extensions \".ts,.tsx\"  --config-file \"./script/.babelrc\" "
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -31,12 +32,18 @@
     ]
   },
   "devDependencies": {
+    "@babel/cli": "^7.7.4",
+    "@babel/core": "^7.7.4",
+    "@babel/preset-typescript": "^7.7.4",
+    "@types/node": "^12.12.14",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.4",
+    "@types/shelljs": "^0.8.6",
     "customize-cra": "^0.9.1",
     "less": "^3.10.3",
     "less-loader": "^5.0.0",
     "react-app-rewired": "^2.1.5",
+    "shelljs": "^0.8.3",
     "typescript": "^3.7.2"
   }
 }
