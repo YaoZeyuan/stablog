@@ -1,7 +1,18 @@
+@import "./animate.css";
+
+body::-webkit-scrollbar {
+  display: none;
+}
+body {
+  -ms-overflow-style: none;
+}
+
 .Home {
   background: #fff;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
   .fork-me-on-github {
     position: absolute;
@@ -33,6 +44,8 @@
       .desc {
         margin-top: 20px;
       }
+
+     
     }
 
     .page-content {
@@ -81,19 +94,43 @@
 
   .footer {
     height: 80px;
-    width: 99vw;
     display: flex;
     justify-content: center;
-    position: absolute;
     bottom: 0;
+    flex-wrap: wrap;
+    @comment-width: 300px;
+    width:@comment-width;
     .comment {
-      width: 300px;
+      width: @comment-width;
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
       .tip {
         color: #5c5edc;
         font-size: 16px;
         text-decoration: none;
+      }
+      p{
+        margin:0;
+      }
+      .row{
+        display: flex;
+        width: @comment-width;
+        justify-content: space-between;
+      }
+      
+    }
+    .thank-list{
+      margin-top:20px;
+      margin-bottom:20px;
+      display: flex;
+      width: @comment-width;
+      flex-wrap: wrap;
+      &-item{
+        margin-top:10px;
+        width: @comment-width;
+        justify-content: space-between;
+        display: flex;
       }
     }
   }
