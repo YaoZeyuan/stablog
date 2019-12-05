@@ -67,15 +67,15 @@ export default class Base extends Component {
         <div className="body">
           <div className="container">
             <div className="title">稳部落</div>
-            <div className="slogan">专业导出备份微博记录</div>
+            <div className="slogan">专业备份导出微博记录</div>
             <div className="desc">一键导出指定用户的所有微博&文章</div>
-            <div className="desc">最新版本：{config.version}</div>
+            <div className="desc">最新版本：v{config.version}</div>
             <div className="logo">
               <img src={logo} />
             </div>
-            <div className="desc">下载</div>
-            <div>
-              <div className="download-container">
+            <div className="download-container">
+              <div className="download-tip">下载</div>
+              <div className="action-line">
                 <a className="download-button" target="_blank" href={config.detail.windows.url}>
                   <img className="download-button-icon" src={svg_logo_window} />
                   Windows版
@@ -104,7 +104,7 @@ export default class Base extends Component {
             <div className="thank-list">{thankEleList}</div>
           </CSSTransition>
         </div>
-        <a href="https://github.com/you" className="fork-me-on-github">
+        <a href="https://github.com/YaoZeyuan/stablog" className="fork-me-on-github" target="_blank">
           <img
             width="149px"
             height="149px"
