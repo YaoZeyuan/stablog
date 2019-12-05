@@ -13,6 +13,7 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build && cp -rf build/* ../",
+    "deploy": "npm run build && git commit -am 'feat: 发布新代码' && git push",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
     "wsh": "babel script --copy-files -d script  --watch --verbose  --source-maps --extensions \".ts,.tsx\"  --config-file \"./script/.babelrc\" "
