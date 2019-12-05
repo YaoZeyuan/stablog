@@ -30,8 +30,8 @@ export default class Base extends Component {
   }
 
   async componentDidMount() {
-    let versionResponse = await axios.get('http://api.bookflaneur.cn/stablog/version')
-    let thankListResponse = await axios.get('http://api.bookflaneur.cn/stablog/thank_you/list')
+    let versionResponse = await axios.get('https://api.bookflaneur.cn/stablog/version')
+    let thankListResponse = await axios.get('https://api.bookflaneur.cn/stablog/thank_you/list')
     let config = versionResponse.data
     let thankList = thankListResponse.data
     this.setState({
