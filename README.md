@@ -157,3 +157,11 @@
 ![老铁,谢谢了](http://ww1.sinaimg.cn/large/6671cfa8ly1g7y4zur0juj20ri16s41d.jpg)
 
 [致谢列表](https://www.easy-mock.com/mock/5d9b49fc896b9432186c1fa5/stablog/thank_you/list)
+
+
+#   功能todo
+1.  提供查看数据库内容的入口
+    1.  按账号查看/debug
+2.  可以进行增量备份, 或者备份指定页码范围内的数据
+    1.  方便补全数据
+3.  解决转发微博的图片会显示两遍问题
