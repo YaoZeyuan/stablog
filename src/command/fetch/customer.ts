@@ -13,6 +13,33 @@ import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
 
+/**
+ * 解析微博文章id，方便构造api, 抓取文章内容
+ * @param rawUrl
+ */
+function getArticleId(rawUrl = '') {
+  if (!rawUrl) {
+    return ''
+  }
+  let decodeUrl = unescape(rawUrl)
+  if (!decodeUrl) {
+    return ''
+  }
+  let rawArticleUrl = decodeUrl.split('url=')[1]
+  if (!rawArticleUrl) {
+    return ''
+  }
+  let baseArticleUrl = rawArticleUrl.split('?')[0] // url => 'https://card.weibo.com/article/m/show/id/2309404446645566701785'
+  if (!baseArticleUrl) {
+    return ''
+  }
+  let articleId = baseArticleUrl.split('show/id/')[1]
+  if (!articleId) {
+    return ''
+  }
+  return articleId
+}
+
 class FetchCustomer extends Base {
   fetchStartAtPageNo = 0
   fetchEndAtPageNo = 10000
@@ -156,8 +183,8 @@ class FetchCustomer extends Base {
         ) {
           // 转发的是微博文章
           let pageInfo = rawMblog.mblog.retweeted_status.page_info
-          let articleUrl = pageInfo.page_url
-          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleUrl)
+          let articleId = getArticleId(pageInfo.page_url)
+          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId)
           if (_.isEmpty(articleRecord)) {
             // 文章详情获取失败, 不储存该记录
             continue
@@ -168,8 +195,8 @@ class FetchCustomer extends Base {
       if (rawMblog.mblog.page_info && rawMblog.mblog.page_info.type === 'article') {
         // 文章类型为微博文章
         let pageInfo = rawMblog.mblog.page_info
-        let articleUrl = pageInfo.page_url
-        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleUrl)
+        let articleId = getArticleId(pageInfo.page_url)
+        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId)
         if (_.isEmpty(articleRecord)) {
           // 文章详情获取失败, 不储存该记录
           continue

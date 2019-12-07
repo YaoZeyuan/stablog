@@ -210,7 +210,7 @@ export type TypePageInfo = {
   page_pic: {
     url: 'https://wx4.sinaimg.cn/wap720/48c999f1gy1g6uza6a6qlj20d407egm6.jpg'
   }
-  page_url: 'https://media.weibo.cn/article?object_id=1022%3A2309404414789865570479&extparam=lmid--4414789868083942&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO&id=2309404414789865570479'
+  page_url: 'https://m.weibo.cn/feature/applink?scheme=sinaweibo%3A%2F%2Farticlebrowser%3Fobject_id%3D1022%253A2309404446645566701785%26url%3Dhttps%253A%252F%252Fcard.weibo.com%252Farticle%252Fm%252Fshow%252Fid%252F2309404446645566701785%253F_wb_client_%253D1%26extparam%3Dlmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO'
   page_title: '香港反对派推促的美国反华法案对香港经济的影响？'
   content1: '香港反对派推促的美国反华法案对香港经济的影响？'
   content2: ''
