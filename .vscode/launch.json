@@ -41,11 +41,11 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "debug",
+      "name": "debug-command",
       "program": "${workspaceFolder}/src/ace.ts",
       "args": [
         // 抓取数据
-        "Command:Demo"
+        "Debug"
       ],
       "outFiles": ["${workspaceFolder}/**/*.js"]
     }
