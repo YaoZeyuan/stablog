@@ -45,7 +45,7 @@
       "program": "${workspaceFolder}/src/ace.ts",
       "args": [
         // 抓取数据
-        "Debug"
+        "debug"
       ],
       "outFiles": ["${workspaceFolder}/**/*.js"]
     }

@@ -2,10 +2,10 @@ import Base from '~/src/command/base'
 import MBlog from '~/src/model/mblog'
 import fs from 'fs'
 
-class CommandDemo extends Base {
+class CommandDebug extends Base {
   static get signature() {
     return `
-     Debug
+    debug
      `
   }
 
@@ -20,4 +20,4 @@ class CommandDemo extends Base {
   }
 }
 
-export default CommandDemo
+export default CommandDebug

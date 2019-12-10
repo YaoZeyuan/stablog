@@ -12,6 +12,7 @@ import ace from '@adonisjs/ace'
 
 const registedCommandList = [
   './command/demo', //  命令demo
+  './command/debug', //  专业debug命令
   './command/init_env', //  初始化运行环境
   './command/dispatch_task', //  分发任务
 
