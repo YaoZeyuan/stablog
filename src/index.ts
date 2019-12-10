@@ -5,6 +5,8 @@ import ConfigHelperUtil from '~/src/library/util/config_helper'
 import PathConfig from '~/src/config/path'
 import Logger from '~/src/library/logger'
 import DispatchTaskCommand from '~/src/command/dispatch_task'
+import MUser from '~/src/model/mblog_user'
+import MBlog from '~/src/model/mblog'
 import fs from 'fs'
 import _ from 'lodash'
 
@@ -48,10 +50,12 @@ function createWindow() {
     Menu.setApplicationMenu(null)
   }
 
+  const { screen } = Electron
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 1366,
-    height: 768,
+    width,
+    height,
     // 自动隐藏菜单栏
     autoHideMenuBar: true,
     // 窗口的默认标题
@@ -101,6 +105,9 @@ function createWindow() {
   })
 
   global.pathConfig = PathConfig
+  // 向html代码注入MUser, 方便查询
+  global.mUser = MUser
+  global.mBlog = MBlog
 }
 
 // This method will be called when Electron has finished

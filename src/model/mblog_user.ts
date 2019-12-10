@@ -14,6 +14,24 @@ export default class MblogUser extends Base {
   static TABLE_COLUMN = [`author_uid`, `raw_json`]
 
   /**
+   * 获取数据库中的用户列表
+   * @param author_uid
+   */
+  static async asyncGetUserList(): Promise<TypeWeibo.TypeWeiboUserInfo[]> {
+    let rawRecordList = <Array<TypeMblogUserRecord>>await this.db
+      .select(this.TABLE_COLUMN)
+      .from(this.TABLE_NAME)
+      .catch(() => {
+        return []
+      })
+    let recordList = []
+    for (let rawItem of rawRecordList) {
+      let record = JSON.parse(rawItem.raw_json)
+      recordList.push(record)
+    }
+    return recordList
+  }
+  /**
    * 从数据库中获取微博记录列表
    * @param id
    */
