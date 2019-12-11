@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="mamage-tab">
     <el-table
       :data="userList"
       style="width: 100%"
@@ -45,10 +45,54 @@
         :data="weiboStorageSummaryList"
         style="width: 100%;margin-bottom: 20px;"
         border
+        highlight-current-row
         show-summary
       >
         <el-table-column prop="date" label="时间" width="180"></el-table-column>
         <el-table-column prop="count" label="缓存微博数"></el-table-column>
+      </el-table>
+    </el-card>
+    <el-card class="box-card" shadow="hover" v-if="state.storageSelect.day">
+      <div slot="header" class="clearfix">
+        <span>{{currentSelectUser['screen_name']}} 在{{state.storageSelect.year}}{{state.storageSelect.month}}{{state.storageSelect.day}}发布的微博列表</span>
+      </div>
+      <el-table
+        :data="state.storageSelect.blogList"
+        border
+        cell-class-name="mblog-detail-list-cell"
+      >
+        <el-table-column prop="id" label="id" width="180"></el-table-column>
+        <el-table-column label="发布时间" width="180">
+          <template slot-scope="scope">
+            <div>{{formatUnix(scope.row.created_timestamp_at)}}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="微博内容">
+          <template slot-scope="scope">
+            <div class="weibo">
+              <div class="weibo-raw-item">
+                <div class="weibo-text" v-html="scope.row.raw_text || scope.row.text" />
+                <div class="weibo-img-list">
+                  <div v-for="pic in scope.row.pics">
+                    <img :src="pic.url" />
+                  </div>
+                </div>
+                <div class="weibo-repost-item" v-if="scope.row.retweeted_status">
+                  <hr />
+                  <div
+                    class="weibo-text"
+                    v-html="scope.row.retweeted_status.raw_text || scope.row.retweeted_status.text"
+                  />
+                  <div class="weibo-img-list">
+                    <div v-for="retweetedPic in scope.row.retweeted_status.pics">
+                      <img :src="retweetedPic.url" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
       </el-table>
     </el-card>
   </div>
@@ -58,6 +102,7 @@
 import { remote } from 'electron'
 import Vue from 'vue'
 import _ from 'lodash'
+import moment from 'moment'
 import TypeWeibo from '~/gui/../src/type/namespace/weibo'
 
 type BlogDistributionItem = {
@@ -93,8 +138,10 @@ export default {
       storageSelect: {
         year: string
         month: string
+        day: string
         yearList: string[]
         monthList: string[]
+        blogList: TypeWeibo.TypeMblog[]
       }
       loading: {
         distribution: boolean
@@ -112,8 +159,10 @@ export default {
         storageSelect: {
           year: '',
           month: '',
+          day: '',
           yearList: [],
           monthList: [],
+          blogList: [],
         },
         loading: {
           distribution: false,
@@ -143,21 +192,36 @@ export default {
       this.database.blogDistributionMap = distributionMap
       this.forceUpdate++
     },
+    /**
+     * 获取当天微博数据列表
+     */
+    async getBlogListInRange(startAt: number, endAt: number) {
+      let MBlog = remote.getGlobal('mBlog')
+      let blogList = (await MBlog.asyncGetMblogList(this.state.selectUserId, startAt, endAt)) as TypeWeibo.TypeMblog[]
+      console.log(JSON.parse(JSON.stringify(blogList)))
+      return blogList
+    },
     async handleSelectChange(currentRow: TypeWeibo.TypeWeiboUserInfo, oldCurrentRow: TypeWeibo.TypeWeiboUserInfo) {
       this.state.selectUserId = `${currentRow.id}`
-      this.state.storageSelect.month = ''
-      this.state.storageSelect.year = ''
-      this.state.storageSelect.yearList = []
-      this.state.storageSelect.monthList = []
+      this.resetSelect()
       await this.getDistribute()
     },
     // 支持点选
-    handleStorageSelectInTable(row: BlogDistributionItem) {
+    async handleStorageSelectInTable(row: BlogDistributionItem) {
       if (row.type === 'year') {
         this.state.storageSelect.year = row.date
+        this.state.storageSelect.blogList = []
       }
       if (row.type === 'month') {
         this.state.storageSelect.month = row.date
+        this.state.storageSelect.blogList = []
+      }
+      if (row.type === 'day') {
+        this.state.storageSelect.day = row.date
+        let startAt = row.startAt
+        let endAt = row.startAt + 86400 - 1
+        let blogList = await this.getBlogListInRange(startAt, endAt)
+        this.state.storageSelect.blogList = blogList
       }
     },
     weiboStorageYearList() {
@@ -197,6 +261,19 @@ export default {
     clearStorageSelect() {
       this.state.storageSelect.year = ''
       this.state.storageSelect.month = ''
+      this.state.storageSelect.day = ''
+      this.state.storageSelect.blogList = []
+    },
+    resetSelect() {
+      this.state.storageSelect.month = ''
+      this.state.storageSelect.year = ''
+      this.state.storageSelect.day = ''
+      this.state.storageSelect.yearList = []
+      this.state.storageSelect.monthList = []
+      this.state.storageSelect.blogList = []
+    },
+    formatUnix(timestamp: number) {
+      return moment.unix(timestamp).format('YYYY-MM-DD HH:mm:ss')
     },
   },
   computed: {
@@ -267,16 +344,22 @@ export default {
 }
 </script>
 
-<style scoped lang="less">
-.user-info {
-  display: flex;
-  font-size: 16px;
-  align-items: center;
-  img.avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 30px;
-    margin-right: 16px;
+<style lang="less">
+.mamage-tab {
+  .user-info {
+    display: flex;
+    font-size: 16px;
+    align-items: center;
+    img.avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 30px;
+      margin-right: 16px;
+    }
+  }
+  .mblog-detail-list-cell {
+    // 所有元素顶部对齐
+    vertical-align: top;
   }
 }
 </style>
