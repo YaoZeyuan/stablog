@@ -368,12 +368,12 @@ class GenerateCustomer extends Base {
     let dayIndex = 0
     for (let weiboDayRecord of weiboDayList) {
       dayIndex++
-      this.log(`正在处理第${dayIndex}/${weiboDayList.length}批微博记录`)
+      this.log(`将网页渲染为pdf, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
       let weiboIndex = 0
       for (let weiboRecord of weiboDayRecord.weiboList) {
         weiboIndex++
         this.log(
-          `正在处理第${dayIndex}/${weiboDayList.length}批下,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
         )
         let content = WeiboView.render([weiboRecord])
         content = this.processContent(content)
@@ -388,15 +388,15 @@ class GenerateCustomer extends Base {
         let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 60, fullPage: true, omitBackground: true })
         if (imageBuffer.length < 1000) {
           // 图片渲染失败
-          this.log(`第${dayIndex}/${weiboDayList.length}条微博渲染失败, 自动跳过`)
+          this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染失败, 自动跳过`)
           continue
         } else {
-          this.log(`第${dayIndex}/${weiboDayList.length}条微博渲染成功`)
+          this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染成功`)
           let size = await imageSize.imageSize(imageBuffer)
           let { width, height } = size
           this.log(`图片size=>`, { width, height })
           if (!width || width <= 0 || !height || height <= 0) {
-            this.log(`第${dayIndex}/${weiboDayList.length}条微博截图捕获失败, 自动跳过`)
+            this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博截图捕获失败, 自动跳过`)
             continue
           }
 
