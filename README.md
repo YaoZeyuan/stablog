@@ -33,8 +33,6 @@
 
 ##  项目动机
 
-鉴于知乎世风日下, 还禁了项目前身[知乎助手](https://github.com/YaoZeyuan/zhihuhelp_with_node)的推广. 作者决定转战微博, 造福社会
-
 严肃保护以[@Aioros先生](https://weibo.com/u/6646798696?refer_flag=0000015010_&from=feed&loc=nickname&sudaref=www.weibo.com&is_all=1)为代表的珍稀野生读物博主
 
 
@@ -155,13 +153,3 @@
 #   支持作者
 
 ![老铁,谢谢了](http://ww1.sinaimg.cn/large/6671cfa8ly1g7y4zur0juj20ri16s41d.jpg)
-
-[致谢列表](https://www.easy-mock.com/mock/5d9b49fc896b9432186c1fa5/stablog/thank_you/list)
-
-
-#   功能todo
-1.  解决转发微博的图片会显示两遍问题
-2.  可以进行增量备份, 或者备份指定页码范围内的数据
-    1.  方便补全数据
-3.  提供查看数据库内容的入口
-    1.  按账号查看/debug
