@@ -16,24 +16,22 @@
 
 #   软件下载
 
-最新版本: 1.1.0
-[点击下载](http://stablog.bookflaneur.cn/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.1.0.exe)
+最新版本: 1.2.0
+[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.2.0.exe)
 
 使用截图:
 
 软件界面:
-![软件界面](http://ww1.sinaimg.cn/large/6671cfa8ly1g86clapkgxj211y0omt9r.jpg)
+![软件界面](http://stablog.bookflaneur.cn//img/%E4%BD%BF%E7%94%A8%E6%88%AA%E5%9B%BE.png)
 
 输出的html电子书:
-![输出的html电子书](http://ww1.sinaimg.cn/large/6671cfa8ly1g86clb89ixj20rg0qjgs0.jpg)
+![输出的html电子书](http://stablog.bookflaneur.cn//img/%E8%BE%93%E5%87%BA%E7%9A%84html%E7%94%B5%E5%AD%90%E4%B9%A6.png)
 
 输出的pdf电子书:
-![输出的pdf电子书](http://ww1.sinaimg.cn/large/6671cfa8ly1g86clba2g8j20tv0kbgr8.jpg)
+![输出的pdf电子书](http://stablog.bookflaneur.cn//img/%E8%BE%93%E5%87%BA%E7%9A%84pdf%E7%94%B5%E5%AD%90%E4%B9%A6.png)
 
 
 ##  项目动机
-
-鉴于知乎世风日下, 还禁了项目前身[知乎助手](https://github.com/YaoZeyuan/zhihuhelp_with_node)的推广. 作者决定转战微博, 造福社会
 
 严肃保护以[@Aioros先生](https://weibo.com/u/6646798696?refer_flag=0000015010_&from=feed&loc=nickname&sudaref=www.weibo.com&is_all=1)为代表的珍稀野生读物博主
 
@@ -46,9 +44,9 @@
 3.  备份完成后会自动打开电子书输出目录, `稳部落输出的电子书`目录下, 即为电子书, 其中, `html`目录下为html格式书籍, `index.html`为目录页. `pdf`下为pdf输出位置
 
  
-1.  ![登录微博](http://ww1.sinaimg.cn/large/6671cfa8ly1g86clauxc7j211g0kydje.jpg)
-2.  ![配置任务](http://ww1.sinaimg.cn/large/6671cfa8ly1g86claim2zj211j0ohabb.jpg)
-3.  ![查看电子书](http://ww1.sinaimg.cn/large/6671cfa8ly1g86clad6r8j20ni0ce3zb.jpg)
+1.  ![登录微博](http://stablog.bookflaneur.cn//img/%E7%99%BB%E5%BD%95%E5%BE%AE%E5%8D%9A.jfif)
+2.  ![配置任务](http://stablog.bookflaneur.cn//img/%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4-6.png)
+3.  ![查看电子书](http://stablog.bookflaneur.cn//img/%E6%9F%A5%E7%9C%8B%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6.jfif)
 
 #   配置项说明
 
@@ -73,10 +71,6 @@
 
 问: 为什么备份这么慢? 为什么每次都要等20s之后才抓取下一条微博?
 答: 新浪对爬虫进行了严格限制, 20s抓一次是我试验多次之后, 可以安全备份微博数据的最短间隔. 作为为非开发人员提供的备份工具, **稳定**第一🎵
-
-问: 为啥只有Windows版? 我是Mac用户, 什么时候会有Mac版? 会不会有Android版? iOS版?
-答: 因为作者用的是Windows, 没有Mac...以及, 由于这本身是一个业余项目, 所以不会开发Android/iOS. 有兴趣的同学可以比照源代码自行开发.
-
 
 
 
@@ -112,13 +106,16 @@
         1.  打包时会向dist目录中复制一份node_modules目录, 导致npm run 时优先从dist中获取node_module信息, 导致无法启动
             1.  因此, 打包结束后需要将dist里的node_modules目录删掉, 以免影响后续开发工作
 3.  电子书封面分辨率为: 100 * 130(宽*高)
-4.  commit信息规范 => 
-    | 关键字 | 功能          |
-    | ------ | ------------- |
-    | feat   | 添加新功能    |
-    | format | 调整代码格式  |
-    | fix    | 修复错误      |
-    | doc    | 修订文档/注释 |
+
+
+##  commit信息规范 
+
+| 关键字 | 功能          |
+| ------ | ------------- |
+| feat   | 添加新功能    |
+| format | 调整代码格式  |
+| fix    | 修复错误      |
+| doc    | 修订文档/注释 |
 
 #   开发指南
 
@@ -154,6 +151,4 @@
 
 #   支持作者
 
-![老铁,谢谢了](http://ww1.sinaimg.cn/large/6671cfa8ly1g7y4zur0juj20ri16s41d.jpg)
-
-[致谢列表](https://www.easy-mock.com/mock/5d9b49fc896b9432186c1fa5/stablog/thank_you/list)
+![老铁,谢谢了](http://stablog.bookflaneur.cn//img/%E8%80%81%E9%93%81%E8%B0%A2%E8%B0%A2%E4%BA%86.jfif)

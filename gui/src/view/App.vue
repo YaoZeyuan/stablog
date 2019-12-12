@@ -6,6 +6,9 @@
           <el-tab-pane label="系统设置" :name="constant.tab.customerTask">
             <CustomerTask :currentTab.sync="status.tab" />
           </el-tab-pane>
+          <el-tab-pane label="管理数据" :name="constant.tab.manage">
+            <Manage />
+          </el-tab-pane>
           <el-tab-pane label="运行日志" :name="constant.tab.log">
             <Log />
           </el-tab-pane>
@@ -31,6 +34,7 @@
   import Log from './log/index.vue'
   import Helper from './helper/index.vue'
   import Donate from './donate/index.vue'
+  import Manage from './manage/index.vue'
   import _ from 'lodash'
 
   export default {
@@ -41,6 +45,7 @@
       Login,
       Helper,
       Donate,
+      Manage,
     },
     data(){
         return {
@@ -52,6 +57,7 @@
               login:'login',
               helper:'helper',
               donate:'donate',
+              manage:'manage',
             }
           },
             // 页面数据

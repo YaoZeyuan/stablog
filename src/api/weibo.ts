@@ -2,6 +2,7 @@ import _ from 'lodash'
 import Base from '~/src/api/base'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
+import moment from 'moment'
 
 /**
  * 用户信息部分容器 id
@@ -153,19 +154,26 @@ export default class Weibo extends Base {
   /**
    * 获取微博文章, 获取不到返回空对象
    */
-  static async asyncGetWeiboArticle(url: string) {
-    let responseHtml = await Base.http.get(url)
-    let json: TypeWeibo.TypeWeiboArticleRecord
-    try {
-      let scriptContent = responseHtml.split('<router-view>')[1]
-      let rawJsContent = scriptContent.split('<script>')[1]
-      let jsContent = rawJsContent.split('</script>')[0]
-      let rawJson = jsContent.split('var $render_data = [')[1]
-      let jsonStr = rawJson.split('][0] || {};')[0]
-      json = JSON.parse(jsonStr)
-    } catch (e) {
-      json = <TypeWeibo.TypeWeiboArticleRecord>{}
-    }
+  static async asyncGetWeiboArticle(articleId: string) {
+    let apiUrl = `https://card.weibo.com/article/m/aj/detail?id=${articleId}&_t=${moment().unix()}`
+    let articleUrl = `https://card.weibo.com/article/m/show/id/${articleId}`
+
+    let response = await Base.http.get(apiUrl, {
+      headers: {
+        Referer: articleUrl,
+      },
+    })
+    let json: TypeWeibo.TypeWeiboArticleRecord = _.get(response, ['data'], {})
+    // try {
+    //   let scriptContent = responseHtml.split('<router-view>')[1]
+    //   let rawJsContent = scriptContent.split('<script>')[1]
+    //   let jsContent = rawJsContent.split('</script>')[0]
+    //   let rawJson = jsContent.split('var $render_data = [')[1]
+    //   let jsonStr = rawJson.split('][0] || {};')[0]
+    //   json = JSON.parse(jsonStr)
+    // } catch (e) {
+    //   json = <TypeWeibo.TypeWeiboArticleRecord>{}
+    // }
 
     return json
   }

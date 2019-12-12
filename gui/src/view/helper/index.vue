@@ -4,27 +4,26 @@
       name="github-readme"
       id="github-readme"
       src="https://github.com/YaoZeyuan/stablog/blob/master/README.md"
-      style
     ></webview>
   </div>
 </template>
 
 <script>
-  import _ from "lodash"
+import _ from 'lodash'
 
-  export default {
-    name: 'dashboard',
-    data(){
-        return {}
-    }
-  }
+export default {
+  name: 'dashboard',
+  data() {
+    return {}
+  },
+}
 </script>
 
 <style scoped>
 webview {
   display: inline-flex;
-  width: 80vw;
+  width: 100%;
   margin: 0 auto;
-  height: 80vh;
+  min-height: 85vh;
 }
 </style>
