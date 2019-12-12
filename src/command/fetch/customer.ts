@@ -21,7 +21,8 @@ function getArticleId(rawUrl = '') {
   if (!rawUrl) {
     return ''
   }
-  let decodeUrl = unescape(rawUrl)
+  // 需要多次解析，才能将url完全解码成正常文本
+  let decodeUrl = unescape(unescape(unescape(rawUrl)))
   if (!decodeUrl) {
     return ''
   }
@@ -130,7 +131,7 @@ class FetchCustomer extends Base {
         } else {
           await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
           // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
-          let sleep_s = 20
+          let sleep_s = 3
           this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
           await Util.asyncSleep(sleep_s * 1000)
         }
