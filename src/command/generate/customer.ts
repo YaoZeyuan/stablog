@@ -105,12 +105,9 @@ class GenerateCustomer extends Base {
       )
       mblogList.sort((a, b) => {
         // 先进行排序
-        let aSortBy = a.created_timestamp_at
-        let bSortBy = b.created_timestamp_at
-        if (a.created_timestamp_at === b.created_timestamp_at) {
-          aSortBy = parseInt(a.id)
-          bSortBy = parseInt(b.id)
-        }
+        // 根据接口 https://m.weibo.cn/feed/friends?max_id=4448802586999203 可以确认, id为确认时间线的关键
+        let aSortBy = parseInt(a.idstr, 10)
+        let bSortBy = parseInt(b.idstr, 10)
         if (this.CUSTOMER_CONFIG_postAtOrderBy === 'asc') {
           return aSortBy! - bSortBy!
         } else {

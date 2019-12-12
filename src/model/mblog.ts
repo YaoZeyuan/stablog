@@ -55,6 +55,16 @@ export default class Mblog extends Base {
         mblogRecordList.push(mblogRecord)
       }
     }
+
+    // 按发布时间(id)排序
+    mblogRecordList.sort((a, b) => {
+      // 先进行排序
+      // 根据接口 https://m.weibo.cn/feed/friends?max_id=4448802586999203 可以确认, id为确认时间线的关键
+      let aSortBy = parseInt(a.idstr, 10)
+      let bSortBy = parseInt(b.idstr, 10)
+      return aSortBy! - bSortBy!
+    })
+
     return mblogRecordList
   }
 
