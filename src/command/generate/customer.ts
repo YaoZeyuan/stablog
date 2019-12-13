@@ -357,7 +357,7 @@ class GenerateCustomer extends Base {
     })
     pdfDocument.text(`\n`)
     pdfDocument.font('Times-Roman')
-    pdfDocument.fillColor('blue').text(`https://stablog.yaozeyuan.online`, {
+    pdfDocument.fillColor('blue').text(`https://www.yaozeyuan.online/stablog`, {
       align: 'center',
       link: `https://www.yaozeyuan.online/stablog`,
     })
