@@ -16,8 +16,8 @@
 
 #   软件下载
 
-最新版本: 1.2.0
-[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.2.0.exe)
+最新版本: 1.4.0
+[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.4.0.exe)
 
 使用截图:
 
