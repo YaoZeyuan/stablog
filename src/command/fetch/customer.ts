@@ -121,7 +121,7 @@ class FetchCustomer extends Base {
       // 拿着st, 获取api config中的st
       this.requestConfig.st = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
 
-      for (let page = 1; page < totalPageCount; page++) {
+      for (let page = 1; page <= totalPageCount; page++) {
         if (page < this.fetchStartAtPageNo) {
           page = this.fetchStartAtPageNo
           this.log(`从第${this.fetchStartAtPageNo}页数据开始抓取`)
