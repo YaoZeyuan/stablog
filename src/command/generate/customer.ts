@@ -390,7 +390,8 @@ class GenerateCustomer extends Base {
           width: 750,
           height: 1,
         })
-        await page.goto(htmlUri)
+        // mac的chrome上需要加前缀后才能打开页面
+        await page.goto('file://' + htmlUri)
         // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
         let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 60, fullPage: true, omitBackground: true })
         if (imageBuffer.length < 1000) {
