@@ -245,7 +245,7 @@ export default Vue.extend({
       mergeCount: 1000,
       fetchStartAtPageNo: 0,
       fetchEndAtPageNo: 100000,
-      outputStartAtMs: moment('2011-01-01 00:00:00').unix() * 1000,
+      outputStartAtMs: moment('2010-01-01 00:00:00').unix() * 1000,
       outputEndAtMs:
         moment()
           .add(1, 'year')
@@ -297,7 +297,7 @@ export default Vue.extend({
       mergeCount: 1000,
       fetchStartAtPageNo: 0,
       fetchEndAtPageNo: 100000,
-      outputStartAtMs: moment('2015-01-01 00:00:00').unix() * 1000,
+      outputStartAtMs: moment('2010-01-01 00:00:00').unix() * 1000,
       outputEndAtMs:
         moment()
           .add(1, 'year')
