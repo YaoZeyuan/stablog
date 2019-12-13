@@ -134,6 +134,25 @@ export default class Weibo extends Base {
     })
     return recordList
   }
+  /**
+   * 获取用户微博总数
+   * 微博列表中用户信息的total可能不准, 因此使用cardlistInfo中的字段
+   */
+  static async asyncGetWeiboCount(author_uid: string): Promise<number> {
+    let page = 1
+    let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
+    const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&page=${page}`
+    const config = {
+      // containerid: containerId,
+      // page_type: '03',
+      // page: page,
+    }
+    const weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
+      params: config,
+    })
+    let totalCount = weiboResponse.data.cardlistInfo.total
+    return totalCount
+  }
 
   /**
    * 根据微博的的bid字段获取长微博详情
@@ -164,17 +183,6 @@ export default class Weibo extends Base {
       },
     })
     let json: TypeWeibo.TypeWeiboArticleRecord = _.get(response, ['data'], {})
-    // try {
-    //   let scriptContent = responseHtml.split('<router-view>')[1]
-    //   let rawJsContent = scriptContent.split('<script>')[1]
-    //   let jsContent = rawJsContent.split('</script>')[0]
-    //   let rawJson = jsContent.split('var $render_data = [')[1]
-    //   let jsonStr = rawJson.split('][0] || {};')[0]
-    //   json = JSON.parse(jsonStr)
-    // } catch (e) {
-    //   json = <TypeWeibo.TypeWeiboArticleRecord>{}
-    // }
-
     return json
   }
 

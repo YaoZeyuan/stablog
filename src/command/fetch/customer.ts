@@ -110,7 +110,7 @@ class FetchCustomer extends Base {
         raw_json: JSON.stringify(mblogUserInfo),
       })
       // 用户总微博数
-      let totalMblogCount = mblogUserInfo.statuses_count
+      let totalMblogCount = await ApiWeibo.asyncGetWeiboCount(uid)
       let totalPageCount = Math.ceil(totalMblogCount / 10)
       this.log(`用户${userInfo.screen_name}共发布了${totalMblogCount}条微博, 正式开始抓取`)
       let maxFetchPageNo = this.fetchEndAtPageNo <= totalPageCount ? this.fetchEndAtPageNo : totalPageCount
