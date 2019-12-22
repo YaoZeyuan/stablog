@@ -1,6 +1,6 @@
 {
   "name": "stablog",
-  "version": "1.3.0",
+  "version": "1.6.0",
   "description": "稳部落. 专业备份微blog, 老铁, 稳!",
   "repository": {
     "type": "git",
@@ -84,7 +84,7 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "shelljs": "^0.8.1",
-    "sqlite3": "^4.1.0",
+    "sqlite3": "^4.1.1",
     "vue": "^2.6.5",
     "vue-class-component": "^7.0.2",
     "vue-router": "^3.0.2",

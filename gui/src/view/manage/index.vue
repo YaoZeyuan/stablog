@@ -1,18 +1,13 @@
 <template>
   <div class="mamage-tab">
-    <el-table
-      :data="userList"
-      style="width: 100%"
-      highlight-current-row
-      @current-change="handleSelectChange"
-    >
+    <el-table :data="userList" style="width: 100%" highlight-current-row @current-change="handleSelectChange">
       <el-table-column type="index" />
       <el-table-column label="已缓存账号">
         <template slot-scope="scope">
           <div class="user-info">
             <img :alt="scope.row.screen_name" :src="scope.row.avatar_hd" class="avatar" />
-            <div class="name">{{scope.row.screen_name}}</div>
-            <div class="id">({{scope.row.id}})</div>
+            <div class="name">{{ scope.row.screen_name }}</div>
+            <div class="id">({{ scope.row.id }})</div>
           </div>
         </template>
       </el-table-column>
@@ -21,7 +16,7 @@
 
     <el-card class="box-card" shadow="hover" v-loading="state.loading.distribution">
       <div slot="header" class="clearfix">
-        <span>{{currentSelectUser['screen_name']}} 微博缓存情况</span>
+        <span>{{ currentSelectUser['screen_name'] }} 微博缓存情况</span>
       </div>
       <el-select v-model="state.storageSelect.year" placeholder="年">
         <el-option
@@ -39,7 +34,8 @@
           :value="monthItem"
         ></el-option>
       </el-select>
-      <el-button @click="clearStorageSelect">重置</el-button>
+      <el-button @click="clearStorageSelect" type="success">重选</el-button>
+      <el-button @click="refresh" type="primary">刷新数据</el-button>
       <el-table
         v-on:row-click="handleStorageSelectInTable"
         :data="weiboStorageSummaryList"
@@ -54,17 +50,16 @@
     </el-card>
     <el-card class="box-card" shadow="hover" v-if="state.storageSelect.day">
       <div slot="header" class="clearfix">
-        <span>{{currentSelectUser['screen_name']}} 在{{state.storageSelect.year}}{{state.storageSelect.month}}{{state.storageSelect.day}}发布的微博列表</span>
+        <span
+          >{{ currentSelectUser['screen_name'] }} 在{{ state.storageSelect.year }}{{ state.storageSelect.month
+          }}{{ state.storageSelect.day }}发布的微博列表</span
+        >
       </div>
-      <el-table
-        :data="state.storageSelect.blogList"
-        border
-        cell-class-name="mblog-detail-list-cell"
-      >
+      <el-table :data="state.storageSelect.blogList" border cell-class-name="mblog-detail-list-cell">
         <el-table-column prop="id" label="id" width="180"></el-table-column>
         <el-table-column label="发布时间" width="180">
           <template slot-scope="scope">
-            <div>{{formatUnix(scope.row.created_timestamp_at)}}</div>
+            <div>{{ formatUnix(scope.row.created_timestamp_at) }}</div>
           </template>
         </el-table-column>
         <el-table-column label="微博内容">
@@ -181,6 +176,7 @@ export default {
         userMap.set(record.id, record)
       }
       this.database.userMap = userMap
+      this.database.blogDistributionMap = new Map()
     },
     async getDistribute() {
       let MBlog = remote.getGlobal('mBlog')
@@ -257,6 +253,16 @@ export default {
       console.log('monthList =>', this.forceUpdate)
       console.log('monthList =>', monthList)
       return monthList
+    },
+    async loadData() {
+      await this.getUserList()
+      if (this.userList.length > 0) {
+        this.state.selectUserId = `${this.userList[0].id}`
+      }
+    },
+    async refresh() {
+      this.resetSelect()
+      await this.loadData()
     },
     clearStorageSelect() {
       this.state.storageSelect.year = ''
@@ -336,10 +342,7 @@ export default {
   },
   async mounted() {
     // 初始化时自动载入数据
-    await this.getUserList()
-    if (this.userList.length > 0) {
-      this.state.selectUserId = `${this.userList[0].id}`
-    }
+    await this.loadData()
   },
 }
 </script>

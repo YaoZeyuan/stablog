@@ -56,12 +56,18 @@ export default class Mblog extends Base {
       }
     }
 
-    // 按发布时间(id)排序
     mblogRecordList.sort((a, b) => {
       // 先进行排序
       // 根据接口 https://m.weibo.cn/feed/friends?max_id=4448802586999203 可以确认, id为确认时间线的关键
-      let aSortBy = parseInt(a.idstr, 10)
-      let bSortBy = parseInt(b.idstr, 10)
+      // 经测试, 仅通过id并不靠谱, 因此还是要使用发布日期作为排序依据.
+      // 同一日期内再用id排序
+      let aSortBy = a.created_timestamp_at
+      let bSortBy = b.created_timestamp_at
+      if (a.created_timestamp_at === b.created_timestamp_at) {
+        // 日期相同时, 以id作为排序依据
+        aSortBy = parseInt(a.id)
+        bSortBy = parseInt(b.id)
+      }
       return aSortBy! - bSortBy!
     })
 

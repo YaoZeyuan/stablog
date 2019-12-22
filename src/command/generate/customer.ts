@@ -106,8 +106,15 @@ class GenerateCustomer extends Base {
       mblogList.sort((a, b) => {
         // 先进行排序
         // 根据接口 https://m.weibo.cn/feed/friends?max_id=4448802586999203 可以确认, id为确认时间线的关键
-        let aSortBy = parseInt(a.idstr, 10)
-        let bSortBy = parseInt(b.idstr, 10)
+        // 经测试, 仅通过id并不靠谱, 因此还是要使用发布日期作为排序依据.
+        // 同一日期内再用id排序
+        let aSortBy = a.created_timestamp_at
+        let bSortBy = b.created_timestamp_at
+        if (a.created_timestamp_at === b.created_timestamp_at) {
+          // 日期相同时, 以id作为排序依据
+          aSortBy = parseInt(a.id)
+          bSortBy = parseInt(b.id)
+        }
         if (this.CUSTOMER_CONFIG_postAtOrderBy === 'asc') {
           return aSortBy! - bSortBy!
         } else {
@@ -357,7 +364,7 @@ class GenerateCustomer extends Base {
     })
     pdfDocument.text(`\n`)
     pdfDocument.font('Times-Roman')
-    pdfDocument.fillColor('blue').text(`https://stablog.yaozeyuan.online`, {
+    pdfDocument.fillColor('blue').text(`https://www.yaozeyuan.online/stablog`, {
       align: 'center',
       link: `https://www.yaozeyuan.online/stablog`,
     })
@@ -383,7 +390,8 @@ class GenerateCustomer extends Base {
           width: 750,
           height: 1,
         })
-        await page.goto(htmlUri)
+        // mac的chrome上需要加前缀后才能打开页面
+        await page.goto('file://' + htmlUri)
         // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
         let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 60, fullPage: true, omitBackground: true })
         if (imageBuffer.length < 1000) {
