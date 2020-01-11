@@ -44,6 +44,7 @@
         {
           "target": "nsis",
           "arch": [
+            "ia32",
             "x64"
           ]
         }
