@@ -171,6 +171,8 @@ ipcMain.on('start', async (event, taskConfigList) => {
 
 ipcMain.on('openOutputDir', async event => {
   shell.showItemInFolder(PathConfig.outputPath)
+  event.returnValue = true
+  return
 })
 
 ipcMain.on('startCustomerTask', async event => {
