@@ -123,6 +123,7 @@
         <el-form-item label="操作">
           <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
           <el-button type="success" @click="asyncData()">同步用户信息</el-button>
+          <el-button type="primary" @click="openOutputDir">打开电子书所在目录</el-button>
           <el-button type="danger" @click="asyncCheckUpdate">检查更新</el-button>
         </el-form-item>
       </el-form>
@@ -400,6 +401,10 @@ export default Vue.extend({
       ipcRenderer.sendSync('startCustomerTask')
       // 将面板切换到log上
       this.$emit('update:currentTab', 'log')
+    },
+    async openOutputDir() {
+      // 打开电子书存储目录
+      ipcRenderer.sendSync('openOutputDir')
     },
     matchTaskId(content: string) {
       let parseResult = querystring.parseUrl(content)
