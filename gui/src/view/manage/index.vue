@@ -364,5 +364,9 @@ export default {
     // 所有元素顶部对齐
     vertical-align: top;
   }
+  .weibo-raw-item{
+    // 禁止点a标签跳转(跳过去就回不来了)
+    pointer-events: none;
+  }
 }
 </style>
