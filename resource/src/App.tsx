@@ -68,6 +68,7 @@ export default class Base extends Component {
           <div className="container">
             <div className="title">稳部落</div>
             <div className="slogan">专业备份导出微博记录</div>
+            <div className="desc">支持被封用户(需使用被封用户原账号登陆)</div>
             <div className="desc">一键导出指定用户的所有微博&文章</div>
             <div className="desc">最新版本：v{config.version}</div>
             <div className="logo">
