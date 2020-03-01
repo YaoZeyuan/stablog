@@ -123,6 +123,7 @@
         <el-form-item label="操作">
           <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
           <el-button type="success" @click="asyncData()">同步用户信息</el-button>
+          <el-button type="primary" @click="openOutputDir">打开电子书所在目录</el-button>
           <el-button type="danger" @click="asyncCheckUpdate">检查更新</el-button>
         </el-form-item>
       </el-form>
@@ -297,15 +298,19 @@ export default Vue.extend({
       mergeCount: 1000,
       fetchStartAtPageNo: 0,
       fetchEndAtPageNo: 100000,
-      outputStartAtMs: moment('2010-01-01 00:00:00').unix() * 1000,
+      outputStartAtMs: moment('2001-01-01 00:00:00').unix() * 1000,
       outputEndAtMs:
         moment()
-          .add(1, 'year')
+          .add(1, 'day')
           .unix() * 1000,
     }
     try {
       taskConfig = JSON.parse(jsonContent)
     } catch (e) {}
+    // 始终重置为次日
+    taskConfig.outputEndAtMs = moment()
+          .add(1, 'day')
+          .unix() * 1000
     this.database.taskConfig = taskConfig
     if (this.database.taskConfig.configList.length === 0) {
       this.database.taskConfig.configList.push(_.clone(defaultConfigItem))
@@ -400,6 +405,10 @@ export default Vue.extend({
       ipcRenderer.sendSync('startCustomerTask')
       // 将面板切换到log上
       this.$emit('update:currentTab', 'log')
+    },
+    async openOutputDir() {
+      // 打开电子书存储目录
+      ipcRenderer.sendSync('openOutputDir')
     },
     matchTaskId(content: string) {
       let parseResult = querystring.parseUrl(content)

@@ -169,6 +169,12 @@ ipcMain.on('start', async (event, taskConfigList) => {
   isRunning = false
 })
 
+ipcMain.on('openOutputDir', async event => {
+  shell.showItemInFolder(PathConfig.outputPath)
+  event.returnValue = true
+  return
+})
+
 ipcMain.on('startCustomerTask', async event => {
   if (isRunning) {
     event.returnValue = '目前尚有任务执行, 请稍后'
