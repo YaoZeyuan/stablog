@@ -4,9 +4,9 @@ import _ from 'lodash'
 
 class ConfigHelper {
   // 重新载入配置文件
-  static reloadConfig () {
+  static reloadConfig() {
     let config = CommonUtil.getConfig()
-    RequestConfig.cookie = _.get(config, ['config', 'cookie'], '')
+    RequestConfig.cookie = _.get(config, ['request', 'cookie'], '')
   }
 }
 
