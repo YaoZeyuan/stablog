@@ -298,15 +298,19 @@ export default Vue.extend({
       mergeCount: 1000,
       fetchStartAtPageNo: 0,
       fetchEndAtPageNo: 100000,
-      outputStartAtMs: moment('2010-01-01 00:00:00').unix() * 1000,
+      outputStartAtMs: moment('2001-01-01 00:00:00').unix() * 1000,
       outputEndAtMs:
         moment()
-          .add(1, 'year')
+          .add(1, 'day')
           .unix() * 1000,
     }
     try {
       taskConfig = JSON.parse(jsonContent)
     } catch (e) {}
+    // 始终重置为次日
+    taskConfig.outputEndAtMs = moment()
+          .add(1, 'day')
+          .unix() * 1000
     this.database.taskConfig = taskConfig
     if (this.database.taskConfig.configList.length === 0) {
       this.database.taskConfig.configList.push(_.clone(defaultConfigItem))
