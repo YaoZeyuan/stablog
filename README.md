@@ -22,24 +22,24 @@
 
 软件界面:
 
-![主界面|675x499](upload://wi7mdzlX6cxozOdOJe3d7wLZBQp.png)
-![配置列表|690x392](upload://grVeR3bnMFObPDLKNRadc7OFLQK.png)
+![主界面|675x499](http://stablog.bookflaneur.cn/img/v2/%E4%B8%BB%E7%95%8C%E9%9D%A2.png)
+![配置列表|690x392](http://stablog.bookflaneur.cn/img/v2/%E9%85%8D%E7%BD%AE%E5%88%97%E8%A1%A8.png)
 
 运行截图
 
-![运行截图|644x500](upload://5fPWeYaEb7FcPF2k76OPwo4SLJs.png)
+![运行截图|644x500](http://stablog.bookflaneur.cn/img/v2/%E8%BF%90%E8%A1%8C%E6%88%AA%E5%9B%BE.png)
 
 输出的文件:
 
-![输出的文件|690x287](upload://4JLXLYYDRG1B8GqMnoPUFUuzh82.png)
+![输出的文件|690x287](http://stablog.bookflaneur.cn/img/v2/%E8%BE%93%E5%87%BA%E7%9A%84%E6%96%87%E4%BB%B6.png)
 
 输出的 html 电子书:
 
-![输出的html电子书|496x500](upload://drycKsQWUS9WuCopdm92GrPsUlo.png)
+![输出的html电子书|496x500](http://stablog.bookflaneur.cn/img/v2/%E8%BE%93%E5%87%BA%E7%9A%84html%E7%94%B5%E5%AD%90%E4%B9%A6.png)
 
 输出的 pdf 电子书:
 
-![输出的pdf电子书|403x500](upload://wEV91LtGecwYCMLaWjjb0wlpuve.jpeg)
+![输出的pdf电子书|403x500](http://stablog.bookflaneur.cn/img/v2/%E8%BE%93%E5%87%BA%E7%9A%84pdf%E7%94%B5%E5%AD%90%E4%B9%A6.jpeg)
 
 ## 项目动机
 
