@@ -21,13 +21,25 @@
 使用截图:
 
 软件界面:
-![软件界面](http://stablog.bookflaneur.cn//img/%E4%BD%BF%E7%94%A8%E6%88%AA%E5%9B%BE.png)
+
+![主界面|675x499](upload://wi7mdzlX6cxozOdOJe3d7wLZBQp.png)
+![配置列表|690x392](upload://grVeR3bnMFObPDLKNRadc7OFLQK.png)
+
+运行截图
+
+![运行截图|644x500](upload://5fPWeYaEb7FcPF2k76OPwo4SLJs.png)
+
+输出的文件:
+
+![输出的文件|690x287](upload://4JLXLYYDRG1B8GqMnoPUFUuzh82.png)
 
 输出的 html 电子书:
-![输出的html电子书](http://stablog.bookflaneur.cn//img/%E8%BE%93%E5%87%BA%E7%9A%84html%E7%94%B5%E5%AD%90%E4%B9%A6.png)
+
+![输出的html电子书|496x500](upload://drycKsQWUS9WuCopdm92GrPsUlo.png)
 
 输出的 pdf 电子书:
-![输出的pdf电子书](http://stablog.bookflaneur.cn//img/%E8%BE%93%E5%87%BA%E7%9A%84pdf%E7%94%B5%E5%AD%90%E4%B9%A6.png)
+
+![输出的pdf电子书|403x500](upload://wEV91LtGecwYCMLaWjjb0wlpuve.jpeg)
 
 ## 项目动机
 
