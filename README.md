@@ -18,7 +18,7 @@
 
 [点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-1.7.0.dmg)
 
-使用截图:
+# 使用截图
 
 软件界面:
 
