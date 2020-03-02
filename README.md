@@ -16,7 +16,7 @@
 
 [点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.7.0.exe)
 
-[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-1.6.0.dmg)
+[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-1.7.0.dmg)
 
 使用截图:
 
