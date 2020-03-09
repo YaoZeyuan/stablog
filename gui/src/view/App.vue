@@ -86,7 +86,8 @@
 .app {
   margin: 0 5vw;
   background-color: #f5f7f9;
-  height: 100vh;
+  height: 100%;
+  min-height:100vh;
 }
 .header {
   .logo {

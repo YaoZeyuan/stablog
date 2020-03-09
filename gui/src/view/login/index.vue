@@ -20,6 +20,6 @@ webview {
   display: inline-flex;
   width: 80vw;
   margin: 0 auto;
-  height: 80vh;
+  min-height: 80vh;
 }
 </style>
