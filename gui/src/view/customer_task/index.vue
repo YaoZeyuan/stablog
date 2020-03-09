@@ -401,6 +401,10 @@ export default Vue.extend({
         if(response.data.includes("用户不存在") && response.data.includes("出错了")){
           let rawHtmlResponse = await http.rawClient.get(`https://weibo.com/${account}`)
           let rawText = rawHtmlResponse.data
+          if(rawText.includes("$CONFIG['uid']='") === false){
+            // uid不存在
+            return ''
+          }
           let content = rawText.split("$CONFIG['uid']='")[1];
           content = content.split("'")[0];
           // 如果抓取用户为被封用户, 且登陆账号不是被封用户, 只能拿到自己的uid
