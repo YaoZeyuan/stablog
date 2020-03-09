@@ -44,6 +44,14 @@
         </el-form-item>
         <el-divider content-position="center">备份配置</el-divider>
         <el-form-item label="备份页数">
+          <el-popover placement="right" trigger="click">
+            <div>
+              <p>每10条微博为一页</p>
+              <p>可以通过配置备份页码范围, 实现增量备份, 或备份指定日期范围内的记录</p>
+              <p>提示: 如果只备份0~1页, 相当于直接进入输出电子书流程</p>
+            </div>
+            <i class="el-icon-question" slot="reference"></i>
+          </el-popover>
           <span>从第</span>
           <el-input-number
             placeholder
@@ -71,6 +79,22 @@
           <el-radio-group v-model="database.taskConfig.imageQuilty">
             <el-radio :label="constant.ImageQuilty.默认">有图</el-radio>
             <el-radio :label="constant.ImageQuilty.无图">无图</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="pdf清晰度">
+          <el-popover placement="right" trigger="click">
+            <div>
+              <p>清晰度越高pdf体积越大</p>
+              <p>一般来说, 60比较合适</p>
+            </div>
+            <i class="el-icon-question" slot="reference"></i>
+          </el-popover>
+          <el-radio-group v-model="database.taskConfig.pdfQuilty">
+            <el-radio :label="constant.PdfQuilty['50']">50</el-radio>
+            <el-radio :label="constant.PdfQuilty['60']">60</el-radio>
+            <el-radio :label="constant.PdfQuilty['70']">70</el-radio>
+            <el-radio :label="constant.PdfQuilty['90']">90</el-radio>
+            <el-radio :label="constant.PdfQuilty['100']">100</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="自动分卷">
@@ -151,9 +175,7 @@
     </el-dialog>
     <div></div>
     <h1>配置文件内容:</h1>
-    <pre>
-        {{JSON.stringify(database, null , 4)}}
-      </pre>
+    <pre>{{JSON.stringify(database, null , 4)}}</pre>
     <div data-comment="监控数据变动" :data-watch="JSON.stringify(watchTaskConfig)"></div>
   </div>
 </template>
@@ -191,6 +213,13 @@ const Order: {
 const ImageQuilty = {
   无图: 'none',
   默认: 'default',
+}
+const PdfQuilty:{[key:string]: 50|60|70|90|100} = {
+  "50": 50,
+  "60": 60,
+  "70": 70,
+  "90": 90,
+  "100": 100,
 }
 
 const Translate_Image_Quilty = {
@@ -238,6 +267,7 @@ export default Vue.extend({
     let taskConfig: TypeTaskConfig.Customer = {
       configList: [_.clone(defaultConfigItem)],
       imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
+      pdfQuilty: PdfQuilty['60'],
       maxBlogInBook: 100000,
       postAtOrderBy: TaskConfigType.CONST_Order_Asc,
       bookTitle: '',
@@ -281,6 +311,7 @@ export default Vue.extend({
       constant: {
         Order,
         ImageQuilty,
+        PdfQuilty,
         MergeBy,
       },
     }
@@ -290,6 +321,7 @@ export default Vue.extend({
     let taskConfig: TypeTaskConfig.Customer = {
       configList: [_.clone(defaultConfigItem)],
       imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
+      pdfQuilty: PdfQuilty['60'],
       maxBlogInBook: 100000,
       postAtOrderBy: TaskConfigType.CONST_Order_Asc,
       bookTitle: '',

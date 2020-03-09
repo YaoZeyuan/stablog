@@ -47,6 +47,7 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_mergeCount: TaskConfig.Customer['mergeCount'] = 1000
   CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
+  CUSTOMER_CONFIG_pdfQuilty: TaskConfig.Customer['pdfQuilty'] = 70
   CUSTOMER_CONFIG_maxBlogInBook: TaskConfig.Customer['maxBlogInBook'] = 1000
   CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
   CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] =
@@ -83,6 +84,7 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_mergeCount = customerTaskConfig.mergeCount
     this.CUSTOMER_CONFIG_postAtOrderBy = customerTaskConfig.postAtOrderBy
     this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
+    this.CUSTOMER_CONFIG_pdfQuilty = customerTaskConfig.pdfQuilty || 60 // 加上默认值
     this.CUSTOMER_CONFIG_maxBlogInBook = customerTaskConfig.maxBlogInBook
     let configList = customerTaskConfig.configList
     for (let config of configList) {
@@ -285,6 +287,7 @@ class GenerateCustomer extends Base {
   async asyncGenerateEbook(bookCounter: number, bookname: string, epubResourcePackage: TypeWeiboEpub) {
     // 初始化资源, 重置所有静态类变量
     this.bookname = StringUtil.encodeFilename(`${bookname}`)
+    // 重载基类中的imageQuilty
     this.imageQuilty = this.CUSTOMER_CONFIG_imageQuilty
     let { weiboDayList } = epubResourcePackage
     this.imgUriPool = new Set()
@@ -393,7 +396,12 @@ class GenerateCustomer extends Base {
         // mac的chrome上需要加前缀后才能打开页面
         await page.goto('file://' + htmlUri)
         // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
-        let imageBuffer = await page.screenshot({ type: 'jpeg', quality: 60, fullPage: true, omitBackground: true })
+        let imageBuffer = await page.screenshot({
+          type: 'jpeg',
+          quality: this.CUSTOMER_CONFIG_pdfQuilty,
+          fullPage: true,
+          omitBackground: true,
+        })
         if (imageBuffer.length < 1000) {
           // 图片渲染失败
           this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染失败, 自动跳过`)
