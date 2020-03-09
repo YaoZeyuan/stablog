@@ -153,6 +153,15 @@
     1.  Electron 需要编译 sqlite3 后才能启动, 不容易搞, 建议直接使用`npm run ace`命令行方式进行调试
     2.  命令使用说明详见代码
 
+# windows 环境下 puppeteer 安装指南
+
+1.  首先, `$env:PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1`配置环境变量, 跳过 chrome 下载过程(下载不下来)
+2.  `npm install puppeteer@1.20.0 -S`安装 puppeteer
+3.  del env:PUPPETEER_SKIP_CHROMIUM_DOWNLOAD 删除该变量
+4.  编辑`./node_modules/puppeteer/lib/BrowserFetcher.js`文件, 将`https://storage.googleapis.com/`替换为`https://storage.googleapis.com.cnpmjs.org/`, 将 win64 的下载地址替换为 win32(32 位的 chrome 才是通用的)
+5.  进入`./node_modules/puppeteer/`目录, 执行`node install.js`, 安装 chrome
+6.  完成
+
 # 功能建议
 
 欢迎通过[issue](https://github.com/YaoZeyuan/stablog/issues)提建议

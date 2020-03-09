@@ -40,7 +40,7 @@ class FetchBase extends Base {
   }
 
   get htmlOutputPath() {
-    return path.resolve(PathConfig.htmlOutputPath)
+    return path.resolve(PathConfig.htmlOutputPath, this.bookname)
   }
 
   static get signature() {
@@ -255,7 +255,7 @@ class FetchBase extends Base {
   }
   async asyncCopyToDist() {
     this.log(`将输出电子书复制到结果目录中`)
-    shelljs.cp('-r', path.resolve(this.htmlCachePath), path.resolve(this.htmlOutputPath))
+    shelljs.cp('-r', path.resolve(this.htmlCachePath, './*'), path.resolve(this.htmlOutputPath))
     this.log(`输出电子书复制完毕`)
   }
 
