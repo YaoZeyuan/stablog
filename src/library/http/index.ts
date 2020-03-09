@@ -45,7 +45,9 @@ class Http {
       .catch(e => {
         logger.log(`网络请求失败, 您的账号可能因抓取频繁被认为有风险, 请6小时后再试`)
         logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
-        if (e.response.status === 404) {
+        // 避免由于status不存在导致进程退出
+        let errorStatus = _.get(e, ['response', 'status'], '')
+        if (errorStatus === 404) {
           return undefined
         }
         return {}

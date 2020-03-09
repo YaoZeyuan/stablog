@@ -96,7 +96,10 @@ class FetchCustomer extends Base {
         continue
       }
       this.log(`开始抓取用户${userInfo.screen_name}微博记录`)
-      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid)
+      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid).catch(e => {
+        // 避免crash导致整个进程退出
+        return []
+      })
       if (_.isEmpty(mblogCardList)) {
         this.log(`用户${userInfo.screen_name}微博记录为空,跳过抓取流程`)
         continue
@@ -144,7 +147,10 @@ class FetchCustomer extends Base {
   async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
-    let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+    let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page).catch(e => {
+      // 避免crash导致整个进程退出
+      return []
+    })
     if (_.isEmpty(rawMblogList)) {
       this.log(`第${page}/${totalPage}页微博记录抓取失败`)
       return
@@ -163,7 +169,10 @@ class FetchCustomer extends Base {
       if (rawMblog.mblog.isLongText === true) {
         // 长微博需要调取api重新获得微博内容
         let bid = rawMblog.mblog.bid
-        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
+        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid).catch(e => {
+          // 避免crash导致整个进程退出
+          return {}
+        })
         if (_.isEmpty(realMblog)) {
           continue
         }
@@ -185,7 +194,10 @@ class FetchCustomer extends Base {
           // 转发的是微博文章
           let pageInfo = rawMblog.mblog.retweeted_status.page_info
           let articleId = getArticleId(pageInfo.page_url)
-          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId)
+          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(e => {
+            // 避免crash导致整个进程退出
+            return {}
+          })
           if (_.isEmpty(articleRecord)) {
             // 文章详情获取失败, 不储存该记录
             continue
@@ -197,7 +209,10 @@ class FetchCustomer extends Base {
         // 文章类型为微博文章
         let pageInfo = rawMblog.mblog.page_info
         let articleId = getArticleId(pageInfo.page_url)
-        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId)
+        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(e => {
+          // 避免crash导致整个进程退出
+          return {}
+        })
         if (_.isEmpty(articleRecord)) {
           // 文章详情获取失败, 不储存该记录
           continue

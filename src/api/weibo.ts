@@ -69,16 +69,20 @@ export default class Weibo extends Base {
       // page: page,
     }
     console.log('url =>', baseUrl)
-    let weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
-      params: config,
-      headers: {
-        Accept: 'application/json, text/plain, */*',
-        'MWeibo-Pwa': 1,
-        'Sec-Fetch-Mode': 'cors',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-XSRF-TOKEN': st,
-      },
-    })
+    let weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http
+      .get(baseUrl, {
+        params: config,
+        headers: {
+          Accept: 'application/json, text/plain, */*',
+          'MWeibo-Pwa': 1,
+          'Sec-Fetch-Mode': 'cors',
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-XSRF-TOKEN': st,
+        },
+      })
+      .catch(e => {
+        return undefined
+      })
     if (weiboResponse === undefined) {
       // 被监控抓住了, 尝试重新获取配置
       console.log(`被监控抓住了, 尝试重新获取配置, 自动修复`)
