@@ -358,14 +358,29 @@ export default Vue.extend({
         return uid
       } else {
         let rawAccount = rawInputUrl.split(`weibo.com/`)[1]
-        let account = rawAccount.split('?')[0]
-        // 新浪会将url重定向到
+        rawAccount = rawAccount.split('?')[0]
+        let account = rawAccount.split('/')[0] // 有可能会加一个/home/
+        // 新浪会将url重定向到uid页面
         let response = await http.rawClient.get(
           `https://m.weibo.cn/${account}?topnav=1&wvr=6&topsug=1&is_all=1&jumpfrom=weibocom&topnav=1&wvr=6&topsug=1&is_all=1`,
         )
-        let url = response.request.responseURL || ''
-        let rawUid = url.split(`m.weibo.cn/u/`)[1]
-        let uid = _.get(rawUid.match(/^\d+/), 0, '')
+        // 对于被封号用户, 会返回一个404, 这时候需要手工匹配html代码
+        let uid = ""
+        if(response.data.includes("用户不存在") && response.data.includes("出错了")){
+          let rawHtmlResponse = await http.rawClient.get(`https://weibo.com/${account}`)
+          let rawText = rawHtmlResponse.data
+          let content = rawText.split("$CONFIG['uid']='")[1];
+          content = content.split("'")[0];
+          // 如果抓取用户为被封用户, 且登陆账号不是被封用户, 只能拿到自己的uid
+          // 但这个属于例外情况了, 一般用户拿不到被封用户的主页url, 不考虑
+          // 假定只有被封用户才能登陆被封用户的主页
+          uid = content
+        }
+        else{
+          let url = response.request.responseURL || ''
+          let rawUid = url.split(`m.weibo.cn/u/`)[1]
+          uid = _.get(rawUid.match(/^\d+/), 0, '')
+        }
         return uid
       }
     },
