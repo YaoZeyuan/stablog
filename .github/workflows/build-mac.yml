@@ -36,9 +36,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: mac-${{ steps.package-version.outputs.version  }}
-        release_name: Mac Release ${{ steps.package-version.outputs.version  }}
-        draft: false
-        prerelease: false
+        release_name: ${{ steps.package-version.outputs.version  }}
+        draft: true
+        prerelease: true
     - name: Upload Release normal mac
       uses: actions/upload-release-asset@v1.0.1
       env:
