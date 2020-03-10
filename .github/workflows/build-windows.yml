@@ -35,11 +35,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ steps.package-version.outputs.version  }}
+        release_name: Windows Release ${{ steps.package-version.outputs.version  }}
         draft: false
         prerelease: false
-    - name: Upload Release normal mac
+    - name: Upload Release normal windows
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
