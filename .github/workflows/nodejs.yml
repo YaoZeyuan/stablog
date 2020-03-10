@@ -4,7 +4,7 @@ on:
   push:
     # Sequence of patterns matched against refs/tags
     tags:
-      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+      - "*" # Push events to matching any tags
 jobs:
   build:
     runs-on: macos-latest
@@ -18,6 +18,12 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
+    # 获取package.json中的版本号, 方便后续处理
+    - name: Read package.json
+      uses: tyankatsu0105/read-package-version-actions@v1
+      id: package-version
+    - name: Show version number
+      run: echo "current version is ${{ steps.package-version.outputs.version }}"
     - run: npm ci
     - run: npm run dist
       env:
@@ -33,12 +39,12 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
-    - name: Upload Release normal windows
+    - name: Upload Release normal mac
       uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-        asset_path: ./release/稳部落-1.9.0.dmg
-        asset_name: release/稳部落-1.9.0.dmg
+        asset_path: ./release/稳部落-${{ steps.package-version.outputs.version }}.dmg
+        asset_name: stablog-${{ steps.package-version.outputs.version }}.dmg
         asset_content_type: application/zip
