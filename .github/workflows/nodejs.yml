@@ -22,6 +22,7 @@ jobs:
     - run: npm run dist
       env:
         CI: true
+        GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
     - name: Create Release
       id: create_release
       uses: monkeyWie/create-release@master
