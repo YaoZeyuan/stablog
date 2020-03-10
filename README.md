@@ -158,8 +158,8 @@
 # windows 环境下 puppeteer 安装指南
 
 1.  首先, `$env:PUPPETEER_DOWNLOAD_HOST=https://storage.googleapis.com.cnpmjs.org/`配置环境变量, 配置 chrome 镜像源
-2.  `npm install puppeteer@1.20.0 -S`安装 puppeteer
-3.  修改`.\node_modules\puppeteer\install.js`中下载方案, 将`const browserFetcher = puppeteer.createBrowserFetcher({ host: downloadHost});`替换为`const browserFetcher = puppeteer.createBrowserFetcher({ host: downloadHost, platform:"win32" });`, 强行将平台设置为 win32, 在`./node_modules/puppeteer/`下重新执行`node install.js`, 安装 32 位版本 chrome, 以适配 win32/64 两个平台
+2.  `npm install puppeteer@1.20.0 -S`安装 puppeteer 代码
+3.  `npm run install-puppeteer-dependencies`安装 32/64 位版本 chrome
 
 # mac 环境下 puppeteer 安装指南
 

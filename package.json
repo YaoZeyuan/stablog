@@ -20,9 +20,10 @@
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "build": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
     "pack": "npm run build && npm run buildgui && electron-builder --dir",
-    "dist": "npm run build && npm run buildgui && electron-builder",
+    "dist": "npm run install-puppeteer-dependencies && npm run build && npm run buildgui && electron-builder",
     "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "install-puppeteer-dependencies": "node install_puppeteer_dependencies.js"
   },
   "build": {
     "productName": "稳部落",
