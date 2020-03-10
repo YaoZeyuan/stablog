@@ -20,18 +20,18 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
     - run: npm run dist
-        env:
+      env:
         CI: true
     - name: Create Release
-        id: create_release
-        uses: monkeyWie/create-release@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+      id: create_release
+      uses: monkeyWie/create-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
     - name: Upload Release normal windows
       uses: actions/upload-release-asset@v1.0.1
       env:
