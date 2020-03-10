@@ -35,7 +35,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.package-version.outputs.version  }}
+        tag_name: win-${{ steps.package-version.outputs.version  }}
         release_name: Windows Release ${{ steps.package-version.outputs.version  }}
         draft: false
         prerelease: false
