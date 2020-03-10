@@ -18,6 +18,19 @@
 
 [点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-1.9.0.dmg)
 
+[更新历史](./changelog.md)
+
+# 使用指南
+
+1.  登录微博. 由于微博网页本身问题, 输入账号/密码/验证码时略有卡顿, 请耐心等待
+
+2.  进入系统设置, 将个人主页地址粘贴进输入栏. 点击`同步个人信息`按钮, 可看到预估的备份时长, 点击`开始备份`, 执行备份操作.
+3.  备份完成后会自动打开电子书输出目录, `稳部落输出的电子书`目录下, 即为电子书, 其中, `html`目录下为 html 格式书籍, `index.html`为目录页. `pdf`下为 pdf 输出位置
+
+1)  ![登录微博](http://stablog.bookflaneur.cn//img/%E7%99%BB%E5%BD%95%E5%BE%AE%E5%8D%9A.jfif)
+2)  ![配置任务](http://stablog.bookflaneur.cn//img/%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4-6.png)
+3)  ![查看电子书](http://stablog.bookflaneur.cn//img/%E6%9F%A5%E7%9C%8B%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6.jfif)
+
 # 使用截图
 
 软件界面:
@@ -44,17 +57,6 @@
 ## 项目动机
 
 严肃保护以[@Aioros 先生](https://weibo.com/u/6646798696?refer_flag=0000015010_&from=feed&loc=nickname&sudaref=www.weibo.com&is_all=1)为代表的珍稀野生读物博主
-
-# 使用指南
-
-1.  登录微博. 由于微博网页本身问题, 输入账号/密码/验证码时略有卡顿, 请耐心等待
-
-2.  进入系统设置, 将个人主页地址粘贴进输入栏. 点击`同步个人信息`按钮, 可看到预估的备份时长, 点击`开始备份`, 执行备份操作.
-3.  备份完成后会自动打开电子书输出目录, `稳部落输出的电子书`目录下, 即为电子书, 其中, `html`目录下为 html 格式书籍, `index.html`为目录页. `pdf`下为 pdf 输出位置
-
-1)  ![登录微博](http://stablog.bookflaneur.cn//img/%E7%99%BB%E5%BD%95%E5%BE%AE%E5%8D%9A.jfif)
-2)  ![配置任务](http://stablog.bookflaneur.cn//img/%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4-6.png)
-3)  ![查看电子书](http://stablog.bookflaneur.cn//img/%E6%9F%A5%E7%9C%8B%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6.jfif)
 
 # 配置项说明
 
@@ -157,6 +159,7 @@
 
 1.  首先, `$env:PUPPETEER_DOWNLOAD_HOST=https://storage.googleapis.com.cnpmjs.org/`配置环境变量, 配置 chrome 镜像源
 2.  `npm install puppeteer@1.20.0 -S`安装 puppeteer
+3.  修改`.\node_modules\puppeteer\install.js`中下载方案, 将`const browserFetcher = puppeteer.createBrowserFetcher({ host: downloadHost});`替换为`const browserFetcher = puppeteer.createBrowserFetcher({ host: downloadHost, platform:"win32" });`, 强行将平台设置为 win32, 在`./node_modules/puppeteer/`下重新执行`node install.js`, 安装 32 位版本 chrome, 以适配 win32/64 两个平台
 
 # mac 环境下 puppeteer 安装指南
 
