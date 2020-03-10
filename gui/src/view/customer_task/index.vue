@@ -407,9 +407,9 @@ export default Vue.extend({
           }
           let content = rawText.split("$CONFIG['uid']='")[1];
           content = content.split("'")[0];
-          // 如果抓取用户为被封用户, 且登陆账号不是被封用户, 只能拿到自己的uid
+          // 如果抓取用户为被封用户, 且登录账号不是被封用户, 只能拿到自己的uid
           // 但这个属于例外情况了, 一般用户拿不到被封用户的主页url, 不考虑
-          // 假定只有被封用户才能登陆被封用户的主页
+          // 假定只有被封用户才能登录被封用户的主页
           uid = content
         }
         else{
@@ -469,13 +469,13 @@ export default Vue.extend({
       return id
     },
     async asyncCheckIsLogin() {
-      // 已登陆则返回用户信息 =>
+      // 已登录则返回用户信息 =>
       // {"preferQuickapp":0,"data":{"login":true,"st":"ae34d2","uid":"1728335761"},"ok":1}
       let record = await http.asyncGet('https://m.weibo.cn/api/config')
       this.status.isLogin = _.get(record, ['data', 'login'], false)
       if (this.status.isLogin === false) {
         // @ts-ignore
-        this.$alert(`检测到尚未登陆微博, 请登陆后再使用`, {})
+        this.$alert(`检测到尚未登录微博, 请登录后再使用`, {})
         this.$emit('update:currentTab', 'login')
       }
       console.log('checkIsLogin: record =>', record)

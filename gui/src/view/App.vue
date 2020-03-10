@@ -12,7 +12,7 @@
           <el-tab-pane label="运行日志" :name="constant.tab.log">
             <Log />
           </el-tab-pane>
-          <el-tab-pane label="登陆微博" :name="constant.tab.login">
+          <el-tab-pane label="登录微博" :name="constant.tab.login">
             <Login />
           </el-tab-pane>
           <el-tab-pane label="使用说明" :name="constant.tab.helper">
