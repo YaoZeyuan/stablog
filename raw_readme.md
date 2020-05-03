@@ -14,9 +14,9 @@
 
 最新版本: 1.9.0
 
-<del>[点击下载-win](#)</del>
+<del>[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.9.0.exe#)</del>
 
-<del>[点击下载-mac](#)</del>
+<del>[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-1.9.0.dmg#)</del>
 
 <del>[更新历史](./changelog.md)</del>
 
