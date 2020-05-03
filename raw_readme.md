@@ -14,11 +14,11 @@
 
 最新版本: 1.9.0
 
-[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.9.0.exe)
+<del>[点击下载-win](#)</del>
 
-[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-1.9.0.dmg)
+<del>[点击下载-mac](#)</del>
 
-[更新历史](./changelog.md)
+<del>[更新历史](./changelog.md)</del>
 
 # 使用指南
 
@@ -169,6 +169,9 @@
 
 欢迎通过[issue](https://github.com/YaoZeyuan/stablog/issues)提建议
 
-# 支持作者
+<!-- # 支持作者 -->
 
-![老铁,谢谢了](http://stablog.bookflaneur.cn//img/%E8%80%81%E9%93%81%E8%B0%A2%E8%B0%A2%E4%BA%86.jfif?date=20191213)
+<!-- ![老铁,谢谢了](http://stablog.bookflaneur.cn//img/%E8%80%81%E9%93%81%E8%B0%A2%E8%B0%A2%E4%BA%86.jfif?date=20191213) -->
+
+[致谢列表](http://api.bookflaneur.cn/stablog/thank_you/list)
+
