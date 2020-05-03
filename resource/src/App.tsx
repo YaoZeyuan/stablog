@@ -19,14 +19,11 @@ export default class Base extends Component {
         mac: { version: 1.1, url: 'http://stablog.bookflaneur.cn/%E7%A8%B3%E9%83%A8%E8%90%BD-1.1.0.dmg' },
       },
     },
-    thankList: [
-      { reason: '*明明捐助了25元', time: '2019-10-14 21:34' },
-      { reason: '*明明捐助了25元', time: '2019-10-14 21:34' },
-      { reason: '*明明捐助了25元', time: '2019-10-14 21:34' },
-      { reason: '*明明捐助了25元', time: '2019-10-14 21:34' },
-      { reason: '*明明捐助了25元', time: '2019-10-14 21:34' },
-      { reason: '*明明捐助了25元', time: '2019-10-14 21:34' },
-    ],
+    thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
+  }
+
+  showAlert() {
+    alert('抱歉, 为规避法律风险, 已移除稳部落下载链接')
   }
 
   async componentDidMount() {
@@ -61,29 +58,54 @@ export default class Base extends Component {
       thankEleList.push(itemEle)
       counter++
     }
-    console.log('showThankList =>', showThankList)
     return (
       <div className="Home">
         <div className="body">
           <div className="container">
             <div className="title">稳部落</div>
             <div className="slogan">专业备份导出微博记录</div>
-            <div className="desc">支持被封用户(需使用被封用户原账号登陆)</div>
-            <div className="desc">一键导出指定用户的所有微博&文章</div>
-            <div className="desc">最新版本：v{config.version}</div>
+            <div className="desc">
+              <del>支持被封用户(需使用被封用户原账号登陆)</del>
+            </div>
+            <div className="desc">
+              <del>一键导出指定用户的所有微博&文章</del>
+            </div>
+            <div className="desc">
+              <del>最新版本：v{config.version}</del>
+            </div>
+            <div className="desc">为规避法律风险, 已移除稳部落下载链接</div>
+            <div className="desc">
+              如有规避方案, 烦请微博私信联系
+              <a href="https://weibo.com/u/1718734760" target="_blank">
+                @yaozeyuan93
+              </a>
+              , 不胜感激
+            </div>
             <div className="logo">
               <img src={logo} />
             </div>
             <div className="download-container">
-              <div className="download-tip">下载</div>
+              <div className="download-tip">
+                <del>下载</del>
+              </div>
               <div className="action-line">
-                <a className="download-button" target="_blank" href={config.detail.windows.url}>
+                <a
+                  className="download-button"
+                  target="_blank"
+                  // href={config.detail.windows.url}
+                  onClick={this.showAlert}
+                >
                   <img className="download-button-icon" src={svg_logo_window} />
-                  Windows版
+                  <del>Windows版</del>
                 </a>
-                <a className="download-button" target="_blank" href={config.detail.mac.url}>
+                <a
+                  className="download-button"
+                  target="_blank"
+                  // href={config.detail.mac.url}
+                  onClick={this.showAlert}
+                >
                   <img className="download-button-icon" src={svg_logo_mac} />
-                  Mac版
+                  <del>Mac版</del>
                 </a>
               </div>
             </div>
