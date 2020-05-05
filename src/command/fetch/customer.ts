@@ -66,6 +66,10 @@ class FetchCustomer extends Base {
     let customerTaskConfig: TypeTaskConfig.Customer = json5.parse(fetchConfigJSON)
     this.fetchStartAtPageNo = customerTaskConfig.fetchStartAtPageNo || this.fetchStartAtPageNo
     this.fetchEndAtPageNo = customerTaskConfig.fetchEndAtPageNo || this.fetchEndAtPageNo
+    if (customerTaskConfig.isSkipFetch) {
+      this.log(`检测到isSkipFetch配置为${!!customerTaskConfig.isSkipFetch}, 自动跳过抓取流程`)
+      return
+    }
     this.log(`开始进行自定义抓取`)
     type TypeTaskPackage = {
       [key: string]: Array<string>

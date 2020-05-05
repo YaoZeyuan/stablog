@@ -38,6 +38,14 @@ declare namespace TaskConfig {
      * 输出微博时间段-结束时间(毫秒)
      */
     outputEndAtMs: number
+    /**
+     * 是否跳过备份阶段
+     */
+    isSkipFetch: boolean
+    /**
+     * 是否跳过pdf输出阶段
+     */
+    isSkipGeneratePdf: boolean
   }
 }
 

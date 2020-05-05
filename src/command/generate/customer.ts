@@ -54,6 +54,8 @@ class GenerateCustomer extends Base {
     moment()
       .add(1, 'year')
       .unix() * 1000
+  CUSTOMER_CONFIG_isSkipGeneratePdf: TaskConfig.Customer['isSkipGeneratePdf'] = false
+  CUSTOMER_CONFIG_isSkipFetch: TaskConfig.Customer['isSkipFetch'] = false
 
   async execute(args: any, options: any): Promise<any> {
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
@@ -86,6 +88,8 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
     this.CUSTOMER_CONFIG_pdfQuilty = customerTaskConfig.pdfQuilty || 60 // 加上默认值
     this.CUSTOMER_CONFIG_maxBlogInBook = customerTaskConfig.maxBlogInBook
+    this.CUSTOMER_CONFIG_isSkipFetch = customerTaskConfig.isSkipFetch
+    this.CUSTOMER_CONFIG_isSkipGeneratePdf = customerTaskConfig.isSkipGeneratePdf
     let configList = customerTaskConfig.configList
     for (let config of configList) {
       let author_uid = config.uid
@@ -314,7 +318,11 @@ class GenerateCustomer extends Base {
 
     // 处理静态资源
     await this.asyncProcessStaticResource()
-    await this.generatePdf(weiboDayList)
+    if (this.CUSTOMER_CONFIG_isSkipGeneratePdf) {
+      this.log(`isSkipGeneratePdf为${this.CUSTOMER_CONFIG_isSkipGeneratePdf}, 自动跳过pdf输出阶段`)
+    } else {
+      await this.generatePdf(weiboDayList)
+    }
     // 输出完毕后, 将结果复制到dist文件夹中
     await this.asyncCopyToDist()
     this.log(`第${bookCounter}本电子书${this.bookname}生成完毕`)
