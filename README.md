@@ -155,13 +155,13 @@
 
 # windows 环境下 puppeteer 安装指南
 
-1.  首先, `$env:PUPPETEER_DOWNLOAD_HOST=https://storage.googleapis.com.cnpmjs.org/`配置环境变量, 配置 chrome 镜像源
+1.  首先, `$env:PUPPETEER_DOWNLOAD_HOST='https://cdn.npm.taobao.org/dist'`配置环境变量, 配置 chrome 镜像源
 2.  `npm install puppeteer@1.20.0 -S`安装 puppeteer 代码
 3.  `npm run install-puppeteer-dependencies`安装 32/64 位版本 chrome
 
 # mac 环境下 puppeteer 安装指南
 
-1.  直接执行 `PUPPETEER_DOWNLOAD_HOST=https://storage.googleapis.com.cnpmjs.org/ npm install puppeteer@1.20.0 -S`
+1.  直接执行 `PUPPETEER_DOWNLOAD_HOST='https://cdn.npm.taobao.org/dist' npm install puppeteer@1.20.0 -S`
 
 # 功能建议
 

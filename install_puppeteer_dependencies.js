@@ -1,7 +1,7 @@
 // windows下, 打包前需要同时安装chrome32/64两版浏览器, 以保证最终产品的兼容性
 console.log("auto check puppeteer dependencies")
 
-const host = 'https://storage.googleapis.com.cnpmjs.org/'
+const host = 'https://cdn.npm.taobao.org/dist'
 // 32位, 64位都装上
 const puppeteer = require('puppeteer/index');
 const os = require('os');
