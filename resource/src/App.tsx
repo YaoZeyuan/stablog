@@ -22,10 +22,6 @@ export default class Base extends Component {
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
   }
 
-  showAlert() {
-    alert('抱歉, 为规避法律风险, 已移除稳部落下载链接')
-  }
-
   async componentDidMount() {
     let versionResponse = await axios.get('https://api.bookflaneur.cn/stablog/version')
     let thankListResponse = await axios.get('https://api.bookflaneur.cn/stablog/thank_you/list')
@@ -58,54 +54,43 @@ export default class Base extends Component {
       thankEleList.push(itemEle)
       counter++
     }
+    console.log('showThankList =>', showThankList)
     return (
       <div className="Home">
         <div className="body">
           <div className="container">
             <div className="title">稳部落</div>
             <div className="slogan">专业备份导出微博记录</div>
+            <div className="desc">备份原理: </div>
             <div className="desc">
-              <del>支持被封用户(需使用被封用户原账号登陆)</del>
-            </div>
-            <div className="desc">
-              <del>一键导出指定用户的所有微博&文章</del>
-            </div>
-            <div className="desc">
-              <del>最新版本：v{config.version}</del>
-            </div>
-            <div className="desc">为规避法律风险, 已移除稳部落下载链接</div>
-            <div className="desc">
-              如有规避方案, 烦请微博私信联系
-              <a href="https://weibo.com/u/1718734760" target="_blank">
-                @yaozeyuan93
+              登录&nbsp;
+              <a href="https://m.weibo.cn" target="_blank">
+                m.weibo.cn
               </a>
-              , 不胜感激
+              &nbsp;后, 模拟浏览器访问, 获取登录用户发布的所有微博并备份之
             </div>
+            <div className="desc">
+              所以, 即使炸号, 只要还能登录&nbsp;
+              <a href="https://m.weibo.cn" target="_blank">
+                m.weibo.cn
+              </a>
+              &nbsp; 就可以备份
+            </div>
+            <div className="desc"></div>
+            <div className="desc">最新版本：v{config.version}</div>
             <div className="logo">
               <img src={logo} />
             </div>
             <div className="download-container">
-              <div className="download-tip">
-                <del>下载</del>
-              </div>
+              <div className="download-tip">下载</div>
               <div className="action-line">
-                <a
-                  className="download-button"
-                  target="_blank"
-                  // href={config.detail.windows.url}
-                  onClick={this.showAlert}
-                >
+                <a className="download-button" target="_blank" href={config.detail.windows.url}>
                   <img className="download-button-icon" src={svg_logo_window} />
-                  <del>Windows版</del>
+                  Windows版
                 </a>
-                <a
-                  className="download-button"
-                  target="_blank"
-                  // href={config.detail.mac.url}
-                  onClick={this.showAlert}
-                >
+                <a className="download-button" target="_blank" href={config.detail.mac.url}>
                   <img className="download-button-icon" src={svg_logo_mac} />
-                  <del>Mac版</del>
+                  Mac版
                 </a>
               </div>
             </div>
