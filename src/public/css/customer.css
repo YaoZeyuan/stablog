@@ -2,9 +2,8 @@
 body {
   background: #f2f2f2;
   text-indent: 0em !important;
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB,
-    Microsoft YaHei, Arial, sans-serif;
-  word-wrap: break-word; /* 自动折行 */
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+  word-wrap: break-word;/* 自动折行 */
 }
 .container {
   display: flex;
@@ -309,6 +308,7 @@ body {
 .mblog-container .card-wrap .m-ctrl-box h4 {
   font-size: 16px;
   margin-left: 5px;
+  font-weight: normal;
 }
 .mblog-container .card-wrap .m-ctrl-box .m-box-center-a {
   display: flex;

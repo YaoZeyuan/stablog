@@ -72,9 +72,6 @@
             <i class="el-icon-question" slot="reference"></i>
           </el-popover>
         </el-form-item>
-        <el-form-item label="增量备份Tip" class="hack-form-item">
-          <span>一页对应10条微博, 如果数据库中已有旧数据, 可以只备份前10页内容(发布的最近100条微博), 加快备份速度</span>
-        </el-form-item>
         <el-divider content-position="center">输出规则</el-divider>
         <el-form-item label="微博排序">
           <el-radio-group v-model="database.taskConfig.postAtOrderBy">
@@ -151,14 +148,24 @@
             <span>条微博一页</span>
           </template>
         </el-form-item>
-        <el-form-item label="开发者模式">
-          <el-checkbox v-model="database.taskConfig.isSkipFetch">跳过备份过程, 直接输出电子书</el-checkbox>
-          <el-checkbox v-model="database.taskConfig.isSkipGeneratePdf">只输出网页,不输出pdf文件</el-checkbox>
-        </el-form-item>
         <el-form-item label="操作">
           <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
           <el-button type="primary" @click="openOutputDir">打开电子书所在目录</el-button>
           <el-button type="danger" @click="asyncCheckUpdate">检查更新</el-button>
+        </el-form-item>
+        <el-divider content-position="center">高级功能</el-divider>
+        <el-form-item label="开发者模式">
+          <el-checkbox v-model="database.taskConfig.isSkipFetch">跳过备份过程, 直接输出电子书</el-checkbox>
+          <el-checkbox v-model="database.taskConfig.isSkipGeneratePdf">只输出网页,不输出pdf文件</el-checkbox>
+        </el-form-item>
+        <el-form-item label="使用提示" class="hack-form-item">
+          <el-card class="box-card">
+            <p>支持增量备份, 备份过一次后, 可以只备份前10页内容, 加快备份速度</p>
+            <p>可在【管理数据】标签页中浏览已备份的微博记录列表</p>
+            <p>支持断点续传, 中途停止后, 可以记下备份的页码, 再次运行时修改【备份范围】配置项, 从该页之后再备份即可</p>
+            <p>32位操作系统下, 当pdf体积超过2GB后, 会提示文件已损坏. => 解决方案是更换64位操作系统, 或调整【时间范围】/【自动分卷】配置项, 通过限定单本pdf容量, 手工将pdf体积控制在2GB之内</p>
+            <p>利用【开发者模式】配置项, 可以极大加快微博备份速度</p>
+          </el-card>
         </el-form-item>
       </el-form>
     </el-card>
