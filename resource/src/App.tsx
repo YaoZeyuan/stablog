@@ -77,7 +77,7 @@ export default class Base extends Component {
               &nbsp; 后还能看见自己的微博,就可以备份
             </div>
             <div className="desc"></div>
-            <div className="desc">最新版本：v{config.version}</div>
+            <div className="desc">最新版本：v{`${config.version}`.padEnd(3, '.0')}</div>
             <div className="logo">
               <img src={logo} />
             </div>
