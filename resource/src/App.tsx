@@ -70,11 +70,11 @@ export default class Base extends Component {
               &nbsp;后, 模拟浏览器访问, 获取登录用户发布的所有微博并备份之
             </div>
             <div className="desc">
-              所以, 即使炸号, 只要还能登录&nbsp;
+              所以, 即使炸号, 只要登录&nbsp;
               <a href="https://m.weibo.cn" target="_blank">
                 m.weibo.cn
               </a>
-              &nbsp; 就可以备份
+              &nbsp; 后还能看见自己的微博,就可以备份
             </div>
             <div className="desc"></div>
             <div className="desc">最新版本：v{config.version}</div>
