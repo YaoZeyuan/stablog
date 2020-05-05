@@ -153,7 +153,7 @@
         </el-form-item>
         <el-form-item label="开发者模式">
           <el-checkbox v-model="database.taskConfig.isSkipFetch">跳过备份过程, 直接输出电子书</el-checkbox>
-          <el-checkbox v-model="database.taskConfig.isSkipGeneratePdf">不输出pdf文件</el-checkbox>
+          <el-checkbox v-model="database.taskConfig.isSkipGeneratePdf">只输出网页,不输出pdf文件</el-checkbox>
         </el-form-item>
         <el-form-item label="操作">
           <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
