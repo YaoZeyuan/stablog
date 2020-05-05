@@ -12,11 +12,11 @@
 
 最新版本: 2.0.0
 
-<del>[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%202.0.0.exe#)</del>
+[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%202.0.0.exe#)
 
-<del>[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-2.0.0.dmg#)</del>
+[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-2.0.0.dmg#)
 
-<del>[更新历史](./changelog.md)</del>
+[更新历史](./changelog.md)
 
 # 使用指南
 
