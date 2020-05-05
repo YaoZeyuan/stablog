@@ -4,10 +4,14 @@
       <el-form label-width="100px">
         <el-form-item label="个人主页">
           <div class="input-homepage-url">
+            <!-- <p>{{database.taskConfig.configList[0].rawInputText}}</p> -->
             <el-input
+              disabled
               v-model="database.taskConfig.configList[0].rawInputText"
               placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281"
             />
+            <el-button type="success" @click="asyncData()">同步用户信息</el-button>
+            <!-- 
             <el-popover placement="bottom" trigger="click">
               <div>
                 <p>请输入您的个人主页url</p>
@@ -18,7 +22,7 @@
                 <p>https://m.weibo.cn/u/1687243315</p>
               </div>
               <i class="el-icon-question" slot="reference"></i>
-            </el-popover>
+            </el-popover>-->
           </div>
         </el-form-item>
         <el-form-item label="用户信息">
@@ -43,15 +47,7 @@
           </template>
         </el-form-item>
         <el-divider content-position="center">备份配置</el-divider>
-        <el-form-item label="备份页数">
-          <el-popover placement="right" trigger="click">
-            <div>
-              <p>每10条微博为一页</p>
-              <p>可以通过配置备份页码范围, 实现增量备份, 或备份指定日期范围内的记录</p>
-              <p>提示: 如果只备份0~1页, 相当于直接进入输出电子书流程</p>
-            </div>
-            <i class="el-icon-question" slot="reference"></i>
-          </el-popover>
+        <el-form-item label="备份范围">
           <span>从第</span>
           <el-input-number
             placeholder
@@ -67,6 +63,17 @@
             :step="1"
           ></el-input-number>
           <span>页</span>
+          <el-popover placement="right" trigger="click">
+            <div>
+              <p>每10条微博为一页</p>
+              <p>可以通过配置备份页码范围, 实现增量备份, 或备份指定日期范围内的记录</p>
+              <p>提示: 如果只备份0~1页, 相当于直接进入输出电子书流程</p>
+            </div>
+            <i class="el-icon-question" slot="reference"></i>
+          </el-popover>
+        </el-form-item>
+        <el-form-item label="增量备份Tip" class="hack-form-item">
+          <span>一页对应10条微博, 如果数据库中已有旧数据, 可以只备份前10页内容(发布的最近100条微博), 加快备份速度</span>
         </el-form-item>
         <el-divider content-position="center">输出规则</el-divider>
         <el-form-item label="微博排序">
@@ -144,9 +151,12 @@
             <span>条微博一页</span>
           </template>
         </el-form-item>
+        <el-form-item label="开发者模式">
+          <el-checkbox v-model="database.taskConfig.isSkipFetch">跳过备份过程, 直接输出电子书</el-checkbox>
+          <el-checkbox v-model="database.taskConfig.isSkipGeneratePdf">不输出pdf文件</el-checkbox>
+        </el-form-item>
         <el-form-item label="操作">
           <el-button type="primary" @click="asyncHandleStartTask">开始备份</el-button>
-          <el-button type="success" @click="asyncData()">同步用户信息</el-button>
           <el-button type="primary" @click="openOutputDir">打开电子书所在目录</el-button>
           <el-button type="danger" @click="asyncCheckUpdate">检查更新</el-button>
         </el-form-item>
@@ -214,12 +224,12 @@ const ImageQuilty = {
   无图: 'none',
   默认: 'default',
 }
-const PdfQuilty:{[key:string]: 50|60|70|90|100} = {
-  "50": 50,
-  "60": 60,
-  "70": 70,
-  "90": 90,
-  "100": 100,
+const PdfQuilty: { [key: string]: 50 | 60 | 70 | 90 | 100 } = {
+  '50': 50,
+  '60': 60,
+  '70': 70,
+  '90': 90,
+  '100': 100,
 }
 
 const Translate_Image_Quilty = {
@@ -281,6 +291,8 @@ export default Vue.extend({
         moment()
           .add(1, 'year')
           .unix() * 1000,
+      isSkipFetch: false,
+      isSkipGeneratePdf: false,
     }
     if (taskConfig.configList.length === 0) {
       // 如果没有数据, 就要手工补上一个, 确保数据完整
@@ -335,14 +347,17 @@ export default Vue.extend({
         moment()
           .add(1, 'day')
           .unix() * 1000,
+      isSkipFetch: false,
+      isSkipGeneratePdf: false,
     }
     try {
       taskConfig = JSON.parse(jsonContent)
     } catch (e) {}
     // 始终重置为次日
-    taskConfig.outputEndAtMs = moment()
-          .add(1, 'day')
-          .unix() * 1000
+    taskConfig.outputEndAtMs =
+      moment()
+        .add(1, 'day')
+        .unix() * 1000
     this.database.taskConfig = taskConfig
     if (this.database.taskConfig.configList.length === 0) {
       this.database.taskConfig.configList.push(_.clone(defaultConfigItem))
@@ -354,18 +369,27 @@ export default Vue.extend({
   },
   methods: {
     async asyncData() {
-      let rawInputText = this.database.taskConfig.configList[0].rawInputText
-      if (!rawInputText) {
-        // @ts-ignore
-        this.$alert(`请先输入待备份用户主页地址`)
-        return false
+      // let rawInputText = this.database.taskConfig.configList[0].rawInputText
+      // if (!rawInputText) {
+      //   // @ts-ignore
+      //   this.$alert(`请先输入待备份用户主页地址`)
+      //   return false
+      // }
+
+      await this.asyncCheckIsLogin()
+      if (this.status.isLogin === false) {
+        console.log('请先登录微博')
+        return
       }
-      let uid = await this.asyncGetUid(rawInputText)
+      // 获取用户uid
+      let uid = await this.asyncGetLoginUid()
       if (!uid) {
         // @ts-ignore
-        this.$alert(`用户不存在, 请确认用户主页地址是否正确`)
+        this.$alert(`uid获取失败, 请确认是否已登录微博账号`)
         return false
       }
+      let rawInputText = `https://m.weibo.cn/u/${uid}`
+      this.database.taskConfig.configList[0].rawInputText = rawInputText
       let userInfo = await this.asyncGetUserInfo(uid)
       Vue.set(this.database.taskConfig.configList, 0, {
         rawInputText,
@@ -377,49 +401,49 @@ export default Vue.extend({
     },
     /**
      * 将用户输入的主页url转为uid
+     * 功能已废弃(禁止用户抓取非本人微博记录)
      */
-    async asyncGetUid(rawInputUrl: string) {
-      if (rawInputUrl.includes('m.weibo.cn/u/')) {
-        let rawUid = rawInputUrl.split(`m.weibo.cn/u/`)[1]
-        let uid = _.get(rawUid.match(/^\d+/), 0, '')
-        return uid
-      }
-      if (rawInputUrl.includes('weibo.com/u/')) {
-        let rawUid = rawInputUrl.split(`weibo.com/u/`)[1]
-        let uid = _.get(rawUid.match(/^\d+/), 0, '')
-        return uid
-      } else {
-        let rawAccount = rawInputUrl.split(`weibo.com/`)[1]
-        rawAccount = rawAccount.split('?')[0]
-        let account = rawAccount.split('/')[0] // 有可能会加一个/home/
-        // 新浪会将url重定向到uid页面
-        let response = await http.rawClient.get(
-          `https://m.weibo.cn/${account}?topnav=1&wvr=6&topsug=1&is_all=1&jumpfrom=weibocom&topnav=1&wvr=6&topsug=1&is_all=1`,
-        )
-        // 对于被封号用户, 会返回一个404, 这时候需要手工匹配html代码
-        let uid = ""
-        if(response.data.includes("用户不存在") && response.data.includes("出错了")){
-          let rawHtmlResponse = await http.rawClient.get(`https://weibo.com/${account}`)
-          let rawText = rawHtmlResponse.data
-          if(rawText.includes("$CONFIG['uid']='") === false){
-            // uid不存在
-            return ''
-          }
-          let content = rawText.split("$CONFIG['uid']='")[1];
-          content = content.split("'")[0];
-          // 如果抓取用户为被封用户, 且登录账号不是被封用户, 只能拿到自己的uid
-          // 但这个属于例外情况了, 一般用户拿不到被封用户的主页url, 不考虑
-          // 假定只有被封用户才能登录被封用户的主页
-          uid = content
-        }
-        else{
-          let url = response.request.responseURL || ''
-          let rawUid = url.split(`m.weibo.cn/u/`)[1]
-          uid = _.get(rawUid.match(/^\d+/), 0, '')
-        }
-        return uid
-      }
-    },
+    // async asyncGetUid(rawInputUrl: string) {
+    //   if (rawInputUrl.includes('m.weibo.cn/u/')) {
+    //     let rawUid = rawInputUrl.split(`m.weibo.cn/u/`)[1]
+    //     let uid = _.get(rawUid.match(/^\d+/), 0, '')
+    //     return uid
+    //   }
+    //   if (rawInputUrl.includes('weibo.com/u/')) {
+    //     let rawUid = rawInputUrl.split(`weibo.com/u/`)[1]
+    //     let uid = _.get(rawUid.match(/^\d+/), 0, '')
+    //     return uid
+    //   } else {
+    //     let rawAccount = rawInputUrl.split(`weibo.com/`)[1]
+    //     rawAccount = rawAccount.split('?')[0]
+    //     let account = rawAccount.split('/')[0] // 有可能会加一个/home/
+    //     // 新浪会将url重定向到uid页面
+    //     let response = await http.rawClient.get(
+    //       `https://m.weibo.cn/${account}?topnav=1&wvr=6&topsug=1&is_all=1&jumpfrom=weibocom&topnav=1&wvr=6&topsug=1&is_all=1`,
+    //     )
+    //     // 对于被封号用户, 会返回一个404, 这时候需要手工匹配html代码
+    //     let uid = ''
+    //     if (response.data.includes('用户不存在') && response.data.includes('出错了')) {
+    //       let rawHtmlResponse = await http.rawClient.get(`https://weibo.com`)
+    //       let rawText = rawHtmlResponse.data
+    //       if (rawText.includes("$CONFIG['uid']='") === false) {
+    //         // uid不存在
+    //         return ''
+    //       }
+    //       let content = rawText.split("$CONFIG['uid']='")[1]
+    //       content = content.split("'")[0]
+    //       // 如果抓取用户为被封用户, 且登录账号不是被封用户, 只能拿到自己的uid
+    //       // 但这个属于例外情况了, 一般用户拿不到被封用户的主页url, 不考虑
+    //       // 假定只有被封用户才能登录被封用户的主页
+    //       uid = content
+    //     } else {
+    //       let url = response.request.responseURL || ''
+    //       let rawUid = url.split(`m.weibo.cn/u/`)[1]
+    //       uid = _.get(rawUid.match(/^\d+/), 0, '')
+    //     }
+    //     return uid
+    //   }
+    // },
     /**
      * 获取用户信息
      */
@@ -477,8 +501,19 @@ export default Vue.extend({
         // @ts-ignore
         this.$alert(`检测到尚未登录微博, 请登录后再使用`, {})
         this.$emit('update:currentTab', 'login')
+        return false
       }
       console.log('checkIsLogin: record =>', record)
+      return true
+    },
+    /**
+     * 获取已登录用户uid, 获取失败返回0
+     */
+    async asyncGetLoginUid() {
+      // 已登录则返回用户信息 =>
+      // {"preferQuickapp":0,"data":{"login":true,"st":"ae34d2","uid":"1728335761"},"ok":1}
+      let record = await http.asyncGet('https://m.weibo.cn/api/config')
+      return _.get(record, ['data', 'uid'], 0)
     },
     async asyncCheckUpdate() {
       let checkUpgradeUri = 'http://api.bookflaneur.cn/stablog/version'
@@ -519,12 +554,24 @@ export default Vue.extend({
 })
 </script>
 
-<style scoped>
+<style style="less" scoped>
 .input-homepage-url {
   display: flex;
 }
 .input-homepage-url .el-icon-question {
   margin-left: 12px;
   margin-right: 12px;
+}
+
+.hack-form-item {
+  display: flex;
+  align-items: center;
+}
+</style>
+
+<style style="less" >
+.hack-form-item.el-form-item div.el-form-item__content {
+  /**强制覆盖element-ui样式 */
+  margin-left: 0 !important;
 }
 </style>

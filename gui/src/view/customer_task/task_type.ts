@@ -38,6 +38,14 @@ export namespace TypeTaskConfig {
      * 输出微博时间下限(毫秒值)
      */
     outputEndAtMs: number
+    /**
+     * 是否跳过备份阶段
+     */
+    isSkipFetch: boolean
+    /**
+     * 是否跳过pdf输出阶段
+     */
+    isSkipGeneratePdf: boolean
   }
 
   // 作为常量
