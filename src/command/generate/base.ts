@@ -35,6 +35,11 @@ class FetchBase extends Base {
   get htmlCacheCssPath() {
     return path.resolve(this.htmlCachePath, 'css')
   }
+
+  get htmlCacheFontPath() {
+    return path.resolve(this.htmlCachePath, 'font')
+  }
+
   get htmlCacheImgPath() {
     return path.resolve(this.htmlCachePath, 'image')
   }
@@ -69,6 +74,7 @@ class FetchBase extends Base {
     shelljs.mkdir('-p', this.htmlCachePath)
     shelljs.mkdir('-p', this.htmlCacheHtmlPath)
     shelljs.mkdir('-p', this.htmlCacheCssPath)
+    shelljs.mkdir('-p', this.htmlCacheFontPath)
     shelljs.mkdir('-p', this.htmlCacheImgPath)
     shelljs.mkdir('-p', this.htmlCachePdfPath)
     shelljs.mkdir('-p', this.htmlOutputPath)
@@ -224,6 +230,12 @@ class FetchBase extends Base {
     for (let filename of ['bootstrap.css', 'customer.css', 'markdown.css', 'normalize.css']) {
       let copyFromUri = path.resolve(PathConfig.resourcePath, 'css', filename)
       let copyToUri = path.resolve(this.htmlCacheCssPath, filename)
+      fs.copyFileSync(copyFromUri, copyToUri)
+    }
+    // font
+    for (let filename of ['iconfont.ttf']) {
+      let copyFromUri = path.resolve(PathConfig.resourcePath, 'font', filename)
+      let copyToUri = path.resolve(this.htmlCacheFontPath, filename)
       fs.copyFileSync(copyFromUri, copyToUri)
     }
     // 图片资源

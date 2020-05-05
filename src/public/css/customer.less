@@ -13,6 +13,192 @@ body {
   flex-direction: column;
 }
 
+// 微博图标字体
+@font-face {
+  font-family: litefont;
+  src: url(../font/iconfont.ttf);
+  font-weight: 400;
+  font-style: normal;
+}
+
+.lite-iconf {
+  font-family: litefont !important;
+  font-size: 22px;
+  color: #fff;
+  /* 覆盖i的默认斜体样式 */
+  font-style: normal;
+}
+
+.lite-iconf-setup:before {
+  content: '\E001';
+}
+
+.lite-iconf-share:before {
+  content: '\E002';
+}
+
+.lite-iconf-eit:before {
+  content: '\E004';
+}
+
+.lite-iconf-editor:before {
+  content: '\E005';
+}
+
+.lite-iconf-profile:before {
+  content: '\E006';
+  color: #282f3c;
+  font-size: 1.625rem;
+}
+
+.lite-iconf-message:before {
+  content: '\E007';
+}
+
+.lite-iconf-report:before {
+  content: '\E008';
+}
+
+.lite-iconf-comments:before {
+  content: '\E009';
+}
+
+.lite-iconf-like:before {
+  content: '\E010';
+}
+
+.lite-iconf-liked:before {
+  content: '\E011';
+  color: #db5f5f;
+}
+
+.lite-iconf-emote:before {
+  content: '\E012';
+}
+
+.lite-iconf-pic:before {
+  content: '\E013';
+}
+
+.lite-iconf-edit:before {
+  content: '\E014';
+}
+
+.lite-iconf-his:before {
+  content: '\E015';
+}
+
+.lite-iconf-horn:before {
+  content: '\E016';
+}
+
+.lite-iconf-each {
+  color: #697480;
+  font-size: 0.8125rem;
+}
+
+.lite-iconf-each:before {
+  content: '\E017';
+}
+
+.lite-iconf-female {
+  font-size: 0.8125rem;
+}
+
+.lite-iconf-female:before {
+  content: '\E018';
+  color: #697480;
+}
+
+.lite-iconf-male {
+  font-size: 0.8125rem;
+}
+
+.lite-iconf-male:before {
+  content: '\E019';
+  color: #697480;
+}
+
+.lite-iconf-dm {
+  font-size: 1.625rem;
+  padding-left: 1px;
+}
+
+.lite-iconf-dm:before {
+  content: '\E021';
+  color: #697480;
+}
+
+.lite-iconf-releas {
+  font-size: 1.25rem;
+}
+
+.lite-iconf-releas:before {
+  content: '\E022';
+  color: #282f3c;
+}
+
+.lite-iconf-home_h:before {
+  content: '\E023';
+}
+
+.lite-iconf-home:before {
+  content: '\E024';
+}
+
+.lite-iconf-msg_h:before {
+  content: '\E025';
+}
+
+.lite-iconf-msg:before {
+  content: '\E026';
+}
+
+.lite-iconf-account_h:before {
+  content: '\E027';
+}
+
+.lite-iconf-account:before {
+  content: '\E028';
+}
+
+.lite-iconf-video_h:before {
+  content: '\E029';
+}
+
+.lite-iconf-video:before {
+  content: '\E030';
+}
+
+.lite-iconf-refresh:before {
+  content: '\E032';
+}
+
+.lite-iconf-account_h,
+.lite-iconf-home_h,
+.lite-iconf-msg_h,
+.lite-iconf-video_h {
+  color: #282f3c;
+  font-size: 1.375rem;
+}
+
+.lite-iconf-account,
+.lite-iconf-home,
+.lite-iconf-msg,
+.lite-iconf-video {
+  color: #000;
+  font-size: 1.375rem;
+}
+
+.lite-iconf-comments,
+.lite-iconf-like,
+.lite-iconf-liked,
+.lite-iconf-report,
+.lite-iconf-share {
+  color: rgba(40, 47, 60, 0.8);
+  font-size: 1.125rem;
+}
+
 // 微博记录
 .mblog-container {
   flex: 6;
@@ -48,7 +234,8 @@ body {
       .m-box-col .m-text-box {
         // 用户名
         display: flex;
-        width: 10rem;
+        /* 增大宽度, 适配用户名过长的情况 */
+        max-width: 500px;
         height: 40px;
         flex-direction: column;
         justify-content: space-between;
@@ -171,6 +358,16 @@ body {
       margin: 0 0.75rem;
       justify-content: space-between;
       align-items: center;
+      .m-box-col {
+        width: 33%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      h4 {
+        font-size: 16px;
+        margin-left: 5px;
+      }
       .m-box-center-a {
         display: flex;
         align-items: center;
@@ -179,6 +376,18 @@ body {
       .m-box-center-retweet {
         // 首项数据前不需要margin-left
         margin-left: 0;
+        h4 {
+          // 转推icon自带一些边距, 因此不需要5px这么多留白
+          margin-left: 1px;
+        }
+      }
+      .m-box-center-comment {
+        // 添加左右边框
+        border-color: #d9d9d9;
+        border-left-style: solid;
+        border-left-width: 1px;
+        border-right-style: solid;
+        border-right-width: 1px;
       }
       // 底栏
       .m-diy-btn {

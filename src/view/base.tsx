@@ -106,12 +106,12 @@ class Base {
                 <a>---</a>:
               </span>
               {/* <div>${mblog.text}</div> */}
-              <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }}></div>
+              <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }} />
             </div>
             <div>
               {/* 如果是图片的话, 需要展示九张图 */}
               <div className="weibo-media-wraps weibo-media media-b">
-                <ul className="m-auto-list"></ul>
+                <ul className="m-auto-list" />
               </div>
             </div>
           </div>
@@ -139,8 +139,8 @@ class Base {
               </div>
               <div className="WB_editor_iframe_new" node-type="contentBody">
                 {/* 正文 */}
-                <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }}></div>
-                <div className="DCI_v2 clearfix"></div>
+                <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }} />
+                <div className="DCI_v2 clearfix" />
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ class Base {
             <span>
               <a href={mblog.user.profile_url}>@{mblog.user.screen_name}</a>:
             </span>
-            <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }}></div>
+            <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }} />
             {/* <div>${mblog.text}</div> */}
           </div>
           <div className="weibo-img-list-container">
@@ -211,8 +211,8 @@ class Base {
             </div>
             <div className="WB_editor_iframe_new" node-type="contentBody">
               {/* 正文 */}
-              <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }}></div>
-              <div className="DCI_v2 clearfix"></div>
+              <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }} />
+              <div className="DCI_v2 clearfix" />
             </div>
           </div>
         </div>
@@ -281,21 +281,21 @@ class Base {
               </article>
               <footer className="m-ctrl-box m-box-center-a">
                 <div className="m-diy-btn m-box-col m-box-center m-box-center-a m-box-center-retweet">
-                  <i className="m-font m-font-forward"></i>
+                  <i className="m-font m-font-forward lite-iconf lite-iconf-report" />
                   {/* 转发数 */}
-                  <h4>转发:{mblog.reposts_count}</h4>
+                  <h4>{mblog.reposts_count}</h4>
                 </div>
-                <span className="m-line-gradient"></span>
+                <span className="m-line-gradient" />
                 <div className="m-diy-btn m-box-col m-box-center m-box-center-a m-box-center-comment">
-                  <i className="m-font m-font-comment"></i>
+                  <i className="m-font m-font-comment  lite-iconf lite-iconf-comments" />
                   {/* 评论数 */}
-                  <h4>评论:{mblog.comments_count}</h4>
+                  <h4>{mblog.comments_count}</h4>
                 </div>
-                <span className="m-line-gradient"></span>
+                <span className="m-line-gradient" />
                 <div className="m-diy-btn m-box-col m-box-center m-box-center-a m-box-center-agree">
-                  <i className="m-icon m-icon-like"></i>
+                  <i className="m-icon m-icon-like lite-iconf lite-iconf-like" />
                   {/* 点赞数 */}
-                  <h4>点赞:{mblog.attitudes_count}</h4>
+                  <h4>{mblog.attitudes_count}</h4>
                 </div>
               </footer>
             </div>
