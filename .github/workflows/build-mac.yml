@@ -1,50 +1,50 @@
-# name: CI
+name: CI
 
-# on:
-#   push:
-#     # Sequence of patterns matched against refs/tags
-#     tags:
-#       - "*" # Push events to matching any tags
-# jobs:
-#   build:
-#     runs-on: macos-latest
-#     strategy:
-#       matrix:
-#         node-version: [12.x]
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '*' # Push events to matching any tags
+jobs:
+  build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        node-version: [12.x]
 
-#     steps:
-#     - uses: actions/checkout@v2
-#     - name: Use Node.js ${{ matrix.node-version }}
-#       uses: actions/setup-node@v1
-#       with:
-#         node-version: ${{ matrix.node-version }}
-#     # 获取package.json中的版本号, 方便后续处理
-#     - name: Read package.json
-#       uses: tyankatsu0105/read-package-version-actions@v1
-#       id: package-version
-#     - name: Show version number
-#       run: echo "current version is ${{ steps.package-version.outputs.version }}"
-#     - run: npm ci
-#     - run: npm run dist
-#       env:
-#         CI: true
-#         GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
-#     - name: Create Release
-#       id: create_release
-#       uses: monkeyWie/create-release@master
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         tag_name: mac-${{ steps.package-version.outputs.version  }}
-#         release_name: ${{ steps.package-version.outputs.version  }}
-#         draft: true
-#         prerelease: true
-#     - name: Upload Release normal mac
-#       uses: actions/upload-release-asset@v1.0.1
-#       env:
-#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#       with:
-#         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-#         asset_path: ./release/稳部落-${{ steps.package-version.outputs.version }}.dmg
-#         asset_name: stablog-${{ steps.package-version.outputs.version }}.dmg
-#         asset_content_type: application/zip
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      # 获取package.json中的版本号, 方便后续处理
+      - name: Read package.json
+        uses: tyankatsu0105/read-package-version-actions@v1
+        id: package-version
+      - name: Show version number
+        run: echo "current version is ${{ steps.package-version.outputs.version }}"
+      - run: npm ci
+      - run: npm run dist
+        env:
+          CI: true
+          GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
+      - name: Create Release
+        id: create_release
+        uses: monkeyWie/create-release@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: mac-${{ steps.package-version.outputs.version  }}
+          release_name: ${{ steps.package-version.outputs.version  }}
+          draft: true
+          prerelease: true
+      - name: Upload Release normal mac
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./release/稳部落-${{ steps.package-version.outputs.version }}.dmg
+          asset_name: stablog-${{ steps.package-version.outputs.version }}.dmg
+          asset_content_type: application/zip
