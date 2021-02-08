@@ -15,6 +15,7 @@
     "start": "electron dist/index.js --debug",
     "prod": "electron dist/index.js",
     "ace": "node dist/ace.js",
+    "epub": "node dist/ace.js Generate:Epub",
     "serve": "node dist/server.js",
     "watch-node": "nodemon dist/server.js",
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",

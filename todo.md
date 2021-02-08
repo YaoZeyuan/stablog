@@ -1,6 +1,11 @@
-1.  移除赞助入口
-2.  体积优化-> 将体积优化到 100mb 以内
-3.  输出 epub 电子书, 而非 pdf
+1.  输出 epub 电子书, 而非 pdf
+    1.  测试 epub 在多看上的效果
+    2.  寻找 epub 生成库(大概率找不到)
+    3.  寻找 epub3.2 规范
+        1.  https://dpublishing.github.io/epub-specs-tc/epub32/epub-spec.html
+    4.  编写基于 epub3.2 规范的生成库
+2.  移除赞助入口
+3.  体积优化-> 将体积优化到 100mb 以内
 4.  允许备份他人微博
 5.  优化 html 文件样式, 调整为 octoman 备份出的样式
 6.  导出关注人 uid 列表[不建议做]
