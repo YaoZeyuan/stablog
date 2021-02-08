@@ -13,19 +13,19 @@ class Epub {
   basePath = path.resolve('.') // 基础路径
   bookname = '' // 书名
 
-  bookIdentifier = 'helloworld' // id, 直接写死
-  creator = 'zhihuhelp' // 创建者, 直接写死
+  bookIdentifier = 'stablog-auto-generate' // id, 直接写死
+  creator = 'stablog' // 创建者, 直接写死
 
-  get currentPath () { return path.resolve(__dirname) }
-  get resourcePath () { return path.resolve(this.currentPath, 'resource') }
+  get currentPath() { return path.resolve(__dirname) }
+  get resourcePath() { return path.resolve(this.currentPath, 'resource') }
 
-  get epubCachePath () { return path.resolve(this.basePath) }
-  get epubContentCachePath () { return path.resolve(this.epubCachePath, 'OEBPS') }
-  get epubCacheHtmlPath () { return path.resolve(this.epubContentCachePath, 'html') }
-  get epubCacheCssPath () { return path.resolve(this.epubContentCachePath, 'css') }
-  get epubCacheImagePath () { return path.resolve(this.epubContentCachePath, 'image') }
+  get epubCachePath() { return path.resolve(this.basePath) }
+  get epubContentCachePath() { return path.resolve(this.epubCachePath, 'OEBPS') }
+  get epubCacheHtmlPath() { return path.resolve(this.epubContentCachePath, 'html') }
+  get epubCacheCssPath() { return path.resolve(this.epubContentCachePath, 'css') }
+  get epubCacheImagePath() { return path.resolve(this.epubContentCachePath, 'image') }
 
-  constructor (bookname: string, basePath: string) {
+  constructor(bookname: string, basePath: string) {
     this.basePath = basePath
     this.bookname = bookname
 
@@ -38,7 +38,7 @@ class Epub {
     this.initPath()
   }
 
-  initPath () {
+  initPath() {
     shelljs.mkdir('-p', this.epubCachePath)
     shelljs.mkdir('-p', this.epubContentCachePath)
     shelljs.mkdir('-p', this.epubCacheCssPath)
@@ -62,39 +62,39 @@ class Epub {
     )
   }
 
-  parseFilename (uri: string) {
+  parseFilename(uri: string) {
     let uriSplitList = uri.split(path.sep)
     let filename = _.get(uriSplitList, uriSplitList.length - 1, '')
     return filename
   }
 
-  addIndexHtml (title: string, uri: string) {
+  addIndexHtml(title: string, uri: string) {
     let filename = this.parseFilename(uri)
     this.CopyFileSyncSafe(uri, path.resolve(this.epubCacheHtmlPath, filename))
     this.opf.addIndexHtml(filename)
     this.toc.addIndexHtml(title, filename)
   }
 
-  addHtml (title: string, uri: string) {
+  addHtml(title: string, uri: string) {
     let filename = this.parseFilename(uri)
     this.CopyFileSyncSafe(uri, path.resolve(this.epubCacheHtmlPath, filename))
     this.opf.addHtml(filename)
     this.toc.addHtml(title, filename)
   }
 
-  addCss (uri: string) {
+  addCss(uri: string) {
     let filename = this.parseFilename(uri)
     this.CopyFileSyncSafe(uri, path.resolve(this.epubCacheCssPath, filename))
     this.opf.addCss(filename)
   }
 
-  addImage (uri: string) {
+  addImage(uri: string) {
     let filename = this.parseFilename(uri)
     this.CopyFileSyncSafe(uri, path.resolve(this.epubCacheImagePath, filename))
     this.opf.addImage(filename)
   }
 
-  addCoverImage (uri: string) {
+  addCoverImage(uri: string) {
     let filename = this.parseFilename(uri)
     this.CopyFileSyncSafe(uri, path.resolve(this.epubCacheImagePath, filename))
     this.opf.addCoverImage(filename)
@@ -103,7 +103,7 @@ class Epub {
   /**
    * 生成epub
    */
-  async asyncGenerate () {
+  async asyncGenerate() {
     let tocContent = this.toc.content
     fs.writeFileSync(path.resolve(this.epubContentCachePath, 'toc.xhtml'), tocContent)
     let opfContent = this.opf.content
@@ -163,7 +163,7 @@ class Epub {
     })
   }
 
-  private CopyFileSyncSafe (fromUri: string, toUri: string) {
+  private CopyFileSyncSafe(fromUri: string, toUri: string) {
     if (fs.existsSync(fromUri) === false) {
       return
     }
