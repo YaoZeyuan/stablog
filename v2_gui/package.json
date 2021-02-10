@@ -22,6 +22,7 @@
   "dependencies": {
     "@ant-design/pro-layout": "^6.5.0",
     "@umijs/preset-react": "1.x",
+    "immer": "^8.0.1",
     "umi": "^3.3.7"
   },
   "devDependencies": {
