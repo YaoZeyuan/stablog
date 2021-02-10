@@ -136,6 +136,8 @@
 3.  利用微博接口抓取数据
 4.  ace/command 提供命令行支持
 5.  sqlite3 提供数据库支持
+6.  图形界面使用React编写.
+    1.  基于[immer](https://immerjs.github.io/immer/docs/introduction) & Hooks 进行状态管理
 
 ## 实现方式
 
@@ -155,20 +157,6 @@
     1.  Electron 需要编译 sqlite3 后才能启动, 不容易搞, 建议直接使用`npm run ace`命令行方式进行调试
     2.  命令使用说明详见代码
 
-# windows 环境下 puppeteer 安装指南
-
-1.  首先, `$env:PUPPETEER_DOWNLOAD_HOST='https://cdn.npm.taobao.org/dist'`配置环境变量, 配置 chrome 镜像源
-2.  `npm install puppeteer@1.20.0 -S`安装 puppeteer 代码
-3.  `npm run install-puppeteer-dependencies`安装 32/64 位版本 chrome
-
-# mac 环境下 puppeteer 安装指南
-
-1.  直接执行 `PUPPETEER_DOWNLOAD_HOST='https://cdn.npm.taobao.org/dist' npm install puppeteer@1.20.0 -S`
-
 # 功能建议
 
 欢迎通过[issue](https://github.com/YaoZeyuan/stablog/issues)提建议
-
-# 支持作者
-
-![老铁,谢谢了](http://stablog.bookflaneur.cn//img/%E8%80%81%E9%93%81%E8%B0%A2%E8%B0%A2%E4%BA%86.jfif?date=20191213)
