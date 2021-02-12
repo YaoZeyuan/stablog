@@ -87,6 +87,7 @@
     "request-promise": "^4.2.2",
     "shelljs": "^0.8.1",
     "sqlite3": "^4.1.1",
+    "umi": "^3.3.7",
     "vue": "^2.6.5",
     "vue-class-component": "^7.0.2",
     "vue-router": "^3.0.2",

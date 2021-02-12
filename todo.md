@@ -1,9 +1,10 @@
-1.  输出 epub 电子书, 而非 pdf
+1.  ❌ 输出 epub 电子书, 而非 pdf
     1.  测试 epub 在多看上的效果
     2.  寻找 epub 生成库(大概率找不到)
     3.  寻找 epub3.2 规范
         1.  https://dpublishing.github.io/epub-specs-tc/epub32/epub-spec.html
     4.  编写基于 epub3.2 规范的生成库
+    5.  多看不支持现代 css, 因此不能生成对应电子书. 手机端
 2.  移除赞助入口
 3.  体积优化-> 将体积优化到 100mb 以内
 4.  允许备份他人微博
