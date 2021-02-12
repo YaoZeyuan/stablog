@@ -320,11 +320,47 @@ class GenerateEpub extends Base {
     if (this.CUSTOMER_CONFIG_isSkipGeneratePdf) {
       this.log(`isSkipGeneratePdf为${this.CUSTOMER_CONFIG_isSkipGeneratePdf}, 自动跳过pdf输出阶段`)
     } else {
-      await this.generatePdf(weiboDayList)
+      await this.asyncGeneratePdfHtml(weiboDayList)
+      // await this.generatePdf(weiboDayList)
     }
     // 输出完毕后, 将结果复制到dist文件夹中
     await this.asyncCopyToDist()
     this.log(`第${bookCounter}本电子书${this.bookname}生成完毕`)
+  }
+
+  // 将渲染pdf所用的页面先行渲染为html
+  async asyncGeneratePdfHtml(weiboDayList: TypeWeiboEpub['weiboDayList']) {
+    let dayIndex = 0
+    let pdfPageConfigList = []
+    for (let weiboDayRecord of weiboDayList) {
+      dayIndex++
+      let dayConfig = {
+        dayIndex,
+        weiboUriList: []
+      }
+      this.log(`将网页渲染为pdf, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
+      let weiboIndex = 0
+      for (let weiboRecord of weiboDayRecord.weiboList) {
+        weiboIndex++
+        this.log(
+          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+        )
+        let content = WeiboView.render([weiboRecord])
+        content = this.processContent(content)
+        let htmlUri = path.resolve(this.htmlCachePdfContentHtmlPath, `${dayIndex}_${weiboIndex}.html`)
+        dayConfig.weiboUriList.push({
+          dayIndex,
+          weiboIndex,
+          uri: htmlUri
+        })
+        fs.writeFileSync(htmlUri, content)
+      }
+      pdfPageConfigList.push(dayConfig)
+    }
+    let configUri = path.resolve(this.htmlCachePdfContentPath, `pdf_config.json`)
+
+    fs.writeFileSync(configUri, JSON.stringify(pdfPageConfigList, null, 2))
+
   }
 
   async generatePdf(weiboDayList: TypeWeiboEpub['weiboDayList']) {
