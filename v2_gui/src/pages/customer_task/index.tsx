@@ -17,13 +17,6 @@ const { RangePicker } = DatePicker;
 
 export default function IndexPage() {
   const [form] = Form.useForm();
-  const layout = {
-    labelCol: { span: 8 },
-    wrapperCol: { span: 16 },
-  };
-  const tailLayout = {
-    wrapperCol: { offset: 8, span: 16 },
-  };
 
   const onFinish = (values: any) => {
     console.log('Success:', values);
@@ -33,9 +26,10 @@ export default function IndexPage() {
     console.log('Failed:', errorInfo);
   };
   return (
-    <div>
+    <div className="customer-task">
       <Form
-        {...layout}
+        labelCol={{ span: 8 }}
+        wrapperCol={{ span: 16 }}
         name="basic"
         form={form}
         initialValues={{ remember: true }}
@@ -43,18 +37,22 @@ export default function IndexPage() {
         onFinishFailed={onFinishFailed}
       >
         <Form.Item label="个人主页" name="rawInputText">
-          <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
-          <Button>同步用户信息</Button>
+          <div className="flex-container">
+            <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
+            <Button>同步用户信息</Button>
+          </div>
         </Form.Item>
-        <Descriptions title="用户信息" bordered>
-          <Descriptions.Item label="用户名">Cloud Database</Descriptions.Item>
-          <Descriptions.Item label="微博总数">Prepaid</Descriptions.Item>
-          <Descriptions.Item label="待抓取页面数">YES</Descriptions.Item>
-          <Descriptions.Item label="备份全部微博预计耗时">
-            YES
-          </Descriptions.Item>
-          <Descriptions.Item label="粉丝数">YES</Descriptions.Item>
-        </Descriptions>
+        <Form.Item label="用户信息">
+          <Descriptions bordered>
+            <Descriptions.Item label="用户名">Cloud Database</Descriptions.Item>
+            <Descriptions.Item label="微博总数">Prepaid</Descriptions.Item>
+            <Descriptions.Item label="待抓取页面数">YES</Descriptions.Item>
+            <Descriptions.Item label="备份全部微博预计耗时">
+              YES
+            </Descriptions.Item>
+            <Descriptions.Item label="粉丝数">YES</Descriptions.Item>
+          </Descriptions>
+        </Form.Item>
         <Divider>备份配置</Divider>
         <Form.Item label="备份范围" name="rawInputText">
           <Slider range defaultValue={[20, 50]} />
