@@ -1,6 +1,13 @@
 import { defineConfig } from 'umi';
+import path from 'path'
 
 export default defineConfig({
+  chainWebpack(memo, { env, webpack, createCSSRule }) {
+    // 设置 alias
+    memo.resolve.alias.set('~', path.resolve(__dirname, '..'));
+    // 设置target为electron
+    memo.target("electron-renderer")
+  },
   locale: {
     default: 'zh-CN',
     antd: true,
