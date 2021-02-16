@@ -1,6 +1,6 @@
 import { Tabs } from 'antd';
 import './index.less';
-import CustomerTask from './customer_task';
+// import CustomerTask from './customer_task';
 import DataManage from './manage';
 import Helper from './helper';
 import Log from './log';
@@ -11,9 +11,9 @@ const { TabPane } = Tabs;
 export default function IndexPage() {
   return (
     <Tabs defaultActiveKey="1" centered>
-      <TabPane tab="系统设置" key="1">
+      {/* <TabPane tab="系统设置" key="1">
         <CustomerTask></CustomerTask>
-      </TabPane>
+      </TabPane> */}
       <TabPane tab="管理数据" key="2">
         <DataManage></DataManage>
       </TabPane>

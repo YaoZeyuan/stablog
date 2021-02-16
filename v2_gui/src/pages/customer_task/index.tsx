@@ -12,6 +12,7 @@ import {
   Radio,
   DatePicker,
   Select,
+  Switch,
 } from 'antd';
 import './index.less';
 
@@ -306,13 +307,13 @@ export default function IndexPage() {
         <Form.Item label="开发者配置">
           <div className="flex-container">
             <Form.Item name="isSkipFetch">
-              <Checkbox></Checkbox>
+              <Switch></Switch>
             </Form.Item>
             跳过抓取流程, 直接输出电子书
           </div>
           <div className="flex-container">
             <Form.Item name="isSkipGeneratePdf">
-              <Checkbox></Checkbox>
+              <Switch></Switch>
             </Form.Item>
             只输出网页,不输出pdf文件
           </div>
