@@ -21,10 +21,9 @@
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "build": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
     "pack": "npm run build && npm run buildgui && electron-builder --dir",
-    "dist": "npm run install-puppeteer-dependencies && npm run build && npm run buildgui && electron-builder",
+    "dist": "npm run build && npm run buildgui && electron-builder",
     "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
-    "install-puppeteer-dependencies": "node install_puppeteer_dependencies.js"
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
   },
   "build": {
     "productName": "稳部落",
@@ -79,7 +78,6 @@
     "md5": "^2.2.1",
     "moment": "^2.24.0",
     "pdfkit": "^0.10.0",
-    "puppeteer": "^1.20.0",
     "query-string": "^6.4.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
@@ -115,7 +113,6 @@
     "@types/md5": "^2.1.33",
     "@types/node": "^9.4.6",
     "@types/pdfkit": "^0.10.3",
-    "@types/puppeteer": "^1.20.1",
     "@types/react": "^16.8.1",
     "@types/react-dom": "^16.0.11",
     "@types/request": "^2.48.1",
