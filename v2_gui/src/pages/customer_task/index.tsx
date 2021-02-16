@@ -200,26 +200,30 @@ export default function IndexPage() {
         </Form.Item>
 
         <Form.Item label="用户信息">
-          <Descriptions bordered>
-            <Descriptions.Item label="用户名">
-              {$$database.currentUserInfo.screen_name}
-            </Descriptions.Item>
-            <Descriptions.Item label="微博总数">
-              {$$database.currentUserInfo.statuses_count}
-            </Descriptions.Item>
-            <Descriptions.Item label="待抓取页面数">
-              {$$database.currentUserInfo.total_page_count}
-            </Descriptions.Item>
-            <Descriptions.Item label="备份全部微博预计耗时">
-              {Math.floor(
-                ($$database.currentUserInfo.total_page_count * 30) / 60,
-              )}
-              分钟
-            </Descriptions.Item>
-            <Descriptions.Item label="粉丝数">
-              {$$database.currentUserInfo.followers_count}
-            </Descriptions.Item>
-          </Descriptions>
+          {$$database.currentUserInfo.screen_name === '' ? (
+            '数据待同步'
+          ) : (
+            <Descriptions bordered>
+              <Descriptions.Item label="用户名">
+                {$$database.currentUserInfo.screen_name}
+              </Descriptions.Item>
+              <Descriptions.Item label="微博总数">
+                {$$database.currentUserInfo.statuses_count}
+              </Descriptions.Item>
+              <Descriptions.Item label="待抓取页面数">
+                {$$database.currentUserInfo.total_page_count}
+              </Descriptions.Item>
+              <Descriptions.Item label="备份全部微博预计耗时">
+                {Math.floor(
+                  ($$database.currentUserInfo.total_page_count * 30) / 60,
+                )}
+                分钟
+              </Descriptions.Item>
+              <Descriptions.Item label="粉丝数">
+                {$$database.currentUserInfo.followers_count}
+              </Descriptions.Item>
+            </Descriptions>
+          )}
         </Form.Item>
         <Divider>备份配置</Divider>
         <Form.Item label="备份范围">
@@ -232,15 +236,7 @@ export default function IndexPage() {
           </span>
         </Form.Item>
         <Divider>输出规则</Divider>
-        <Form.Item label="自动分卷">
-          <div className="flex-container">
-            <span>每</span>
-            <Form.Item name="maxBlogInBook">
-              <InputNumber />
-            </Form.Item>
-            <span>条微博输出一本电子书</span>
-          </div>
-        </Form.Item>
+
         <Form.Item label="微博排序" name="postAtOrderBy">
           <Radio.Group buttonStyle="solid">
             <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>
@@ -254,6 +250,15 @@ export default function IndexPage() {
           </Radio.Group>
         </Form.Item>
 
+        <Form.Item label="自动分卷">
+          <div className="flex-container">
+            <span>每</span>
+            <Form.Item name="maxBlogInBook">
+              <InputNumber />
+            </Form.Item>
+            <span>条微博输出一本电子书</span>
+          </div>
+        </Form.Item>
         <Form.Item label="时间范围">
           <div className="flex-container">
             <span>只输出从</span>
@@ -264,6 +269,7 @@ export default function IndexPage() {
             <span>间发布的微博</span>
           </div>
         </Form.Item>
+
         <Form.Item label="分页依据">
           <div className="flex-container">
             按
@@ -297,18 +303,19 @@ export default function IndexPage() {
           <Button>检查更新</Button>
         </Form.Item>
         <Divider>高级选项</Divider>
-        <Form.Item label="跳过抓取流程, 直接输出电子书" name="isSkipFetch">
-          <Checkbox.Group
-            options={[
-              {
-                label: '',
-                value: true,
-              },
-            ]}
-          ></Checkbox.Group>
-        </Form.Item>
-        <Form.Item label="只输出网页,不输出pdf文件" name="isSkipGeneratePdf">
-          <Checkbox></Checkbox>
+        <Form.Item label="开发者配置">
+          <div className="flex-container">
+            <Form.Item name="isSkipFetch">
+              <Checkbox></Checkbox>
+            </Form.Item>
+            跳过抓取流程, 直接输出电子书
+          </div>
+          <div className="flex-container">
+            <Form.Item name="isSkipGeneratePdf">
+              <Checkbox></Checkbox>
+            </Form.Item>
+            只输出网页,不输出pdf文件
+          </div>
         </Form.Item>
       </Form>
     </div>
