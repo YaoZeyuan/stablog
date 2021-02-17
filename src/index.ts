@@ -88,6 +88,15 @@ function createWindow() {
     // 线上地址
     mainWindow.loadFile('./gui/dist/index.html')
   }
+  // 通过Electron自身将html渲染为图片, 借此将代码体积由300mb压缩至90mb
+  let subWindow = new BrowserWindow({
+    width: 760,
+    height: 10,
+    // 配置最大高度, 该值默认值为屏幕高度, 如果大于该高度, 会出现滚动条
+    maxHeight: 1000000000,
+    // 负责渲染的子窗口不需要显示出来, 避免被用户误关闭
+    show: false
+  })
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
@@ -95,6 +104,9 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null
+    // 主窗口关闭时, 子窗口需要随之关闭
+    subWindow.close()
+    subWindow = null
   })
 
   // 设置ua
@@ -108,6 +120,8 @@ function createWindow() {
   // 向html代码注入MUser, 方便查询
   global.mUser = MUser
   global.mBlog = MBlog
+  // 向html代码中注入子窗口, 方便将html渲染为图片
+  global.subWindow = subWindow
 }
 
 // This method will be called when Electron has finished
