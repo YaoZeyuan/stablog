@@ -16,6 +16,7 @@ import fs from 'fs'
 import path from 'path'
 import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
+import * as mozjpeg from "mozjpeg-js"
 
 // 将img输出为pdf
 import PDFKit from 'pdfkit'
@@ -355,6 +356,7 @@ class GenerateCustomer extends Base {
         content = this.processContent(content)
         let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${baseFileTitle}.html`)
         let imageUri = path.resolve(this.htmlCachePdfHtml2ImagePath, `${baseFileTitle}.jpg`)
+        fs.writeFileSync(htmlUri, content)
         let transConfigItem: TypeTransConfigItem = {
           dayIndex,
           weiboIndex,
@@ -376,30 +378,28 @@ class GenerateCustomer extends Base {
   async html2Image(pageConfig: TypeTransConfigItem) {
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
+    this.log("load url -> ", pageConfig.htmlUri)
+    await webview.loadURL(pageConfig.htmlUri);
     await globalSubWindow.setContentSize(
       Const_Default_Webview_Width,
       Const_Default_Webview_Height,
     );
-    webview.loadURL(pageConfig.htmlUri);
-    await new Promise((reslove, reject) => {
-      webview.once('dom-ready', () => {
-        reslove(true);
-      });
-    });
+    this.log("load complete, resize page ")
     let scrollHeight = await webview.executeJavaScript(
       `document.children[0].children[1].scrollHeight`,
     );
     this.log('scrollHeight => ', scrollHeight);
     await subWindow.setContentSize(760, scrollHeight);
-    let newScrollHeight = await webview.executeJavaScript(
-      `document.children[0].children[1].scrollHeight`,
-    );
-    this.log('newScrollHeight => ', newScrollHeight);
-
     // 生成图片
     this.log('start generateImage');
     let nativeImg = await webview.capturePage();
     let jpgContent = nativeImg.toJPEG(100);
+    // 基于mozjpeg压缩图片
+    let out = mozjpeg.encode(jpgContent, {
+      //处理质量 百分比
+      quality: 75
+    });
+    jpgContent = out.data
     fs.writeFileSync(
       path.resolve(pageConfig.imageUri),
       jpgContent,

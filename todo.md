@@ -13,3 +13,4 @@
 7.  解决用户名折行问题[https://github.com/YaoZeyuan/stablog/issues/33]
 8.  测试微博新版 api 有没有防爬虫功能.
     1.  看起来可以尝试 => https://weibo.com/ajax/statuses/mymblog?uid=1764741287&page=9&feature=0
+9.  使用mozjpeg-js 压缩 jpg 图片

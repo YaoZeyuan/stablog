@@ -148,45 +148,6 @@ app.on('activate', function () {
   }
 })
 
-ipcMain.on('start', async (event, taskConfigList) => {
-  if (isRunning) {
-    event.returnValue = '目前尚有任务执行, 请稍后'
-    return
-  }
-  isRunning = true
-  Logger.log('开始工作')
-  let cookieContent = ''
-  // 写入任务数据
-  fs.writeFileSync(PathConfig.customerTaskConfigUri, JSON.stringify(taskConfigList, null, 4))
-  await new Promise((resolve, reject) => {
-    // 获取页面cookie
-    session.defaultSession.cookies.get({}, (error, cookieList) => {
-      for (let cookie of cookieList) {
-        cookieContent = `${cookie.name}=${cookie.value};${cookieContent}`
-      }
-      // 顺利获取cookie列表
-      resolve()
-    })
-  })
-  // 将cookie更新到本地配置中
-  let config = CommonUtil.getConfig()
-  _.set(config, ['request', 'cookie'], cookieContent)
-  fs.writeFileSync(PathConfig.configUri, JSON.stringify(config, null, 4))
-  Logger.log(`任务配置生成完毕`)
-  Logger.log(`重新载入cookie配置`)
-  ConfigHelperUtil.reloadConfig()
-  Logger.log(`开始执行任务`)
-  event.returnValue = 'success'
-  let dispatchTaskCommand = new DispatchTaskCommand()
-  await dispatchTaskCommand.handle({
-    subWindow
-  }, {})
-  Logger.log(`所有任务执行完毕, 打开电子书文件夹 => `, PathConfig.outputPath)
-  // 输出打开文件夹
-  shell.showItemInFolder(PathConfig.outputPath)
-  isRunning = false
-})
-
 ipcMain.on('openOutputDir', async event => {
   shell.showItemInFolder(PathConfig.outputPath)
   event.returnValue = true
@@ -221,7 +182,9 @@ ipcMain.on('startCustomerTask', async event => {
   Logger.log(`开始执行任务`)
   event.returnValue = 'success'
   let dispatchTaskCommand = new DispatchTaskCommand()
-  await dispatchTaskCommand.handle({}, {})
+  await dispatchTaskCommand.handle({
+    subWindow
+  }, {})
   Logger.log(`所有任务执行完毕, 打开电子书文件夹 => `, PathConfig.outputPath)
   // 输出打开文件夹
   shell.showItemInFolder(PathConfig.outputPath)
