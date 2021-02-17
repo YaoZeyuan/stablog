@@ -2,8 +2,11 @@ import path from 'path';
 import fs from 'fs';
 import './index.less';
 import { TypeBlogItem, TypeDayItem, TypeDayList } from './trans_config';
-import { useState, useRef, useEffect } from 'react';
-import { WebviewTag } from 'electron';
+import { useState, useEffect } from 'react';
+import { remote, BrowserView } from 'electron';
+
+// 从Electron端获取BrowserWindow用于将html渲染为图片
+let subWindow = remote.getGlobal('subWindow') as BrowserView;
 
 // 配置文件目录
 const Const_Config_Uri = path.resolve(
@@ -39,87 +42,84 @@ function* getConfigItem() {
 }
 let generate = getConfigItem();
 
-const Const_Default_Webview_Width = '760px';
+const Const_Default_Webview_Width = 760;
+const Const_Default_Webview_Height = 10;
 
 export default function IndexPage() {
   let [pageConfig, setPageConfig] = useState<TypeBlogItem>();
-  let [webviewStyle, setWebviewStyle] = useState({
-    width: Const_Default_Webview_Width,
-    // height: '100px',
-  });
 
+  // 初始化时读取配置
   useEffect(() => {
     readConfig();
   }, []);
 
   useEffect(() => {
-    updateWebviewHeight();
+    updateSubWindow();
   }, [pageConfig]);
 
-  async function updateWebviewHeight() {
-    let webview = document.querySelector('#webview-render');
-    if (webview === null) {
+  async function updateSubWindow() {
+    let webview = subWindow.webContents;
+    if (pageConfig?.uri === undefined) {
       return;
     }
-
+    await subWindow.setContentSize(
+      Const_Default_Webview_Width,
+      Const_Default_Webview_Height,
+    );
+    webview.loadURL(pageConfig!.uri);
     await new Promise((reslove, reject) => {
-      webview?.addEventListener('dom-ready', () => {
+      webview.once('dom-ready', () => {
         reslove(true);
       });
     });
-
-    let height = await webview.executeJavaScript(
+    let scrollHeight = await webview.executeJavaScript(
       `document.children[0].children[1].scrollHeight`,
     );
-    console.log('height => ', height);
-    // 更新页面宽度
-    setWebviewStyle({
-      width: Const_Default_Webview_Width,
-      height: `${height}px`,
-    });
-  }
+    console.log('scrollHeight => ', scrollHeight);
+    await subWindow.setContentSize(760, scrollHeight);
+    let newScrollHeight = await webview.executeJavaScript(
+      `document.children[0].children[1].scrollHeight`,
+    );
+    console.log('newScrollHeight => ', newScrollHeight);
 
-  async function generateImage() {
-    let webview = document.querySelector('#webview-render') as WebviewTag;
+    // 生成图片
+    console.log('start generateImage');
     let nativeImg = await webview.capturePage();
     let jpgContent = nativeImg.toJPEG(100);
-    fs.writeFileSync(path.resolve(Const_Output_Img_Dir, '1.jpg'), jpgContent);
+    let pngContent = nativeImg.toPNG();
+    fs.writeFileSync(
+      path.resolve(Const_Output_Img_Dir, `${configIndex}.jpg`),
+      jpgContent,
+    );
+    fs.writeFileSync(
+      path.resolve(Const_Output_Img_Dir, `${configIndex}.png`),
+      pngContent,
+    );
+    console.log('generateImage complete');
+    // generateNextDayPageConfig();
   }
 
-  console.log('webviewStyle => ', webviewStyle);
+  function generateNextDayPageConfig() {
+    let status = generate.next();
+    if (status.done !== true) {
+      setPageConfig(status.value);
+    } else {
+      // 已读取一遍. 重新开始读取
+      configIndex = 0;
+      generate = getConfigItem();
+    }
+  }
+
   console.log('pageConfig => ', pageConfig);
   return (
     <div>
       图片预览
-      <button
-        onClick={() => {
-          let status = generate.next();
-          if (status.done !== true) {
-            setPageConfig(status.value);
-            // 重置webview高度
-            setWebviewStyle({
-              width: Const_Default_Webview_Width,
-            });
-          } else {
-            // 已读取一遍. 重新开始读取
-            configIndex = 0;
-            generate = getConfigItem();
-          }
-        }}
-      >
+      <button onClick={generateNextDayPageConfig}>
         生成第{configIndex}天的数据
       </button>
-      <button onClick={updateWebviewHeight}>更新webview宽度</button>
       <button onClick={generateImage}>生成图片</button>
       <button>开始</button>
       <button onClick={readConfig}>重新读取配置</button>
-      <div className="html-2-image">
-        <webview
-          id="webview-render"
-          style={webviewStyle}
-          src={pageConfig?.uri}
-        ></webview>
-      </div>
     </div>
   );
 }
