@@ -21,6 +21,8 @@ let mainWindow: Electron.BrowserWindow
 app.commandLine.appendSwitch('ignore-certificate-errors', 'true')
 
 let isRunning = false
+// subWindow需要放在外边, 以便在全局中传递
+let subWindow: InstanceType<typeof BrowserWindow> = null
 
 function createWindow() {
   if (process.platform === 'darwin') {
@@ -89,7 +91,7 @@ function createWindow() {
     mainWindow.loadFile('./gui/dist/index.html')
   }
   // 通过Electron自身将html渲染为图片, 借此将代码体积由300mb压缩至90mb
-  let subWindow = new BrowserWindow({
+  subWindow = new BrowserWindow({
     width: 760,
     height: 10,
     // 配置最大高度, 该值默认值为屏幕高度, 如果大于该高度, 会出现滚动条
@@ -176,7 +178,9 @@ ipcMain.on('start', async (event, taskConfigList) => {
   Logger.log(`开始执行任务`)
   event.returnValue = 'success'
   let dispatchTaskCommand = new DispatchTaskCommand()
-  await dispatchTaskCommand.handle({}, {})
+  await dispatchTaskCommand.handle({
+    subWindow
+  }, {})
   Logger.log(`所有任务执行完毕, 打开电子书文件夹 => `, PathConfig.outputPath)
   // 输出打开文件夹
   shell.showItemInFolder(PathConfig.outputPath)

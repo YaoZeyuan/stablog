@@ -20,7 +20,12 @@ import moment from 'moment'
 // 将img输出为pdf
 import PDFKit from 'pdfkit'
 import TaskConfig from '~/src/type/namespace/task_config'
+import { BrowserWindow } from 'electron'
 
+// 硬编码传入
+let globalSubWindow: InstanceType<typeof BrowserWindow> = null
+const Const_Default_Webview_Width = 760;
+const Const_Default_Webview_Height = 10;
 class GenerateCustomer extends Base {
   static get signature() {
     return `
@@ -56,6 +61,8 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_isSkipFetch: TaskConfig.Customer['isSkipFetch'] = false
 
   async execute(args: any, options: any): Promise<any> {
+    let { subWindow } = args
+    globalSubWindow = subWindow
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
     let fetchConfigJSON = fs.readFileSync(PathConfig.customerTaskConfigUri).toString()
     this.log('content =>', fetchConfigJSON)
@@ -354,6 +361,7 @@ class GenerateCustomer extends Base {
           htmlUri,
           imageUri,
         }
+        await this.html2Image(transConfigItem)
         weiboRecordImgList.configList.push(transConfigItem)
       }
       weiboDayConfigList.push(weiboRecordImgList)
@@ -364,6 +372,41 @@ class GenerateCustomer extends Base {
     // 处理完毕, 返回配置内容
     return weiboDayConfigList
   }
+
+  async html2Image(pageConfig: TypeTransConfigItem) {
+    let webview = globalSubWindow.webContents;
+    let subWindow = globalSubWindow
+    await globalSubWindow.setContentSize(
+      Const_Default_Webview_Width,
+      Const_Default_Webview_Height,
+    );
+    webview.loadURL(pageConfig.htmlUri);
+    await new Promise((reslove, reject) => {
+      webview.once('dom-ready', () => {
+        reslove(true);
+      });
+    });
+    let scrollHeight = await webview.executeJavaScript(
+      `document.children[0].children[1].scrollHeight`,
+    );
+    this.log('scrollHeight => ', scrollHeight);
+    await subWindow.setContentSize(760, scrollHeight);
+    let newScrollHeight = await webview.executeJavaScript(
+      `document.children[0].children[1].scrollHeight`,
+    );
+    this.log('newScrollHeight => ', newScrollHeight);
+
+    // 生成图片
+    this.log('start generateImage');
+    let nativeImg = await webview.capturePage();
+    let jpgContent = nativeImg.toJPEG(100);
+    fs.writeFileSync(
+      path.resolve(pageConfig.imageUri),
+      jpgContent,
+    );
+    this.log('generateImage complete');
+  }
+
 
   async generatePdf(weiboDayList: TypeTransConfigPackageList) {
     // 初始化pdf类
