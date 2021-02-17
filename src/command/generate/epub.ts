@@ -16,9 +16,6 @@ import path from 'path'
 import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
 
-// 将本地html渲染为img
-import puppeteer from 'puppeteer'
-
 // 将img输出为pdf
 import PDFKit from 'pdfkit'
 import TaskConfig from '~/src/type/namespace/task_config'
@@ -364,14 +361,6 @@ class GenerateEpub extends Base {
   }
 
   async generatePdf(weiboDayList: TypeWeiboEpub['weiboDayList']) {
-    // 启动Chrome
-    const browser = await puppeteer.launch({
-      defaultViewport: {
-        width: 750,
-        height: 1, // 要设的足够小
-      },
-    })
-    let page = await browser.newPage()
     // 初始化pdf类
     let pdfDocument = new PDFKit({
       margin: 0,
@@ -432,41 +421,41 @@ class GenerateEpub extends Base {
         content = this.processContent(content)
         let htmlUri = path.resolve(this.htmlCacheHtmlPath, `demo.html`)
         fs.writeFileSync(htmlUri, content)
-        await page.setViewport({
-          width: 750,
-          height: 1,
-        })
-        // mac的chrome上需要加前缀后才能打开页面
-        await page.goto('file://' + htmlUri)
-        // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
-        let imageBuffer = await page.screenshot({
-          type: 'jpeg',
-          quality: this.CUSTOMER_CONFIG_pdfQuilty,
-          fullPage: true,
-          omitBackground: true,
-        })
-        if (imageBuffer.length < 1000) {
-          // 图片渲染失败
-          this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染失败, 自动跳过`)
-          continue
-        } else {
-          this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染成功`)
-          let size = await imageSize.imageSize(imageBuffer)
-          let { width, height } = size
-          this.log(`图片size=>`, { width, height })
-          if (!width || width <= 0 || !height || height <= 0) {
-            this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博截图捕获失败, 自动跳过`)
-            continue
-          }
+        // await page.setViewport({
+        //   width: 750,
+        //   height: 1,
+        // })
+        // // mac的chrome上需要加前缀后才能打开页面
+        // await page.goto('file://' + htmlUri)
+        // // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
+        // let imageBuffer = await page.screenshot({
+        //   type: 'jpeg',
+        //   quality: this.CUSTOMER_CONFIG_pdfQuilty,
+        //   fullPage: true,
+        //   omitBackground: true,
+        // })
+        // if (imageBuffer.length < 1000) {
+        //   // 图片渲染失败
+        //   this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染失败, 自动跳过`)
+        //   continue
+        // } else {
+        //   this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染成功`)
+        //   let size = await imageSize.imageSize(imageBuffer)
+        //   let { width, height } = size
+        //   this.log(`图片size=>`, { width, height })
+        //   if (!width || width <= 0 || !height || height <= 0) {
+        //     this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博截图捕获失败, 自动跳过`)
+        //     continue
+        //   }
 
-          // 将图片数据添加到pdf文件中
-          pdfDocument.addPage({
-            margin: 0,
-            layout: 'landscape',
-            size: [height, width], // a smaller document for small badge printers
-          })
-          pdfDocument.image(imageBuffer)
-        }
+        //   // 将图片数据添加到pdf文件中
+        //   pdfDocument.addPage({
+        //     margin: 0,
+        //     layout: 'landscape',
+        //     size: [height, width], // a smaller document for small badge printers
+        //   })
+        //   pdfDocument.image(imageBuffer)
+        // }
       }
     }
     await page.close()
