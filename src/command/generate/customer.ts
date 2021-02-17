@@ -8,6 +8,7 @@ import DATE_FORMAT from '~/src/constant/date_format'
 import imageSize from 'image-size'
 import _ from 'lodash'
 import json5 from 'json5'
+import { TypeTransConfigItem, TypeTransConfigPackageList, TypeTransConfigPackage } from "./trans_config"
 
 import WeiboView from '~/src/view/weibo'
 import BaseView from '~/src/view/base'
@@ -137,14 +138,13 @@ class GenerateCustomer extends Base {
           booktitle = `${resourcePackage.userInfo.screen_name}-微博整理(${moment
             .unix(resourcePackage.startDayAt)
             .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-            .unix(resourcePackage.endDayAt)
-            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+              .unix(resourcePackage.endDayAt)
+              .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         } else {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${
-            resourcePackage.totalBookCount
-          }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-            .unix(resourcePackage.endDayAt)
-            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${resourcePackage.totalBookCount
+            }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+              .unix(resourcePackage.endDayAt)
+              .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         }
         this.log(`输出第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}`)
         await this.asyncGenerateEbook(bookCounter, booktitle, resourcePackage)
@@ -181,8 +181,8 @@ class GenerateCustomer extends Base {
           title:
             this.CUSTOMER_CONFIG_mergeBy === 'count'
               ? `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
-                  .unix(mblogCreateAtTimestamp)
-                  .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
+                .unix(mblogCreateAtTimestamp)
+                .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
               : `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`,
           dayStartAt: moment
             .unix(mblogCreateAtTimestamp)
@@ -318,14 +318,54 @@ class GenerateCustomer extends Base {
     if (this.CUSTOMER_CONFIG_isSkipGeneratePdf) {
       this.log(`isSkipGeneratePdf为${this.CUSTOMER_CONFIG_isSkipGeneratePdf}, 自动跳过pdf输出阶段`)
     } else {
-      await this.generatePdf(weiboDayList)
+      let weiboDayConfigList = await this.transWeiboRecord2Image(weiboDayList)
+      await this.generatePdf(weiboDayConfigList)
     }
     // 输出完毕后, 将结果复制到dist文件夹中
     await this.asyncCopyToDist()
     this.log(`第${bookCounter}本电子书${this.bookname}生成完毕`)
   }
 
-  async generatePdf(weiboDayList: TypeWeiboEpub['weiboDayList']) {
+  async transWeiboRecord2Image(weiboDayList: TypeWeiboEpub['weiboDayList']) {
+    // 首先生成单条微博对应的静态html文件, 以及对应配置
+    let dayIndex = 0
+    let weiboDayConfigList: TypeTransConfigPackageList = []
+    for (let weiboDayRecord of weiboDayList) {
+      dayIndex++
+      this.log(`将网页渲染为图片, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
+      let weiboRecordImgList: TypeTransConfigPackage = {
+        dayIndex,
+        configList: []
+      }
+      let weiboIndex = 0
+      for (let weiboRecord of weiboDayRecord.weiboList) {
+        weiboIndex++
+        let baseFileTitle = `${dayIndex}_${weiboIndex}`
+        this.log(
+          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+        )
+        let content = WeiboView.render([weiboRecord])
+        content = this.processContent(content)
+        let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${baseFileTitle}.html`)
+        let imageUri = path.resolve(this.htmlCachePdfHtml2ImagePath, `${baseFileTitle}.jpg`)
+        let transConfigItem: TypeTransConfigItem = {
+          dayIndex,
+          weiboIndex,
+          htmlUri,
+          imageUri,
+        }
+        weiboRecordImgList.configList.push(transConfigItem)
+      }
+      weiboDayConfigList.push(weiboRecordImgList)
+    }
+    // 写入系统文件中
+    fs.writeFileSync(path.resolve(this.htmlCachePdfPath, `pdf_html2img_config_list.json`), weiboDayConfigList)
+    // 将控制权转交给前端, 由前端执行html转图片工作
+    // 处理完毕, 返回配置内容
+    return weiboDayConfigList
+  }
+
+  async generatePdf(weiboDayList: TypeTransConfigPackageList) {
     // 初始化pdf类
     let pdfDocument = new PDFKit({
       margin: 0,
@@ -377,52 +417,48 @@ class GenerateCustomer extends Base {
       dayIndex++
       this.log(`将网页渲染为pdf, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
       let weiboIndex = 0
-      for (let weiboRecord of weiboDayRecord.weiboList) {
+      for (let weiboRecord of weiboDayRecord.configList) {
         weiboIndex++
         this.log(
-          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.configList.length}条微博`,
         )
-        let content = WeiboView.render([weiboRecord])
-        content = this.processContent(content)
-        let htmlUri = path.resolve(this.htmlCacheHtmlPath, `demo.html`)
-        fs.writeFileSync(htmlUri, content)
+        let imgUri = weiboRecord.imageUri
+        if (fs.existsSync(imgUri) === false) {
+          // 图片渲染失败
+          this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染失败, 自动跳过`)
+          continue
+        } else {
+          let imageBuffer = fs.readFileSync(imgUri)
 
-      //   if (imageBuffer.length < 1000) {
-      //     // 图片渲染失败
-      //     this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染失败, 自动跳过`)
-      //     continue
-      //   } else {
-      //     this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染成功`)
-      //     let size = await imageSize.imageSize(imageBuffer)
-      //     let { width, height } = size
-      //     this.log(`图片size=>`, { width, height })
-      //     if (!width || width <= 0 || !height || height <= 0) {
-      //       this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博截图捕获失败, 自动跳过`)
-      //       continue
-      //     }
+          this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染成功`)
+          let size = await imageSize.imageSize(imageBuffer)
+          let { width, height } = size
+          this.log(`图片size=>`, { width, height })
+          if (!width || width <= 0 || !height || height <= 0) {
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
+            continue
+          }
 
-      //     // 将图片数据添加到pdf文件中
-      //     pdfDocument.addPage({
-      //       margin: 0,
-      //       layout: 'landscape',
-      //       size: [height, width], // a smaller document for small badge printers
-      //     })
-      //     pdfDocument.image(imageBuffer)
-      //   }
-      // }
+          // 将图片数据添加到pdf文件中
+          pdfDocument.addPage({
+            margin: 0,
+            layout: 'landscape',
+            size: [height, width], // a smaller document for small badge printers
+          })
+          pdfDocument.image(imageBuffer)
+        }
+      }
     }
-    await page.close()
-    await browser.close()
+
     pdfDocument.end()
     // 等待pdf文件写入完毕
     await new Promise((resolve, reject) => {
-      pdfSaveStream.on('finish', function() {
+      pdfSaveStream.on('finish', function () {
         // do stuff with the PDF file
-        resolve()
+        resolve(true)
       })
     })
     this.log(`pdf输出完毕`)
   }
 }
-
 export default GenerateCustomer

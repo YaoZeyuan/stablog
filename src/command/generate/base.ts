@@ -32,22 +32,9 @@ class FetchBase extends Base {
     return path.resolve(this.htmlCachePath, 'pdf')
   }
   // pdf 系列内容
-  get htmlCachePdfContentPath() {
-    return path.resolve(this.htmlCachePdfPath, 'content')
+  get htmlCachePdfHtml2ImagePath() {
+    return path.resolve(this.htmlCachePdfPath, 'html2image')
   }
-  get htmlCachePdfContentHtmlPath() {
-    return path.resolve(this.htmlCachePdfContentPath, 'html')
-  }
-  get htmlCachePdfContentCssPath() {
-    return path.resolve(this.htmlCachePdfContentPath, 'css')
-  }
-  get htmlCachePdfContentFontPath() {
-    return path.resolve(this.htmlCachePdfContentPath, 'font')
-  }
-  get htmlCachePdfContentImgPath() {
-    return path.resolve(this.htmlCachePdfContentPath, 'image')
-  }
-
 
   get htmlCacheCssPath() {
     return path.resolve(this.htmlCachePath, 'css')
@@ -94,11 +81,7 @@ class FetchBase extends Base {
     shelljs.mkdir('-p', this.htmlCacheFontPath)
     shelljs.mkdir('-p', this.htmlCacheImgPath)
     shelljs.mkdir('-p', this.htmlCachePdfPath)
-    shelljs.mkdir('-p', this.htmlCachePdfContentPath)
-    shelljs.mkdir('-p', this.htmlCachePdfContentHtmlPath)
-    shelljs.mkdir('-p', this.htmlCachePdfContentCssPath)
-    shelljs.mkdir('-p', this.htmlCachePdfContentFontPath)
-    shelljs.mkdir('-p', this.htmlCachePdfContentImgPath)
+    shelljs.mkdir('-p', this.htmlCachePdfHtml2ImagePath)
     shelljs.mkdir('-p', this.htmlOutputPath)
     this.log(`电子书:${this.bookname}对应文件夹创建完毕`)
   }
