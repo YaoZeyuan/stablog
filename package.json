@@ -11,7 +11,7 @@
   "license": "MIT",
   "scripts": {
     "startgui": "node gui/script/dev-server.js",
-    "buildgui": "node gui/script/build.js",
+    "buildgui": "echo 1",
     "start": "electron dist/index.js --debug",
     "prod": "electron dist/index.js",
     "ace": "node dist/ace.js",
@@ -80,6 +80,8 @@
     "query-string": "^6.4.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
     "shelljs": "^0.8.1",
     "sqlite3": "^4.1.1"
   },
