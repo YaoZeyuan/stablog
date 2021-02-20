@@ -1,7 +1,7 @@
 import http from "../../library/http"
 import _ from "lodash"
 import fs from "fs"
-import packageConfig from '~/../../package.json'
+import packageConfig from '@/../../package.json'
 import semver from 'semver'
 
 const electron = require('electron');
@@ -122,7 +122,11 @@ export async function asyncCheckNeedUpdate() {
         .catch(e => {
             return {}
         })
-    // 已经通过Electron拿到了最新cookie并写入了配置文件中, 因此不需要再填写配置文件了
+
+    // 远程端口返回值不正确则不需要继续比较
+    if (semver.valid(remoteVersionConfig.version) === null) {
+        return false
+    }
     if (semver.lt(packageConfig.version, remoteVersionConfig.version)) {
         return remoteVersionConfig
     } else {

@@ -13,6 +13,7 @@ import {
   DatePicker,
   Select,
   Switch,
+  Modal,
 } from 'antd';
 import './index.less';
 
@@ -185,6 +186,30 @@ export default function IndexPage() {
 
   return (
     <div className="customer-task">
+      <Modal
+        title="发现新版本"
+        visible={$$status.showUpgradeInfo}
+        onOk={() => {
+          set$$Status(
+            process($$status, (raw) => {
+              raw.showUpgradeInfo = false;
+            }),
+          );
+          TaskUtils.jumpToUpgrade($$status.remoteVersionConfig.downloadUrl);
+        }}
+        okText="更新"
+        onCancel={() => {
+          set$$Status(
+            process($$status, (raw) => {
+              raw.showUpgradeInfo = false;
+            }),
+          );
+        }}
+      >
+        <p>最新版本:{$$status.remoteVersionConfig.version}</p>
+        <p>更新内容:{$$status.remoteVersionConfig.releaseNote}</p>
+        <p>更新时间:{$$status.remoteVersionConfig.releaseAt}</p>
+      </Modal>
       <Form
         labelCol={{ span: 8 }}
         wrapperCol={{ span: 16 }}
@@ -361,8 +386,24 @@ export default function IndexPage() {
         ) : null}
         <Form.Item label="操作">
           <Button>开始备份</Button>
-          <Button>打开电子书所在目录</Button>
-          <Button>检查更新</Button>
+          <Button onClick={TaskUtils.openOutputDir}>打开电子书所在目录</Button>
+          <Button
+            onClick={async () => {
+              let remoteConfig = await TaskUtils.asyncCheckNeedUpdate();
+              if (remoteConfig === false) {
+                return;
+              }
+              console.log('remoteConfig => ', remoteConfig);
+              set$$Status(
+                process($$status, (raw) => {
+                  raw.showUpgradeInfo = true;
+                  raw.remoteVersionConfig = remoteConfig;
+                }),
+              );
+            }}
+          >
+            检查更新
+          </Button>
         </Form.Item>
         <Divider>高级选项</Divider>
         <Form.Item label="开发者配置">
