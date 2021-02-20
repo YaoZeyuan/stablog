@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import process from 'immer';
 import {
   Form,
@@ -24,6 +24,7 @@ import util from '@/library/util';
 import querystring from 'query-string';
 import packageConfig from '@/../../package.json';
 import { TypeTaskConfig } from './task_type';
+import * as TaskUtils from './utils';
 
 let currentVersion = parseFloat(packageConfig.version);
 
@@ -160,6 +161,10 @@ export default function IndexPage() {
       (e) => e,
     ),
   );
+  // 每次database更新后, 重写 taskConfig 配置
+  useEffect(() => {
+    TaskUtils.saveConfig($$database.taskConfig);
+  }, [$$database]);
 
   const onFinish = (values: any) => {
     console.log('Success:', values);
@@ -172,8 +177,8 @@ export default function IndexPage() {
       $$database.taskConfig.fetchEndAtPageNo,
     ],
     outputTimeRange: [
-      moment($$database.taskConfig.outputStartAtMs),
-      moment($$database.taskConfig.outputEndAtMs),
+      moment.unix($$database.taskConfig.outputStartAtMs / 1000),
+      moment.unix($$database.taskConfig.outputEndAtMs / 1000),
     ],
   };
   console.log('initValue => ', initValue);
@@ -187,6 +192,38 @@ export default function IndexPage() {
         form={form}
         onValuesChange={(changedValues, values) => {
           console.log('onValuesChange', changedValues, values);
+          set$$Database(
+            process($$database, (raw: TypeDatabase) => {
+              let updateKey = Object.keys(changedValues)[0];
+              switch (updateKey) {
+                case 'rawInputText':
+                  let rawInput = changedValues['rawInputText'];
+                  // 先记录数据, 待点击同步按钮后再更新uid信息
+                  raw.taskConfig.configList[0].rawInputText = rawInput;
+                  raw.taskConfig.configList[0].uid = '';
+                  raw.taskConfig.configList[0].comment = '';
+                  break;
+                case 'fetchPageNoRange':
+                  raw.taskConfig['fetchStartAtPageNo'] =
+                    changedValues[updateKey][0];
+                  raw.taskConfig['fetchEndAtPageNo'] =
+                    changedValues[updateKey][1];
+                  break;
+                case 'outputTimeRange':
+                  raw.taskConfig['outputStartAtMs'] =
+                    changedValues[updateKey][0].unix() * 1000;
+                  raw.taskConfig['outputEndAtMs'] =
+                    changedValues[updateKey][1].unix() * 1000;
+                  break;
+                case 'mergeBy':
+                  raw.taskConfig[updateKey] = changedValues[updateKey].value;
+                  break;
+                default:
+                  raw.taskConfig[updateKey] = changedValues[updateKey];
+              }
+              console.log('NEW ITEM =>', raw);
+            }),
+          );
         }}
         initialValues={initValue}
         onFinish={onFinish}
@@ -196,7 +233,31 @@ export default function IndexPage() {
             <Form.Item name="rawInputText">
               <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
             </Form.Item>
-            <Button>同步用户信息</Button>
+            <Button
+              onClick={async () => {
+                // 先获取uidr
+                let uid = $$database.taskConfig.configList[0].uid;
+                if (uid === '') {
+                  uid = await TaskUtils.asyncGetUid(
+                    $$database.taskConfig.configList[0].rawInputText,
+                  );
+                  set$$Database(
+                    process($$database, (raw) => {
+                      raw.taskConfig.configList[0].uid = uid;
+                    }),
+                  );
+                }
+                // 然后更新用户信息
+                let userInfo = await TaskUtils.asyncGetUserInfo(uid);
+                set$$Database(
+                  process($$database, (raw) => {
+                    raw.currentUserInfo = userInfo;
+                  }),
+                );
+              }}
+            >
+              同步用户信息
+            </Button>
           </div>
         </Form.Item>
 
@@ -264,7 +325,7 @@ export default function IndexPage() {
           <div className="flex-container">
             <span>只输出从</span>
             <Form.Item name="outputTimeRange">
-              <RangePicker picker="month" />
+              <RangePicker picker="date" />
             </Form.Item>
 
             <span>间发布的微博</span>
@@ -275,7 +336,7 @@ export default function IndexPage() {
           <div className="flex-container">
             按
             <Form.Item name="mergeBy">
-              <Select labelInValue style={{ width: 120 }}>
+              <Select labelInValue={false} style={{ width: 120 }}>
                 <Option value={MergeBy.年}>年</Option>
                 <Option value={MergeBy.月}>月</Option>
                 <Option value={MergeBy.日}>日</Option>
@@ -306,19 +367,22 @@ export default function IndexPage() {
         <Divider>高级选项</Divider>
         <Form.Item label="开发者配置">
           <div className="flex-container">
-            <Form.Item name="isSkipFetch">
+            <Form.Item name="isSkipFetch" valuePropName="checked">
               <Switch></Switch>
             </Form.Item>
             跳过抓取流程, 直接输出电子书
           </div>
           <div className="flex-container">
-            <Form.Item name="isSkipGeneratePdf">
+            <Form.Item name="isSkipGeneratePdf" valuePropName="checked">
               <Switch></Switch>
             </Form.Item>
             只输出网页,不输出pdf文件
           </div>
         </Form.Item>
       </Form>
+      <div>
+        <pre>{JSON.stringify($$database.taskConfig, null, 4)}</pre>
+      </div>
     </div>
   );
 }
