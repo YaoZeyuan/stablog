@@ -27,16 +27,16 @@ function getLogContent() {
   return showLogList;
 }
 
+let globalIsAutoUpdate = true;
 export default function IndexPage() {
   let [logContent, setLogContent] = useState<string>('');
   let [isAutoUpdate, setIsAutoUpdate] = useState<boolean>(true);
-
+  globalIsAutoUpdate = isAutoUpdate;
   useEffect(() => {
     // 初始化时启动日志自动更新
     setInterval(() => {
-      console.log('auto update => ', isAutoUpdate);
       // 若开启自动更新, 默认每秒更新一次
-      if (isAutoUpdate) {
+      if (globalIsAutoUpdate) {
         updateLogContent();
       }
     }, 1000);
