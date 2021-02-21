@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import process from 'immer';
+import produce from 'immer';
 import {
   Form,
   Input,
@@ -142,7 +142,7 @@ if (taskConfig.configList.length === 0) {
 export default function IndexPage(props: { changeTabKey: Function }) {
   const [form] = Form.useForm();
   const [$$status, set$$Status] = useState<TypeState>(
-    process(
+    produce(
       {
         isLogin: false,
         showLoginModel: false,
@@ -158,7 +158,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     ),
   );
   const [$$database, set$$Database] = useState<TypeDatabase>(
-    process(
+    produce(
       {
         taskConfig: taskConfig,
         currentUserInfo: {
@@ -188,14 +188,14 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     let isLogin = await TaskUtils.asyncCheckIsLogin();
     if (isLogin !== true) {
       set$$Status(
-        process($$status, (raw) => {
+        produce($$status, (raw) => {
           raw.isLogin = false;
           raw.showLoginModel = true;
         }),
       );
     } else {
       set$$Status(
-        process($$status, (raw) => {
+        produce($$status, (raw) => {
           raw.isLogin = true;
           raw.showLoginModel = false;
         }),
@@ -211,24 +211,24 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       return false;
     }
     // 获取uid
-    let uid = $$database.taskConfig.configList[0].uid;
-    if (uid === '') {
-      uid = await TaskUtils.asyncGetUid(
-        $$database.taskConfig.configList[0].rawInputText,
-      );
-      set$$Database(
-        process($$database, (raw) => {
-          raw.taskConfig.configList[0].uid = uid;
-        }),
-      );
-    }
+    // let uid = $$database.taskConfig.configList[0].uid;
+    let uid = await TaskUtils.asyncGetUid(
+      $$database.taskConfig.configList[0].rawInputText,
+    );
+    console.log('uid =>', uid);
     // 然后更新用户信息
     let userInfo = await TaskUtils.asyncGetUserInfo(uid);
     set$$Database(
-      process($$database, (raw) => {
+      produce($$database, (raw) => {
+        raw.taskConfig.configList[0].uid = uid;
         raw.currentUserInfo = userInfo;
         raw.taskConfig.fetchStartAtPageNo = 0;
-        raw.taskConfig.fetchEndAtPageNo = userInfo.total_page_count || 1000;
+        raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000;
+        form.setFieldsValue({
+          fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
+          fetchStartAtPageNo: 0,
+          fetchPageNoRange: [0, raw.taskConfig.fetchEndAtPageNo],
+        });
       }),
     );
     return true;
@@ -247,6 +247,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     ],
   };
 
+  console.log('initValue =>', initValue);
   return (
     <div className="customer-task">
       <Modal
@@ -254,7 +255,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         visible={$$status.showUpgradeInfo}
         onOk={() => {
           set$$Status(
-            process($$status, (raw) => {
+            produce($$status, (raw) => {
               raw.showUpgradeInfo = false;
             }),
           );
@@ -263,7 +264,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         okText="更新"
         onCancel={() => {
           set$$Status(
-            process($$status, (raw) => {
+            produce($$status, (raw) => {
               raw.showUpgradeInfo = false;
             }),
           );
@@ -278,7 +279,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         visible={$$status.showLoginModel}
         onOk={() => {
           set$$Status(
-            process($$status, (raw) => {
+            produce($$status, (raw) => {
               raw.showLoginModel = false;
             }),
           );
@@ -286,7 +287,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         }}
         onCancel={() => {
           set$$Status(
-            process($$status, (raw) => {
+            produce($$status, (raw) => {
               raw.showLoginModel = false;
             }),
           );
@@ -302,7 +303,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         form={form}
         onValuesChange={(changedValues, values) => {
           set$$Database(
-            process($$database, (raw: TypeDatabase) => {
+            produce($$database, (raw: TypeDatabase) => {
               let updateKey = Object.keys(changedValues)[0];
               switch (updateKey) {
                 case 'rawInputText':
@@ -338,7 +339,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         <Form.Item
           label={
             <span>
-              个人主页
+              个人主页&nbsp;
               <Tooltip title="在浏览器中进入用户首页, 将链接粘贴至此处. 主页地址类似于:https://weibo.com/u/5659598386 或 https://weibo.com/n/八大山债人 或 https://m.weibo.cn/u/5659598386 或 https://m.weibo.cn/profile/2291429207">
                 <QuestionCircleOutlined />
               </Tooltip>
@@ -385,17 +386,21 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           <Form.Item name="fetchPageNoRange" noStyle>
             <Slider
               range
-              marks={{
-                0: `第${$$database.taskConfig.fetchStartAtPageNo}页`,
-                100: `第${$$database.taskConfig.fetchEndAtPageNo}页`,
-              }}
+              // marks={{
+              //   0: `第${$$database.taskConfig.fetchStartAtPageNo}页`,
+              //   100: `第${$$database.taskConfig.fetchEndAtPageNo}页`,
+              // }}
+              tooltipVisible={true}
+              tipFormatter={(item) => `第${item}页`}
+              min={0}
+              max={$$database?.currentUserInfo?.total_page_count || 1000}
             />
           </Form.Item>
         </Form.Item>
         <Form.Item
           label={
             <span>
-              跳过抓取
+              跳过抓取&nbsp;
               <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
                 <QuestionCircleOutlined />
               </Tooltip>
@@ -411,7 +416,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         <Form.Item
           label={
             <span>
-              输出pdf
+              输出pdf&nbsp;
               <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
                 <QuestionCircleOutlined />
               </Tooltip>
@@ -514,7 +519,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                 return;
               }
               set$$Status(
-                process($$status, (raw) => {
+                produce($$status, (raw) => {
                   raw.showUpgradeInfo = true;
                   raw.remoteVersionConfig = remoteConfig;
                 }),
