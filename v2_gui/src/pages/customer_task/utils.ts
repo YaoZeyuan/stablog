@@ -100,6 +100,7 @@ export async function asyncCheckIsLogin() {
     // 已登录则返回用户信息 =>
     // {"preferQuickapp":0,"data":{"login":true,"st":"ae34d2","uid":"1728335761"},"ok":1}
     let record = await http.asyncGet('https://m.weibo.cn/api/config')
+    console.log("record => ", record)
     let isLogin = _.get(record, ['data', 'login'], false)
     if (isLogin === false) {
         return false

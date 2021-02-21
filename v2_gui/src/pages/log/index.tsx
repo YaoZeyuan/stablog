@@ -3,7 +3,8 @@ import _ from 'lodash';
 import fs from 'fs';
 import electron from 'electron';
 import util from '@/library/util';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Button, Switch } from 'antd';
 let remote = electron.remote;
 let ipcRenderer = electron.ipcRenderer;
 
@@ -28,6 +29,17 @@ function getLogContent() {
 
 export default function IndexPage() {
   let [logContent, setLogContent] = useState<string>('');
+  let [isAutoUpdate, setIsAutoUpdate] = useState<boolean>(true);
+
+  useEffect(() => {
+    // 初始化时启动日志自动更新
+    setInterval(() => {
+      // 若开启自动更新, 默认每秒更新一次
+      if (isAutoUpdate) {
+        updateLogContent();
+      }
+    }, 1000);
+  }, []);
 
   function updateLogContent() {
     let logList = getLogContent();
@@ -35,13 +47,30 @@ export default function IndexPage() {
     let divElement = window.document.getElementById('log-dashboard');
     divElement!.scrollTop = divElement!.scrollHeight;
   }
+  function clearLogContent() {
+    clearLog();
+    updateLogContent();
+  }
 
   return (
     <div className="log-container">
       <div id="log-dashboard">
         <pre>{logContent}</pre>
       </div>
-      <button onClick={updateLogContent}>更新日志</button>
+      <p></p>
+      <div>
+        <Button onClick={updateLogContent}>刷新</Button>
+        &nbsp;
+        <Button onClick={clearLogContent}>清空日志</Button>
+        &nbsp; 自动刷新:&nbsp;
+        <Switch
+          checked={isAutoUpdate}
+          onChange={(isChecked: boolean) => {
+            console.log('isChecked ->', isChecked);
+            setIsAutoUpdate(isChecked);
+          }}
+        ></Switch>
+      </div>
     </div>
   );
 }

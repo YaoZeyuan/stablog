@@ -50,6 +50,7 @@ const { Option } = Select;
 
 type TypeState = {
   isLogin: boolean;
+  showLoginModel: boolean;
   showUpgradeInfo: boolean;
   remoteVersionConfig: {
     version: number;
@@ -138,12 +139,13 @@ if (taskConfig.configList.length === 0) {
   taskConfig.configList.push(_.clone(defaultConfigItem));
 }
 
-export default function IndexPage() {
+export default function IndexPage(props: { changeTabKey: Function }) {
   const [form] = Form.useForm();
   const [$$status, set$$Status] = useState<TypeState>(
     process(
       {
         isLogin: false,
+        showLoginModel: false,
         showUpgradeInfo: false,
         remoteVersionConfig: {
           version: 1.0,
@@ -174,12 +176,32 @@ export default function IndexPage() {
     TaskUtils.saveConfig($$database.taskConfig);
   }, [$$database]);
 
-  const onFinish = (values: any) => {
-    console.log('Success:', values);
-  };
+  // 初始化时检查是否已登录
+  useEffect(() => {
+    let a = async () => {
+      let isLogin = await TaskUtils.asyncCheckIsLogin();
+      if (isLogin !== true) {
+        set$$Status(
+          process($$status, (raw) => {
+            raw.isLogin = false;
+            raw.showLoginModel = true;
+          }),
+        );
+      } else {
+        set$$Status(
+          process($$status, (raw) => {
+            raw.isLogin = true;
+            raw.showLoginModel = false;
+          }),
+        );
+      }
+    };
+    a();
+  }, []);
 
   let initValue = {
     ...$$database.taskConfig,
+    rawInputText: $$database.taskConfig.configList[0].rawInputText,
     fetchPageNoRange: [
       $$database.taskConfig.fetchStartAtPageNo,
       $$database.taskConfig.fetchEndAtPageNo,
@@ -189,7 +211,6 @@ export default function IndexPage() {
       moment.unix($$database.taskConfig.outputEndAtMs / 1000),
     ],
   };
-  console.log('initValue => ', initValue);
 
   return (
     <div className="customer-task">
@@ -217,13 +238,34 @@ export default function IndexPage() {
         <p>更新内容:{$$status.remoteVersionConfig.releaseNote}</p>
         <p>更新时间:{$$status.remoteVersionConfig.releaseAt}</p>
       </Modal>
+      <Modal
+        title="未登录"
+        visible={$$status.showLoginModel}
+        onOk={() => {
+          set$$Status(
+            process($$status, (raw) => {
+              raw.showLoginModel = false;
+            }),
+          );
+          props.changeTabKey('login');
+        }}
+        onCancel={() => {
+          set$$Status(
+            process($$status, (raw) => {
+              raw.showLoginModel = false;
+            }),
+          );
+        }}
+        okText="去登录"
+      >
+        <p>检查到尚未登录, 请先登录微博账号</p>
+      </Modal>
       <Form
         labelCol={{ span: 4 }}
         wrapperCol={{ span: 16 }}
         name="basic"
         form={form}
         onValuesChange={(changedValues, values) => {
-          console.log('onValuesChange', changedValues, values);
           set$$Database(
             process($$database, (raw: TypeDatabase) => {
               let updateKey = Object.keys(changedValues)[0];
@@ -253,12 +295,10 @@ export default function IndexPage() {
                 default:
                   raw.taskConfig[updateKey] = changedValues[updateKey];
               }
-              console.log('NEW ITEM =>', raw);
             }),
           );
         }}
         initialValues={initValue}
-        onFinish={onFinish}
       >
         <Form.Item label="个人主页">
           <div className="flex-container">
@@ -440,7 +480,6 @@ export default function IndexPage() {
               if (remoteConfig === false) {
                 return;
               }
-              console.log('remoteConfig => ', remoteConfig);
               set$$Status(
                 process($$status, (raw) => {
                   raw.showUpgradeInfo = true;

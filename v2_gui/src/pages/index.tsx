@@ -5,26 +5,39 @@ import DataManage from './manage';
 import Helper from './helper';
 import Log from './log';
 import Login from './login';
+import { useState } from 'react';
 
 const { TabPane } = Tabs;
 
 export default function IndexPage() {
+  let [currentTabKey, setCurrentTabKey] = useState<string>('customer_task');
+
+  function changeTabKey(tab: string) {
+    setCurrentTabKey(tab);
+  }
+
   return (
     <div className="tab-card-container">
-      <Tabs defaultActiveKey="1" centered>
-        <TabPane tab="系统设置" key="1">
-          <CustomerTask></CustomerTask>
+      <Tabs
+        activeKey={currentTabKey}
+        centered
+        onTabClick={(key: string) => {
+          setCurrentTabKey(key);
+        }}
+      >
+        <TabPane tab="系统设置" key="customer_task">
+          <CustomerTask changeTabKey={changeTabKey}></CustomerTask>
         </TabPane>
-        <TabPane tab="管理数据" key="2">
+        <TabPane tab="管理数据" key="manage">
           <DataManage></DataManage>
         </TabPane>
-        <TabPane tab="运行日志" key="3">
+        <TabPane tab="运行日志" key="log">
           <Log></Log>
         </TabPane>
-        <TabPane tab="登录微博" key="4">
+        <TabPane tab="登录微博" key="login">
           <Login></Login>
         </TabPane>
-        <TabPane tab="使用说明" key="5">
+        <TabPane tab="使用说明" key="help">
           <Helper></Helper>
         </TabPane>
       </Tabs>
