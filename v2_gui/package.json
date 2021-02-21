@@ -7,6 +7,7 @@
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'"
   },
   "dependencies": {
+    "@ant-design/icons": "^4.5.0",
     "@ant-design/pro-layout": "^6.5.0",
     "@umijs/preset-react": "1.x",
     "immer": "^8.0.1",

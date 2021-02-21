@@ -3,7 +3,7 @@ import _ from 'lodash'
 
 // 创建axios实例
 const http = axios.create({
-  timeout: 1000,
+  timeout: 5000,
 })
 
 class Http {

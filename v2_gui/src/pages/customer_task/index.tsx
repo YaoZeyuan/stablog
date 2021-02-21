@@ -14,7 +14,14 @@ import {
   Select,
   Switch,
   Modal,
+  Tooltip,
+  Collapse,
 } from 'antd';
+import {
+  QuestionOutlined,
+  QuestionCircleOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
 import './index.less';
 
 import _ from 'lodash';
@@ -211,7 +218,7 @@ export default function IndexPage() {
         <p>更新时间:{$$status.remoteVersionConfig.releaseAt}</p>
       </Modal>
       <Form
-        labelCol={{ span: 8 }}
+        labelCol={{ span: 4 }}
         wrapperCol={{ span: 16 }}
         name="basic"
         form={form}
@@ -241,7 +248,7 @@ export default function IndexPage() {
                     changedValues[updateKey][1].unix() * 1000;
                   break;
                 case 'mergeBy':
-                  raw.taskConfig[updateKey] = changedValues[updateKey].value;
+                  raw.taskConfig['mergeBy'] = changedValues['mergeBy'];
                   break;
                 default:
                   raw.taskConfig[updateKey] = changedValues[updateKey];
@@ -255,7 +262,7 @@ export default function IndexPage() {
       >
         <Form.Item label="个人主页">
           <div className="flex-container">
-            <Form.Item name="rawInputText">
+            <Form.Item name="rawInputText" className="flex-container-item-w100">
               <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
             </Form.Item>
             <Button
@@ -277,6 +284,9 @@ export default function IndexPage() {
                 set$$Database(
                   process($$database, (raw) => {
                     raw.currentUserInfo = userInfo;
+                    raw.taskConfig.fetchStartAtPageNo = 0;
+                    raw.taskConfig.fetchEndAtPageNo =
+                      userInfo.total_page_count || 1000;
                   }),
                 );
               }}
@@ -313,17 +323,48 @@ export default function IndexPage() {
           )}
         </Form.Item>
         <Divider>备份配置</Divider>
-        <Form.Item label="备份范围">
-          <Form.Item name="fetchPageNoRange">
-            <Slider range />
+
+        <Form.Item label={`备份范围`}>
+          <Form.Item name="fetchPageNoRange" noStyle>
+            <Slider
+              range
+              marks={{
+                0: `第${$$database.taskConfig.fetchStartAtPageNo}页`,
+                100: `第${$$database.taskConfig.fetchEndAtPageNo}页`,
+              }}
+            />
           </Form.Item>
-          <span>
-            从第{$$database.taskConfig.fetchStartAtPageNo}页备份到第
-            {$$database.taskConfig.fetchEndAtPageNo}页
-          </span>
+        </Form.Item>
+        <Form.Item
+          label={
+            <span>
+              跳过抓取
+              <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isSkipFetch"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
         </Form.Item>
         <Divider>输出规则</Divider>
 
+        <Form.Item
+          label={
+            <span>
+              输出pdf
+              <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isSkipGeneratePdf"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
         <Form.Item label="微博排序" name="postAtOrderBy">
           <Radio.Group buttonStyle="solid">
             <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>
@@ -339,28 +380,29 @@ export default function IndexPage() {
 
         <Form.Item label="自动分卷">
           <div className="flex-container">
-            <span>每</span>
+            <span>每&nbsp;</span>
             <Form.Item name="maxBlogInBook">
-              <InputNumber />
+              <InputNumber min={100} step={100} />
             </Form.Item>
-            <span>条微博输出一本电子书</span>
+            <span>&nbsp;条微博输出一本电子书</span>
           </div>
         </Form.Item>
         <Form.Item label="时间范围">
           <div className="flex-container">
             <span>只输出从</span>
-            <Form.Item name="outputTimeRange">
+            &nbsp;
+            <Form.Item name="outputTimeRange" noStyle>
               <RangePicker picker="date" />
             </Form.Item>
-
+            &nbsp;
             <span>间发布的微博</span>
           </div>
         </Form.Item>
 
         <Form.Item label="分页依据">
           <div className="flex-container">
-            按
-            <Form.Item name="mergeBy">
+            按 &nbsp;
+            <Form.Item name="mergeBy" noStyle>
               <Select labelInValue={false} style={{ width: 120 }}>
                 <Option value={MergeBy.年}>年</Option>
                 <Option value={MergeBy.月}>月</Option>
@@ -368,25 +410,30 @@ export default function IndexPage() {
                 <Option value={MergeBy.微博条数}>微博条数</Option>
               </Select>
             </Form.Item>
-            汇集微博
+            &nbsp; 汇集为一页
+            {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
+              <span>, 每&nbsp;</span>
+            ) : null}
+            {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
+              <Form.Item name="mergeCount" noStyle>
+                <InputNumber
+                  placeholder="每n条微博一页"
+                  min={100}
+                  step={100}
+                ></InputNumber>
+              </Form.Item>
+            ) : null}
+            {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
+              <span>&nbsp;条微博一页</span>
+            ) : null}
           </div>
         </Form.Item>
-        {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
-          <Form.Item label="分页微博条数">
-            , 每
-            <Form.Item name="mergeCount">
-              <InputNumber
-                placeholder="每n条微博一页"
-                min={100}
-                step={100}
-              ></InputNumber>
-            </Form.Item>
-            条微博一页
-          </Form.Item>
-        ) : null}
+
         <Form.Item label="操作">
           <Button>开始备份</Button>
+          &nbsp;
           <Button onClick={TaskUtils.openOutputDir}>打开电子书所在目录</Button>
+          &nbsp;
           <Button
             onClick={async () => {
               let remoteConfig = await TaskUtils.asyncCheckNeedUpdate();
@@ -405,25 +452,14 @@ export default function IndexPage() {
             检查更新
           </Button>
         </Form.Item>
-        <Divider>高级选项</Divider>
-        <Form.Item label="开发者配置">
-          <div className="flex-container">
-            <Form.Item name="isSkipFetch" valuePropName="checked">
-              <Switch></Switch>
-            </Form.Item>
-            跳过抓取流程, 直接输出电子书
-          </div>
-          <div className="flex-container">
-            <Form.Item name="isSkipGeneratePdf" valuePropName="checked">
-              <Switch></Switch>
-            </Form.Item>
-            只输出网页,不输出pdf文件
-          </div>
-        </Form.Item>
       </Form>
-      <div>
-        <pre>{JSON.stringify($$database.taskConfig, null, 4)}</pre>
-      </div>
+      <Collapse>
+        <Collapse.Panel header="配置内容" key="config-content">
+          <div>
+            <pre>{JSON.stringify($$database.taskConfig, null, 4)}</pre>
+          </div>
+        </Collapse.Panel>
+      </Collapse>
     </div>
   );
 }
