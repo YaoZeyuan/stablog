@@ -108,21 +108,9 @@ export async function asyncCheckIsLogin() {
     return true
 }
 
-export async function asyncHandleStartTask() {
-    this.saveConfig()
-    await this.asyncCheckIsLogin()
-    if (this.status.isLogin === false) {
-        console.log('请先登录微博')
-        return
-    }
-    let asyncSuccess = await this.asyncData()
-    if (asyncSuccess !== true) {
-        return
-    }
+export function startBackupTask() {
     // 将当前任务配置发送给服务器
     ipcRenderer.sendSync('startCustomerTask')
-    // 将面板切换到log上
-    this.$emit('update:currentTab', 'log')
 }
 
 export async function asyncCheckNeedUpdate() {

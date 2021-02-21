@@ -34,6 +34,7 @@ export default function IndexPage() {
   useEffect(() => {
     // 初始化时启动日志自动更新
     setInterval(() => {
+      console.log('auto update => ', isAutoUpdate);
       // 若开启自动更新, 默认每秒更新一次
       if (isAutoUpdate) {
         updateLogContent();

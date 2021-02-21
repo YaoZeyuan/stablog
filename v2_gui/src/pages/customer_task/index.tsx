@@ -179,25 +179,60 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   // 初始化时检查是否已登录
   useEffect(() => {
     let a = async () => {
-      let isLogin = await TaskUtils.asyncCheckIsLogin();
-      if (isLogin !== true) {
-        set$$Status(
-          process($$status, (raw) => {
-            raw.isLogin = false;
-            raw.showLoginModel = true;
-          }),
-        );
-      } else {
-        set$$Status(
-          process($$status, (raw) => {
-            raw.isLogin = true;
-            raw.showLoginModel = false;
-          }),
-        );
-      }
+      await asyncCheckIsLogin();
     };
     a();
   }, []);
+
+  async function asyncCheckIsLogin() {
+    let isLogin = await TaskUtils.asyncCheckIsLogin();
+    if (isLogin !== true) {
+      set$$Status(
+        process($$status, (raw) => {
+          raw.isLogin = false;
+          raw.showLoginModel = true;
+        }),
+      );
+    } else {
+      set$$Status(
+        process($$status, (raw) => {
+          raw.isLogin = true;
+          raw.showLoginModel = false;
+        }),
+      );
+    }
+    return isLogin;
+  }
+
+  async function asyncSyncUserInfo() {
+    // 先检查是否登录
+    let isLogin = await asyncCheckIsLogin();
+    if (isLogin !== true) {
+      return false;
+    }
+    // 获取uid
+    let uid = $$database.taskConfig.configList[0].uid;
+    if (uid === '') {
+      uid = await TaskUtils.asyncGetUid(
+        $$database.taskConfig.configList[0].rawInputText,
+      );
+      set$$Database(
+        process($$database, (raw) => {
+          raw.taskConfig.configList[0].uid = uid;
+        }),
+      );
+    }
+    // 然后更新用户信息
+    let userInfo = await TaskUtils.asyncGetUserInfo(uid);
+    set$$Database(
+      process($$database, (raw) => {
+        raw.currentUserInfo = userInfo;
+        raw.taskConfig.fetchStartAtPageNo = 0;
+        raw.taskConfig.fetchEndAtPageNo = userInfo.total_page_count || 1000;
+      }),
+    );
+    return true;
+  }
 
   let initValue = {
     ...$$database.taskConfig,
@@ -300,39 +335,21 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         }}
         initialValues={initValue}
       >
-        <Form.Item label="个人主页">
+        <Form.Item
+          label={
+            <span>
+              个人主页
+              <Tooltip title="在浏览器中进入用户首页, 将链接粘贴至此处. 主页地址类似于:https://weibo.com/u/5659598386 或 https://weibo.com/n/八大山债人 或 https://m.weibo.cn/u/5659598386 或 https://m.weibo.cn/profile/2291429207">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+        >
           <div className="flex-container">
             <Form.Item name="rawInputText" className="flex-container-item-w100">
               <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
             </Form.Item>
-            <Button
-              onClick={async () => {
-                // 先获取uidr
-                let uid = $$database.taskConfig.configList[0].uid;
-                if (uid === '') {
-                  uid = await TaskUtils.asyncGetUid(
-                    $$database.taskConfig.configList[0].rawInputText,
-                  );
-                  set$$Database(
-                    process($$database, (raw) => {
-                      raw.taskConfig.configList[0].uid = uid;
-                    }),
-                  );
-                }
-                // 然后更新用户信息
-                let userInfo = await TaskUtils.asyncGetUserInfo(uid);
-                set$$Database(
-                  process($$database, (raw) => {
-                    raw.currentUserInfo = userInfo;
-                    raw.taskConfig.fetchStartAtPageNo = 0;
-                    raw.taskConfig.fetchEndAtPageNo =
-                      userInfo.total_page_count || 1000;
-                  }),
-                );
-              }}
-            >
-              同步用户信息
-            </Button>
+            <Button onClick={asyncSyncUserInfo}>同步用户信息</Button>
           </div>
         </Form.Item>
 
@@ -340,7 +357,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           {$$database.currentUserInfo.screen_name === '' ? (
             '数据待同步'
           ) : (
-            <Descriptions bordered>
+            <Descriptions bordered column={1}>
               <Descriptions.Item label="用户名">
                 {$$database.currentUserInfo.screen_name}
               </Descriptions.Item>
@@ -470,7 +487,23 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         </Form.Item>
 
         <Form.Item label="操作">
-          <Button>开始备份</Button>
+          <Button
+            onClick={async () => {
+              // 先同步信息(期间会检查登录状态)
+              let isSyncSuccess = await asyncSyncUserInfo();
+              if (isSyncSuccess !== true) {
+                return false;
+              }
+              // 保存日志
+              TaskUtils.saveConfig($$database.taskConfig);
+              // 然后将tab切换到日志栏
+              props.changeTabKey('log');
+              // 启动任务进程
+              TaskUtils.startBackupTask();
+            }}
+          >
+            开始备份
+          </Button>
           &nbsp;
           <Button onClick={TaskUtils.openOutputDir}>打开电子书所在目录</Button>
           &nbsp;
