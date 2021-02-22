@@ -1,3 +1,6 @@
+* {
+  box-sizing: border-box;
+}
 /* 设置背景色，清除缩进 */
 body {
   background: #f2f2f2;
@@ -210,52 +213,93 @@ body {
     text-decoration: none;
   }
   border-bottom: 1px solid #e6e6e6;
+  .card {
+    margin-bottom: 11.25px;
+  }
+  .m-panel {
+    border-top-width: 1px;
+    border-right-width: 0;
+    border-bottom-width: 1px;
+    border-left-width: 0;
+    border-color: #e6e6e6;
+    border-style: solid;
+    background: #fff;
+  }
   .card-wrap {
-    background-color: #ffffff;
-    border-bottom-color: #e6e6e6;
+    margin: 0 15px;
+    padding-top: 18.75px;
+    .card-main {
+      margin: 0 -15px;
+    }
     .m-avatar-box {
       // 头像容器
       display: flex;
       flex-direction: row;
-      width: 40px;
-      padding-top: 0.9375rem;
-      margin-left: 0.75rem;
-      margin-right: 0.75rem;
+      // width: 40px;
+      padding: 0 15px;
+      // padding-top: 0.9375rem;
+      // margin-left: 0.75rem;
+      // margin-right: 0.75rem;
       .m-img-box {
         // 头像
-        width: 40px;
+        width: 50px;
         height: 50px;
         img {
-          width: 40px;
-          height: 40px;
+          width: 50px;
+          height: 50px;
           border-radius: 50%;
         }
       }
+      .m-box-center {
+        display: flex;
+        justify-content: center;
+      }
       .m-box-col .m-text-box {
         // 用户名
-        display: flex;
+        display: block;
         /* 增大宽度, 适配用户名过长的情况 */
-        max-width: 500px;
-        height: 40px;
-        flex-direction: column;
-        justify-content: space-between;
-        margin-left: 0.5rem;
+        // max-width: 500px;
+        // height: 40px;
+        // flex-direction: column;
+        // justify-content: space-between;
+        margin-left: 15px;
         a {
           h3.m-text-cut {
             @head-line-text: 20px;
-            height: @head-line-text;
-            line-height: 100%;
-            font-size: @head-line-text;
-
-            margin: 0;
+            color: #f46200;
+            font-size: 18.75px;
+            line-height: 1.4;
+            white-space: nowrap;
             font-weight: normal;
+            // overflow: hidden;
+            // text-overflow: ellipsis;
+            .m-icon {
+              display: inline-block;
+              vertical-align: top;
+              background-image: url(../image/sprite.svg);
+              background-size: 3em 57em;
+              width: 1em;
+              height: 1em;
+              font-size: 18px;
+              vertical-align: -0.125rem;
+            }
+            .m-icon-vipl7 {
+              background-position: -1em -55em;
+            }
+            margin: 0;
+
+            // height: @head-line-text;
+            // line-height: 100%;
+
+            // margin: 0;
+            // font-weight: normal;
           }
         }
         h4.m-text-cut {
-          @head-post-at-text: 15px;
           color: #939393;
-          height: @head-post-at-text;
-          font-size: @head-post-at-text;
+          line-height: 1.5;
+          height: 24px;
+          font-size: 16px;
           margin: 0;
           font-weight: normal;
         }
@@ -263,8 +307,6 @@ body {
     }
     .weibo-main {
       // 微博内容
-      margin-left: 0.75rem;
-      margin-right: 0.75rem;
       height: 100%;
       font-size: 20px;
       color: #333;

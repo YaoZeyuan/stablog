@@ -23,7 +23,8 @@
     "pack": "npm run build && npm run buildgui && electron-builder --dir",
     "dist": "npm run build && npm run buildgui && electron-builder",
     "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "watch-less": "node ./script/watch-less.js"
   },
   "build": {
     "productName": "稳部落",
@@ -103,6 +104,7 @@
     "@types/jquery": "^3.2.17",
     "@types/json5": "0.0.30",
     "@types/knex": "^0.15.1",
+    "@types/less": "^3.0.2",
     "@types/lodash": "^4.14.91",
     "@types/md5": "^2.1.33",
     "@types/node": "^9.4.6",
@@ -115,6 +117,8 @@
     "babel-plugin-root-import": "^6.1.0",
     "electron": "^6.0.12",
     "electron-builder": "^21.2.0",
-    "electron-rebuild": "^1.8.6"
+    "electron-rebuild": "^1.8.6",
+    "less": "^4.1.1",
+    "watch": "^1.0.2"
   }
 }

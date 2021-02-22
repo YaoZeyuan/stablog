@@ -250,7 +250,9 @@ class Base {
                 <div className="m-box-col m-box-dir m-box-center">
                   <div className="m-text-box">
                     <a>
-                      <h3 className="m-text-cut">{mblog.user.screen_name}</h3>
+                      <h3 className="m-text-cut">
+                        {mblog.user.screen_name} <i className="m-icon m-icon-vipl7"></i>
+                      </h3>
                     </a>
                     <h4 className="m-text-cut">
                       <span className="time">
