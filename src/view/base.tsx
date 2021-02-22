@@ -106,7 +106,7 @@ class Base {
                 <a>---</a>:
               </span>
               {/* <div>${mblog.text}</div> */}
-              <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }} />
+              <span dangerouslySetInnerHTML={{ __html: `${mblog.text}` }} />
             </div>
             <div>
               {/* 如果是图片的话, 需要展示九张图 */}
