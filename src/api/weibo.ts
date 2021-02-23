@@ -32,7 +32,7 @@ export default class Weibo extends Base {
       let rawStStartStr = jsonStr.split(`st:`)[1]
       let rawStStr = rawStStartStr.split(`,`)[0]
       st = rawStStr.replace(/"|'| /g, '')
-    } catch (e) { }
+    } catch (e) {}
     return st
   }
   static async asyncStep2FetchApiConfig(st: string) {
@@ -60,11 +60,16 @@ export default class Weibo extends Base {
     st: string,
     author_uid: string,
     page: number = 1,
-  ): Promise<Array<TypeWeibo.TypeWeiboNewApi_MyBlob_Item>> {
-    const baseUrl = `https://weibo.com/ajax/statuses/mymblog?uid=${author_uid}&page=${page}&feature=0`
-    const config = {}
+  ): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
+    let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
+    const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&page=${page}`
+    const config = {
+      // containerid: containerId,
+      // page_type: '03',
+      // page: page,
+    }
     console.log('url =>', baseUrl)
-    let weiboResponse = <TypeWeibo.TypeWeiboNewApi_MyBlob_ListResponse>await Base.http
+    let weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http
       .get(baseUrl, {
         params: config,
         headers: {
@@ -94,11 +99,15 @@ export default class Weibo extends Base {
         },
       })
     }
-    if (_.isEmpty(weiboResponse.data.list)) {
+    if (_.isEmpty(weiboResponse.data.cards)) {
       return []
     }
-    const rawRecordList = weiboResponse.data.list
-    return rawRecordList
+    const rawRecordList = weiboResponse.data.cards
+    // 需要按cardType进行过滤, 只要id为9的(微博卡片)
+    let recordList = rawRecordList.filter(item => {
+      return item.card_type === 9
+    })
+    return recordList
   }
 
   /**
