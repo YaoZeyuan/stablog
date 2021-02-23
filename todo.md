@@ -11,6 +11,8 @@
 5.  ✅ 优化 html 文件样式, 调整为 octoman 备份出的样式
 6.  导出关注人 uid 列表[不建议做]
 7.  解决用户名折行问题[https://github.com/YaoZeyuan/stablog/issues/33]
-8.  测试微博新版 api 有没有防爬虫功能.
+8.  ❌ 测试微博新版 api 有没有防爬虫功能.
     1.  看起来可以尝试 => https://weibo.com/ajax/statuses/mymblog?uid=1764741287&page=9&feature=0
+    2.  经测试, 新版 api 一样有反爬虫功能, 10s 一次爬取也会被拦截.
+    3.  对用户来说, 等待 1 小时才能完成和等 3 小时才能完成是等效的, 所以不浪费时间切新 API 了(还需要适配微博生成格式, 不值得)
 9.  ✅ 使用 mozjpeg-js 压缩 jpg 图片
