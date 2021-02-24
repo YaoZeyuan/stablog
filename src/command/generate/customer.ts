@@ -355,7 +355,7 @@ class GenerateCustomer extends Base {
         let content = WeiboView.render([weiboRecord])
         content = this.processContent(content)
         let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${baseFileTitle}.html`)
-        let imageUri = path.resolve(this.htmlCachePdfHtml2ImagePath, `${baseFileTitle}.jpg`)
+        let imageUri = path.resolve(this.html2ImageCachePath, `${baseFileTitle}.jpg`)
         fs.writeFileSync(htmlUri, content)
         let transConfigItem: TypeTransConfigItem = {
           dayIndex,

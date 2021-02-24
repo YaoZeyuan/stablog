@@ -133,7 +133,7 @@ let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri);
 try {
   taskConfig = JSON.parse(jsonContent);
 } catch (e) {}
-// 始终重置为次日
+// 输出时间始终重置为次日
 taskConfig.outputEndAtMs = moment().add(1, 'day').unix() * 1000;
 if (taskConfig.configList.length === 0) {
   taskConfig.configList.push(_.clone(defaultConfigItem));
@@ -382,7 +382,16 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         </Form.Item>
         <Divider>备份配置</Divider>
 
-        <Form.Item label={`备份范围`}>
+        <Form.Item
+          label={
+            <span>
+              备份范围&nbsp;
+              <Tooltip title="可通过配置备份页面范围, 实现断点续传/只备份指定范围内的微博">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+        >
           <Form.Item name="fetchPageNoRange" noStyle>
             <Slider
               range
@@ -390,43 +399,21 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               //   0: `第${$$database.taskConfig.fetchStartAtPageNo}页`,
               //   100: `第${$$database.taskConfig.fetchEndAtPageNo}页`,
               // }}
-              tooltipVisible={true}
+              // tooltipVisible={true}
               tipFormatter={(item) => `第${item}页`}
+              marks={{
+                0: 0,
+                [$$database?.currentUserInfo?.total_page_count || 1000]:
+                  $$database?.currentUserInfo?.total_page_count || 1000,
+              }}
               min={0}
               max={$$database?.currentUserInfo?.total_page_count || 1000}
             />
           </Form.Item>
         </Form.Item>
-        <Form.Item
-          label={
-            <span>
-              跳过抓取&nbsp;
-              <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isSkipFetch"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
+
         <Divider>输出规则</Divider>
 
-        <Form.Item
-          label={
-            <span>
-              输出pdf&nbsp;
-              <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isSkipGeneratePdf"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
         <Form.Item label="微博排序" name="postAtOrderBy">
           <Radio.Group buttonStyle="solid">
             <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>
@@ -489,6 +476,36 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               <span>&nbsp;条微博一页</span>
             ) : null}
           </div>
+        </Form.Item>
+        <Divider>开发人员选项</Divider>
+
+        <Form.Item
+          label={
+            <span>
+              跳过抓取&nbsp;
+              <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isSkipFetch"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
+        <Form.Item
+          label={
+            <span>
+              跳过输出pdf&nbsp;
+              <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isSkipGeneratePdf"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
         </Form.Item>
 
         <Form.Item label="操作">

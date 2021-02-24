@@ -31,9 +31,10 @@ class FetchBase extends Base {
   get htmlCachePdfPath() {
     return path.resolve(this.htmlCachePath, 'pdf')
   }
-  // pdf 系列内容
-  get htmlCachePdfHtml2ImagePath() {
-    return path.resolve(this.htmlCachePdfPath, 'html2image')
+
+  // 用于生成pdf的html应该和html同一层级
+  get html2ImageCachePath() {
+    return path.resolve(this.htmlCachePath, 'html2image')
   }
 
   get htmlCacheCssPath() {
@@ -81,7 +82,7 @@ class FetchBase extends Base {
     shelljs.mkdir('-p', this.htmlCacheFontPath)
     shelljs.mkdir('-p', this.htmlCacheImgPath)
     shelljs.mkdir('-p', this.htmlCachePdfPath)
-    shelljs.mkdir('-p', this.htmlCachePdfHtml2ImagePath)
+    shelljs.mkdir('-p', this.html2ImageCachePath)
     shelljs.mkdir('-p', this.htmlOutputPath)
     this.log(`电子书:${this.bookname}对应文件夹创建完毕`)
   }
