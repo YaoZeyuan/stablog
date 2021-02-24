@@ -230,7 +230,8 @@ body {
   text-decoration: none;
 }
 .mblog-container .card {
-  margin-bottom: 11.25px;
+  margin-bottom: 5.25px;
+  margin-top: 5.25px;
 }
 .mblog-container .m-panel {
   border-top-width: 1px;
