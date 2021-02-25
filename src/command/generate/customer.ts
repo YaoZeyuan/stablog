@@ -20,8 +20,11 @@ import * as mozjpeg from "mozjpeg-js"
 
 // 将img输出为pdf
 import PDFKit from 'pdfkit'
+import pdf from 'pdfjs'
+import pdfFonts_Times_Roman from 'pdfjs/font/Times-Roman'
 import TaskConfig from '~/src/type/namespace/task_config'
-import { BrowserWindow } from 'electron'
+import { height } from 'pdfkit/js/page'
+import jsPDF from 'jspdf'
 
 // 硬编码传入
 let globalSubWindow: InstanceType<typeof BrowserWindow> = null
@@ -342,6 +345,7 @@ class GenerateCustomer extends Base {
       dayIndex++
       this.log(`将网页渲染为图片, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
       let weiboRecordImgList: TypeTransConfigPackage = {
+        title: weiboDayRecord.title,
         dayIndex,
         configList: []
       }
@@ -407,59 +411,75 @@ class GenerateCustomer extends Base {
     this.log('generateImage complete');
   }
 
-
   async generatePdf(weiboDayList: TypeTransConfigPackageList) {
-    // 初始化pdf类
-    let pdfDocument = new PDFKit({
-      margin: 0,
-      layout: 'landscape',
-      size: [667, 375 * 2], // a smaller document for small badge printers
+
+    let doc = new jsPDF({
+      unit: 'px',
+      format: [750, 500],
+      orientation: "landscape"
     })
-    let fontUri = path.resolve(__dirname, '../../public/font/yangrendong_zhushi.ttf')
-    pdfDocument.font(fontUri)
-    pdfDocument.fontSize(48)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
+    let fontUri = path.resolve(__dirname, '../../public/font/alibaba_PuHuiTi_Regular.ttf')
+    let fontContent = fs.readFileSync(fontUri)
+    let fontName = "alibaba_PuHuiTi_Regular"
+
+    doc.addFileToVFS(`${fontName}.ttf`, fontContent.toString("base64"))
+    doc.addFont(`${fontName}.ttf`, fontName, "normal")
+    doc.setFont(fontName, "normal");
+    doc.setFontSize(32)
+
+    // demo =>  yaozeyuan93-微博整理(2011-07-07~2012-01-25)
     let rawBooktitle = this.bookname
     let contentList = rawBooktitle.split(`-微博整理`)
-    // 调整展示格式
-    pdfDocument.text(`${contentList[0]}`, {
-      align: 'center',
-    })
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`微博整理`, {
-      align: 'center',
-    })
-    pdfDocument.text(`${contentList[1].replace(/^-/, '')}`, {
-      align: 'center',
-    })
-    pdfDocument.fontSize(20)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`由稳部落自动生成`, {
-      align: 'center',
-    })
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`项目主页`, {
-      align: 'center',
-    })
-    pdfDocument.text(`\n`)
-    pdfDocument.font('Times-Roman')
-    pdfDocument.fillColor('blue').text(`https://www.yaozeyuan.online/stablog`, {
-      align: 'center',
-      link: `https://www.yaozeyuan.online/stablog`,
-    })
+    let accountName = contentList[0]
+    let timeRangeStr = contentList[1]
+    timeRangeStr = timeRangeStr.replace("(", "")
+    timeRangeStr = timeRangeStr.replace(")", "")
 
-    let pdfSaveStream = fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`))
-    pdfDocument.pipe(pdfSaveStream)
+    let lineAt = 0
+    let lineHeight = 40
+    let paddingLeft = 340
+
+    function addLine(content: string) {
+      lineAt = lineAt + 1
+      doc.text(content, paddingLeft, lineHeight * lineAt, {
+        align: 'center',
+      })
+    }
+    function addLink(content: string) {
+      lineAt = lineAt + 1
+      doc.setTextColor("blue")
+      doc.textWithLink(content, paddingLeft, lineHeight * lineAt, {
+        align: 'center',
+        url: content
+      })
+    }
+    addLine("")
+    addLine("微博整理")
+    addLine(accountName)
+    addLine(timeRangeStr)
+    addLine("")
+    addLine("该文件由稳部落自动生成")
+    addLine("")
+    addLine("项目主页")
+    addLink("https://www.yaozeyuan.online/stablog")
+
+
+    let currentPageNo = 2
+    let outlineConfigList: {
+      title: string,
+      pageNo: number,
+    }[] = []
     // 先加一页, 避免出现空白页
     let dayIndex = 0
     for (let weiboDayRecord of weiboDayList) {
       dayIndex++
       this.log(`将网页渲染为pdf, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
       let weiboIndex = 0
+      outlineConfigList.push({
+        title: weiboDayRecord.title,
+        pageNo: currentPageNo,
+      })
+
       for (let weiboRecord of weiboDayRecord.configList) {
         weiboIndex++
         this.log(
@@ -473,34 +493,34 @@ class GenerateCustomer extends Base {
         } else {
           let imageBuffer = fs.readFileSync(imgUri)
 
-          this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染成功`)
           let size = await imageSize.imageSize(imageBuffer)
           let { width, height } = size
-          this.log(`图片size=>`, { width, height })
           if (!width || width <= 0 || !height || height <= 0) {
             this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
             continue
           }
 
-          // 将图片数据添加到pdf文件中
-          pdfDocument.addPage({
-            margin: 0,
-            layout: 'landscape',
-            size: [height, width], // a smaller document for small badge printers
-          })
-          pdfDocument.image(imageBuffer)
+          doc.addPage([width, height], width > height ? "landscape" : "portrait")
+          doc.addImage(
+            {
+              imageData: imageBuffer,
+              x: 0,
+              y: 0,
+              width: width,
+              height: height
+            })
+          currentPageNo = currentPageNo + 1
         }
       }
     }
+    // 开始补充导航栏
+    var node = doc.outline.add(null, '首页', { pageNumber: 1 });
+    for (let outlineConfig of outlineConfigList) {
+      doc.outline.add(node, outlineConfig.title, { pageNumber: outlineConfig.pageNo });
 
-    pdfDocument.end()
-    // 等待pdf文件写入完毕
-    await new Promise((resolve, reject) => {
-      pdfSaveStream.on('finish', function () {
-        // do stuff with the PDF file
-        resolve(true)
-      })
-    })
+    }
+
+    await doc.save(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`), { returnPromise: true })
     this.log(`pdf输出完毕`)
   }
 }

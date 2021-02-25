@@ -12,6 +12,7 @@ export type TypeTransConfigItem = {
 }
 
 export type TypeTransConfigPackage = {
+    title: string,
     "dayIndex": number,
     "configList": TypeTransConfigItem[]
 }
