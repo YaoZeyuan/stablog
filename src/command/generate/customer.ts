@@ -343,7 +343,7 @@ class GenerateCustomer extends Base {
     let weiboDayConfigList: TypeTransConfigPackageList = []
     for (let weiboDayRecord of weiboDayList) {
       dayIndex++
-      this.log(`将网页渲染为图片, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
+      this.log(`开始将记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下的微博渲染为图片`)
       let weiboRecordImgList: TypeTransConfigPackage = {
         title: weiboDayRecord.title,
         dayIndex,
@@ -354,7 +354,7 @@ class GenerateCustomer extends Base {
         weiboIndex++
         let baseFileTitle = `${dayIndex}_${weiboIndex}`
         this.log(
-          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+          `正在渲染记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
         )
         let content = WeiboView.render([weiboRecord])
         content = this.processContent(content)
@@ -372,9 +372,6 @@ class GenerateCustomer extends Base {
       }
       weiboDayConfigList.push(weiboRecordImgList)
     }
-    // 写入系统文件中
-    fs.writeFileSync(path.resolve(this.htmlCachePdfPath, `pdf_html2img_config_list.json`), weiboDayConfigList)
-    // 将控制权转交给前端, 由前端执行html转图片工作
     // 处理完毕, 返回配置内容
     return weiboDayConfigList
   }
@@ -382,20 +379,20 @@ class GenerateCustomer extends Base {
   async html2Image(pageConfig: TypeTransConfigItem) {
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
-    this.log("load url -> ", pageConfig.htmlUri)
+    // this.log("load url -> ", pageConfig.htmlUri)
     await webview.loadURL(pageConfig.htmlUri);
     await globalSubWindow.setContentSize(
       Const_Default_Webview_Width,
       Const_Default_Webview_Height,
     );
-    this.log("load complete, resize page ")
+    // this.log("load complete, resize page ")
     let scrollHeight = await webview.executeJavaScript(
       `document.children[0].children[1].scrollHeight`,
     );
-    this.log('scrollHeight => ', scrollHeight);
+    // this.log('scrollHeight => ', scrollHeight);
     await subWindow.setContentSize(760, scrollHeight);
     // 生成图片
-    this.log('start generateImage');
+    // this.log('start generateImage');
     let nativeImg = await webview.capturePage();
     let jpgContent = nativeImg.toJPEG(100);
     // 基于mozjpeg压缩图片
@@ -408,7 +405,7 @@ class GenerateCustomer extends Base {
       path.resolve(pageConfig.imageUri),
       jpgContent,
     );
-    this.log('generateImage complete');
+    // this.log('generateImage complete');
   }
 
   async generatePdf(weiboDayList: TypeTransConfigPackageList) {
@@ -473,7 +470,7 @@ class GenerateCustomer extends Base {
     let dayIndex = 0
     for (let weiboDayRecord of weiboDayList) {
       dayIndex++
-      this.log(`将网页渲染为pdf, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
+      this.log(`将页面${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)添加到pdf文件中`)
       let weiboIndex = 0
       outlineConfigList.push({
         title: weiboDayRecord.title,
@@ -483,7 +480,7 @@ class GenerateCustomer extends Base {
       for (let weiboRecord of weiboDayRecord.configList) {
         weiboIndex++
         this.log(
-          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.configList.length}条微博`,
+          `正在添加页面${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下,第${weiboIndex}/${weiboDayRecord.configList.length}条微博`,
         )
         let imgUri = weiboRecord.imageUri
         if (fs.existsSync(imgUri) === false) {

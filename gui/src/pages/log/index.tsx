@@ -1,14 +1,17 @@
 import './index.less';
 import _ from 'lodash';
 import fs from 'fs';
+import path from 'path';
 import electron from 'electron';
 import util from '@/library/util';
 import { useEffect, useState } from 'react';
 import { Button, Switch } from 'antd';
 let remote = electron.remote;
+let shell = electron.shell;
 let ipcRenderer = electron.ipcRenderer;
 
 let pathConfig = remote.getGlobal('pathConfig');
+const Const_Max_Log_Line = 100000;
 
 function clearLog() {
   fs.writeFileSync(pathConfig.runtimeLogUri, '');
@@ -18,13 +21,19 @@ function getLogContent() {
   let logContent = util.getFileContent(pathConfig.runtimeLogUri);
   let logList = logContent.split('\n');
   let showLogList = logList.slice(logList.length - 500, logList.length); // 只展示最后500行即可
-  if (logList.length > 100000) {
+  if (logList.length > Const_Max_Log_Line) {
     fs.writeFileSync(
       pathConfig.runtimeLogUri,
       `日志数超过10w, 自动清空\n--------------\n${showLogList.join('\n')}`,
     );
   }
   return showLogList;
+}
+
+function openLogFile() {
+  shell.openExternal(pathConfig.runtimeLogUri);
+  shell.showItemInFolder(pathConfig.runtimeLogUri);
+  return;
 }
 
 let globalIsAutoUpdate = true;
@@ -63,6 +72,8 @@ export default function IndexPage() {
         <Button onClick={updateLogContent}>刷新</Button>
         &nbsp;
         <Button onClick={clearLogContent}>清空日志</Button>
+        &nbsp;
+        <Button onClick={openLogFile}>打开日志文件</Button>
         &nbsp; 自动刷新:&nbsp;
         <Switch
           checked={isAutoUpdate}
