@@ -422,7 +422,7 @@ class GenerateCustomer extends Base {
         );
         // this.log('scrollHeight => ', scrollHeight);
         // this.log("setContentSize with scrollHeight -> ", scrollHeight)
-        await subWindow.setContentSize(760, scrollHeight);
+        await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
         // 生成图片
         // this.log('start generateImage');
         let nativeImg = await webview.capturePage();
@@ -452,7 +452,7 @@ class GenerateCustomer extends Base {
 
     let doc = new jsPDF({
       unit: 'px',
-      format: [760, 500],
+      format: [Const_Default_Webview_Width, 500],
       orientation: "landscape"
     })
     let fontUri = path.resolve(__dirname, '../../public/font/alibaba_PuHuiTi_Regular.ttf')
@@ -474,7 +474,7 @@ class GenerateCustomer extends Base {
 
     let lineAt = 0
     let lineHeight = 40
-    let paddingLeft = 340
+    let paddingLeft = Const_Default_Webview_Width / 2
 
     function addLine(content: string) {
       lineAt = lineAt + 1
