@@ -19,12 +19,11 @@ import moment from 'moment'
 import * as mozjpeg from "mozjpeg-js"
 
 // 将img输出为pdf
-import PDFKit from 'pdfkit'
-import pdf from 'pdfjs'
-import pdfFonts_Times_Roman from 'pdfjs/font/Times-Roman'
 import TaskConfig from '~/src/type/namespace/task_config'
-import { height } from 'pdfkit/js/page'
 import jsPDF from 'jspdf'
+import { BrowserWindow } from 'electron'
+
+const Const_Render_Html_Timeout_Second = 15
 
 // 硬编码传入
 let globalSubWindow: InstanceType<typeof BrowserWindow> = null
@@ -159,7 +158,7 @@ class GenerateCustomer extends Base {
         }
         this.log(`输出第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}`)
         await this.asyncGenerateEbook(bookCounter, booktitle, resourcePackage)
-        this.log(`第第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}输出完毕`)
+        this.log(`第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}输出完毕`)
       }
     }
   }
@@ -367,7 +366,24 @@ class GenerateCustomer extends Base {
           htmlUri,
           imageUri,
         }
-        await this.html2Image(transConfigItem)
+        // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
+        let isRenderSuccess = await this.html2Image(transConfigItem)
+        if (isRenderSuccess === false) {
+          this.log(`${transConfigItem.htmlUri}第1次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+          isRenderSuccess = await this.html2Image(transConfigItem)
+          if (isRenderSuccess === true) {
+            this.log(`${transConfigItem.htmlUri}渲染成功`)
+          }
+        }
+        if (isRenderSuccess === false) {
+          this.log(`${transConfigItem.htmlUri}第2次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+          isRenderSuccess = await this.html2Image(transConfigItem)
+          if (isRenderSuccess === true) {
+            this.log(`${transConfigItem.htmlUri}渲染成功`)
+          } else {
+            this.log(`${transConfigItem.htmlUri}渲染失败`)
+          }
+        }
         weiboRecordImgList.configList.push(transConfigItem)
       }
       weiboDayConfigList.push(weiboRecordImgList)
@@ -376,43 +392,67 @@ class GenerateCustomer extends Base {
     return weiboDayConfigList
   }
 
-  async html2Image(pageConfig: TypeTransConfigItem) {
+  /**
+   * 将html渲染为图片, 成功返回true, 渲染失败或超时返回false
+   * @param pageConfig 
+   */
+  async html2Image(pageConfig: TypeTransConfigItem): Promise<boolean> {
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
-    // this.log("load url -> ", pageConfig.htmlUri)
-    await webview.loadURL(pageConfig.htmlUri);
-    await globalSubWindow.setContentSize(
-      Const_Default_Webview_Width,
-      Const_Default_Webview_Height,
-    );
-    // this.log("load complete, resize page ")
-    let scrollHeight = await webview.executeJavaScript(
-      `document.children[0].children[1].scrollHeight`,
-    );
-    // this.log('scrollHeight => ', scrollHeight);
-    await subWindow.setContentSize(760, scrollHeight);
-    // 生成图片
-    // this.log('start generateImage');
-    let nativeImg = await webview.capturePage();
-    let jpgContent = nativeImg.toJPEG(100);
-    // 基于mozjpeg压缩图片
-    let out = mozjpeg.encode(jpgContent, {
-      //处理质量 百分比
-      quality: 75
-    });
-    jpgContent = out.data
-    fs.writeFileSync(
-      path.resolve(pageConfig.imageUri),
-      jpgContent,
-    );
-    // this.log('generateImage complete');
+
+    return await new Promise((reslove, reject) => {
+      let timmerId = setTimeout(() => {
+        // 增加20s超时退出限制
+        globalSubWindow.reload()
+        reslove(false)
+      }, Const_Render_Html_Timeout_Second * 1000)
+
+      let render = async () => {
+        // this.log("load url -> ", pageConfig.htmlUri)
+        await webview.loadURL(pageConfig.htmlUri);
+        // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
+        await globalSubWindow.setContentSize(
+          Const_Default_Webview_Width,
+          Const_Default_Webview_Height,
+        );
+        // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
+        // this.log("resize page, executeJavaScript ")
+        let scrollHeight = await webview.executeJavaScript(
+          `document.children[0].children[1].scrollHeight`,
+        );
+        // this.log('scrollHeight => ', scrollHeight);
+        // this.log("setContentSize with scrollHeight -> ", scrollHeight)
+        await subWindow.setContentSize(760, scrollHeight);
+        // 生成图片
+        // this.log('start generateImage');
+        let nativeImg = await webview.capturePage();
+        let jpgContent = nativeImg.toJPEG(100);
+        // 基于mozjpeg压缩图片
+        let out = mozjpeg.encode(jpgContent, {
+          //处理质量 百分比
+          quality: 80
+        });
+        jpgContent = out.data
+        fs.writeFileSync(
+          path.resolve(pageConfig.imageUri),
+          jpgContent,
+        );
+        // this.log('generateImage complete');
+        // 每张图片最大渲染时间不能超过10s
+        clearTimeout(timmerId)
+        reslove(true)
+      }
+
+      render()
+    })
+
   }
 
   async generatePdf(weiboDayList: TypeTransConfigPackageList) {
 
     let doc = new jsPDF({
       unit: 'px',
-      format: [750, 500],
+      format: [760, 500],
       orientation: "landscape"
     })
     let fontUri = path.resolve(__dirname, '../../public/font/alibaba_PuHuiTi_Regular.ttf')
