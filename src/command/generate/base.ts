@@ -245,7 +245,7 @@ class FetchBase extends Base {
       fs.copyFileSync(copyFromUri, copyToUri)
     }
     // 图片资源
-    for (let filename of ['cover.jpg', 'kanshan.png']) {
+    for (let filename of ['cover.jpg', 'kanshan.png', 'sprite.svg']) {
       let copyFromUri = path.resolve(PathConfig.resourcePath, 'image', filename)
       let copyToUri = path.resolve(this.htmlCacheImgPath, filename)
       fs.copyFileSync(copyFromUri, copyToUri)
