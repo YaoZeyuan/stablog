@@ -44,7 +44,7 @@ class GenerateBase extends Base {
 
   // 用于生成pdf的html应该和html同一层级
   get html2ImageCache_HtmlPath() {
-    return path.resolve(this.htmlCachePath, 'pdf_2_html')
+    return path.resolve(this.htmlCachePath, 'html_to_pdf')
   }
 
   get htmlCacheCssPath() {
@@ -102,6 +102,7 @@ class GenerateBase extends Base {
     shelljs.mkdir('-p', this.htmlCacheImgPath)
     shelljs.mkdir('-p', this.htmlCachePdfPath)
     shelljs.mkdir('-p', this.html2ImageCache_ImagePath)
+    shelljs.mkdir('-p', this.html2ImageCache_HtmlPath)
     shelljs.mkdir('-p', this.htmlOutputPath)
     this.log(`电子书:${this.bookname}对应文件夹创建完毕`)
   }
@@ -289,12 +290,12 @@ class GenerateBase extends Base {
 
     this.log(`复制静态资源`)
     this.copyStaticResource()
-    this.log(`静态资源完毕`)
+    this.log(`静态资源复制完毕`)
   }
   async asyncCopyToDist() {
     this.log(`将输出电子书复制到结果目录中`)
     shelljs.cp('-r', path.resolve(this.htmlCachePath, './*'), path.resolve(this.htmlOutputPath))
-    this.log(`输出电子书复制完毕`)
+    this.log(`电子书复制完毕`)
   }
 
   /**

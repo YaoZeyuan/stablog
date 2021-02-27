@@ -384,7 +384,7 @@ class GenerateCustomer extends Base {
 
   async transWeiboRecord2Image(weiboRecord: TypeMblog) {
     // 以微博创建时间和微博id作为唯一key
-    let baseFileTitle = `${moment(weiboRecord.created_timestamp_at).format("YYYY_MM_DD HH_mm_ss")}_${weiboRecord.id}`
+    let baseFileTitle = `${moment.unix(weiboRecord.created_timestamp_at).format("YYYY_MM_DD HH_mm_ss")}_${weiboRecord.id}`
 
     let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
     let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
