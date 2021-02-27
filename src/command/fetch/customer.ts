@@ -260,7 +260,10 @@ class FetchCustomer extends Base {
       if (newFormatRecordMap.has(idStr) && newFormatRecordMap.get(idStr)?.created_at) {
         let newFormatRecord = newFormatRecordMap.get(idStr)
         let createTimeFormatStr = newFormatRecord?.created_at || ''
-        createAt = moment(createTimeFormatStr, Const_Moment_Parse_Format_4_WeiboComApi).unix()
+        let createAtMoment = moment(createTimeFormatStr, Const_Moment_Parse_Format_4_WeiboComApi)
+        createAt = createAtMoment.unix()
+        // 解析出正确时间后, 将原数据替换为标准时间
+        mblog.created_at = createAtMoment.format("YYYY-MM-DD HH:mm:ss")
       } else {
         createAt = this.parseMblogCreateTimestamp(mblog)
       }
