@@ -249,6 +249,25 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   };
 
   console.log('initValue =>', initValue);
+
+  // 总需要生成的微博数量
+  let needGenerateWeiboCount = $$database?.currentUserInfo?.statuses_count || 0;
+
+  // 总需要备份的微博页数
+  let needBackupWeiboPageCount =
+    $$database?.currentUserInfo?.statuses_count || 0;
+  needBackupWeiboPageCount =
+    $$database?.taskConfig.fetchEndAtPageNo -
+    $$database?.taskConfig.fetchStartAtPageNo;
+  if ($$database.taskConfig.isSkipFetch) {
+    needBackupWeiboPageCount = 0;
+  }
+  // 总需要等待的时长(秒)
+  let needWaitSecond =
+    needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 1;
+  let needWaitMinute = Math.floor(needWaitSecond / 60);
+  let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100;
+
   return (
     <div className="customer-task">
       <Modal
@@ -366,8 +385,16 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               <Descriptions.Item label="微博总数">
                 {$$database.currentUserInfo.statuses_count}
               </Descriptions.Item>
-              <Descriptions.Item label="待抓取页面数">
+              <Descriptions.Item label="微博总页面数">
                 {$$database.currentUserInfo.total_page_count}
+              </Descriptions.Item>
+              <Descriptions.Item label="待抓取页面范围">
+                从{$$database.taskConfig.fetchStartAtPageNo}~
+                {$$database.taskConfig.fetchEndAtPageNo}页, 共
+                {$$database.taskConfig.fetchEndAtPageNo -
+                  $$database.taskConfig.fetchStartAtPageNo +
+                  1}
+                页
               </Descriptions.Item>
               <Descriptions.Item
                 label={
@@ -379,20 +406,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                   </span>
                 }
               >
-                {Math.floor(
-                  ($$database.currentUserInfo.total_page_count * 30 +
-                    $$database.currentUserInfo.statuses_count) /
-                    60,
-                )}
-                分钟 /
-                {Math.round(
-                  (($$database.currentUserInfo.total_page_count * 30 +
-                    $$database.currentUserInfo.statuses_count) /
-                    60 /
-                    60) *
-                    100,
-                ) / 100}
-                小时
+                {needWaitMinute}分钟 / {needWaitHour}小时
               </Descriptions.Item>
               <Descriptions.Item label="粉丝数">
                 {$$database.currentUserInfo.followers_count}
@@ -420,7 +434,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               //   100: `第${$$database.taskConfig.fetchEndAtPageNo}页`,
               // }}
               // tooltipVisible={true}
-              tipFormatter={(item) => `第${item}页`}
+              tipFormatter={(item: number) => `第${item}页`}
               marks={{
                 0: 0,
                 [$$database?.currentUserInfo?.total_page_count || 1000]:
