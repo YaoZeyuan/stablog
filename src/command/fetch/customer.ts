@@ -7,11 +7,18 @@ import json5 from 'json5'
 import moment from 'moment'
 
 import ApiWeibo from '~/src/api/weibo'
+import ApiWeiboCom from '~/src/api/weibo_com_api'
 import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
 import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
+import { TypeWeiboApi_MyBlob_Item } from 'namespace/new_weibo_api_com'
+
+/**
+ * weibo.com的新Api对应的创建时间解析格式字符串
+ */
+const Const_Moment_Parse_Format_4_WeiboComApi = "ddd MMM DD HH:mm:ss Z YYYY"
 
 /**
  * 解析微博文章id，方便构造api, 抓取文章内容
@@ -75,6 +82,9 @@ class FetchCustomer extends Base {
       [key: string]: Array<string>
     }
     let taskConfigList: Array<TypeTaskConfig.Record> = customerTaskConfig.configList
+
+    // 记录通过新微博获取的用户微博记录, 方便后续转换出创建时间戳
+    let newApiFormatRecordMap = new Map<string, TypeWeiboApi_MyBlob_Item>()
     for (let taskConfig of taskConfigList) {
       let { uid, comment } = taskConfig
       this.log(`待抓取用户uid => ${uid}`)
@@ -136,7 +146,13 @@ class FetchCustomer extends Base {
         if (page > this.fetchEndAtPageNo) {
           this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
-          await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
+          // 先通过新接口抓取微博记录, 储存在newApiFormatRecordMap中, 方便后续解析创建时间
+          let newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page)
+          for (let newApiFormatRecord of newApiFormatRecordList) {
+            newApiFormatRecordMap.set(`${newApiFormatRecord.id}`, newApiFormatRecord)
+          }
+
+          await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount, newApiFormatRecordMap)
           // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
           let sleep_s = 20
           this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
@@ -148,7 +164,14 @@ class FetchCustomer extends Base {
     this.log(`所有任务抓取完毕`)
   }
 
-  async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
+  /**
+   * 
+   * @param author_uid 
+   * @param page 
+   * @param totalPage 
+   * @param newFormatRecordMap 
+   */
+  async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number, newFormatRecordMap: Map<string, TypeWeiboApi_MyBlob_Item>) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
     let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page).catch(e => {
@@ -231,7 +254,17 @@ class FetchCustomer extends Base {
       // 处理完毕, 将数据存入数据库中
       let id = mblog.id
       let author_uid = `${mblog.user.id}`
-      mblog.created_timestamp_at = this.parseMblogCreateTimestamp(mblog)
+      let idStr = `${id}`
+      let createAt = 0
+      // 优先从新Api记录中查阅
+      if (newFormatRecordMap.has(idStr) && newFormatRecordMap.get(idStr)?.created_at) {
+        let newFormatRecord = newFormatRecordMap.get(idStr)
+        let createTimeFormatStr = newFormatRecord?.created_at || ''
+        createAt = moment(createTimeFormatStr, Const_Moment_Parse_Format_4_WeiboComApi).unix()
+      } else {
+        createAt = this.parseMblogCreateTimestamp(mblog)
+      }
+      mblog.created_timestamp_at = createAt
       let raw_json = JSON.stringify(mblog)
       await MMblog.replaceInto({
         id,
