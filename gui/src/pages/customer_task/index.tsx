@@ -264,7 +264,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   }
   // 总需要等待的时长(秒)
   let needWaitSecond =
-    needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 1;
+    needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2;
   let needWaitMinute = Math.floor(needWaitSecond / 60);
   let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100;
 
@@ -400,7 +400,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                 label={
                   <span>
                     备份全部微博预计耗时&nbsp;
-                    <Tooltip title="计算公式:总耗时=(微博总数/10 * 30 + 微博总数)秒. 每10条微博一页, 抓取一页微博数据需要间隔30s. 抓取完成, 生成pdf时, 每条微博需要用1s将其渲染为图片. 故有此公式">
+                    <Tooltip title="计算公式:总耗时=(待抓取微博总数/10 * 30 + 微博总数 * 2)秒. 每10条微博一页, 抓取一页微博数据需要间隔30s. 抓取完成, 生成pdf时, 每条微博需要用2s将其渲染为图片. 故有此公式">
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </span>
