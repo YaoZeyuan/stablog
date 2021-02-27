@@ -122,6 +122,7 @@ let taskConfig: TypeTaskConfig.Customer = {
   outputEndAtMs: moment().add(1, 'year').unix() * 1000,
   isSkipFetch: false,
   isSkipGeneratePdf: false,
+  isRegenerateHtml2PdfImage: false,
 };
 if (taskConfig.configList.length === 0) {
   // 如果没有数据, 就要手工补上一个, 确保数据完整
@@ -368,11 +369,30 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               <Descriptions.Item label="待抓取页面数">
                 {$$database.currentUserInfo.total_page_count}
               </Descriptions.Item>
-              <Descriptions.Item label="备份全部微博预计耗时">
+              <Descriptions.Item
+                label={
+                  <span>
+                    备份全部微博预计耗时&nbsp;
+                    <Tooltip title="计算公式:总耗时=(微博总数/10 * 30 + 微博总数)秒. 每10条微博一页, 抓取一页微博数据需要间隔30s. 抓取完成, 生成pdf时, 每条微博需要用1s将其渲染为图片. 故有此公式">
+                      <QuestionCircleOutlined />
+                    </Tooltip>
+                  </span>
+                }
+              >
                 {Math.floor(
-                  ($$database.currentUserInfo.total_page_count * 30) / 60,
+                  ($$database.currentUserInfo.total_page_count * 30 +
+                    $$database.currentUserInfo.statuses_count) /
+                    60,
                 )}
-                分钟
+                分钟 /
+                {Math.round(
+                  (($$database.currentUserInfo.total_page_count * 30 +
+                    $$database.currentUserInfo.statuses_count) /
+                    60 /
+                    60) *
+                    100,
+                ) / 100}
+                小时
               </Descriptions.Item>
               <Descriptions.Item label="粉丝数">
                 {$$database.currentUserInfo.followers_count}
@@ -503,6 +523,20 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             </span>
           }
           name="isSkipGeneratePdf"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
+        <Form.Item
+          label={
+            <span>
+              生成pdf时重新渲染&nbsp;
+              <Tooltip title="生成pdf需要先将每条微博渲染为图片, 时间较慢(1s/条).因此启用了缓存.若微博之前被渲染过, 则会利用已经渲染好的图片, 以加快生成速度. 如果旧渲染图片有误, 可以直接删除缓存中的该张图片. 不建议勾选此项">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isRegenerateHtml2PdfImage"
           valuePropName="checked"
         >
           <Switch></Switch>
