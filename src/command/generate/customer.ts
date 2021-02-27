@@ -338,7 +338,7 @@ class GenerateCustomer extends Base {
     if (this.CUSTOMER_CONFIG_isSkipGeneratePdf) {
       this.log(`isSkipGeneratePdf为${this.CUSTOMER_CONFIG_isSkipGeneratePdf}, 自动跳过pdf输出阶段`)
     } else {
-      let weiboDayConfigList = await this.transWeiboRecord2Image(weiboDayList)
+      let weiboDayConfigList = await this.transWeiboDayList2Image(weiboDayList)
       await this.generatePdf(weiboDayConfigList)
     }
     // 输出完毕后, 将结果复制到dist文件夹中
@@ -346,7 +346,7 @@ class GenerateCustomer extends Base {
     this.log(`第${bookCounter}本电子书${this.bookname}生成完毕`)
   }
 
-  async transWeiboRecord2Image(weiboDayList: TypeWeiboEpub['weiboDayList']) {
+  async transWeiboDayList2Image(weiboDayList: TypeWeiboEpub['weiboDayList']) {
     // 首先生成单条微博对应的静态html文件, 以及对应配置
     let dayIndex = 0
     let weiboDayConfigList: TypeTransConfigPackageList = []
@@ -361,49 +361,19 @@ class GenerateCustomer extends Base {
       let weiboIndex = 0
       for (let weiboRecord of weiboDayRecord.weiboList) {
         weiboIndex++
-        // 以微博创建时间和微博id作为唯一key
-        let baseFileTitle = `${moment(weiboRecord.created_timestamp_at).format("YYYY_MM_DD HH_mm_ss")}_${weiboRecord.id}`
 
-        let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
-        let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
+        this.log(
+          `将记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染为图片`,
+        )
+        let { htmlUri, imageUri } = await this.transWeiboRecord2Image(weiboRecord)
+
         let transConfigItem: TypeTransConfigItem = {
           dayIndex,
           weiboIndex,
           htmlUri,
           imageUri,
-        }
-        // 若已生成过文件, 则不需要重新生成, 自动跳过即可
-        if (fs.existsSync(imageUri)) {
-          this.log(
-            `记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博已生成为图片, 不需要重新生成, 自动跳过`,
-          )
-          weiboRecordImgList.configList.push(transConfigItem)
-          continue
-        }
-        this.log(
-          `正在渲染记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
-        )
-        let content = WeiboView.render([weiboRecord])
-        content = this.processContent(content)
-        fs.writeFileSync(htmlUri, content)
-        // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
-        let isRenderSuccess = await this.html2Image(transConfigItem)
-        if (isRenderSuccess === false) {
-          this.log(`${transConfigItem.htmlUri}第1次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
-          isRenderSuccess = await this.html2Image(transConfigItem)
-          if (isRenderSuccess === true) {
-            this.log(`${transConfigItem.htmlUri}渲染成功`)
-          }
-        }
-        if (isRenderSuccess === false) {
-          this.log(`${transConfigItem.htmlUri}第2次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
-          isRenderSuccess = await this.html2Image(transConfigItem)
-          if (isRenderSuccess === true) {
-            this.log(`${transConfigItem.htmlUri}渲染成功`)
-          } else {
-            this.log(`${transConfigItem.htmlUri}渲染失败`)
-          }
-        }
+        };
+
         weiboRecordImgList.configList.push(transConfigItem)
       }
       weiboDayConfigList.push(weiboRecordImgList)
@@ -412,11 +382,51 @@ class GenerateCustomer extends Base {
     return weiboDayConfigList
   }
 
+  async transWeiboRecord2Image(weiboRecord: TypeMblog) {
+    // 以微博创建时间和微博id作为唯一key
+    let baseFileTitle = `${moment(weiboRecord.created_timestamp_at).format("YYYY_MM_DD HH_mm_ss")}_${weiboRecord.id}`
+
+    let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
+    let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
+    let transConfigItem = {
+      htmlUri,
+      imageUri,
+    }
+    // 若已生成过文件, 则不需要重新生成, 自动跳过即可
+    if (fs.existsSync(imageUri)) {
+      return transConfigItem
+    }
+
+    let content = WeiboView.render([weiboRecord])
+    content = this.processContent(content)
+    fs.writeFileSync(htmlUri, content)
+    // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
+    let isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+    if (isRenderSuccess === false) {
+      this.log(`${transConfigItem.htmlUri}第1次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+      isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+      if (isRenderSuccess === true) {
+        this.log(`${transConfigItem.htmlUri}渲染成功`)
+      }
+    }
+    if (isRenderSuccess === false) {
+      this.log(`${transConfigItem.htmlUri}第2次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+      isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+      if (isRenderSuccess === true) {
+        this.log(`${transConfigItem.htmlUri}渲染成功`)
+      } else {
+        this.log(`${transConfigItem.htmlUri}渲染失败`)
+      }
+    }
+    return transConfigItem
+  }
+
+
   /**
    * 将html渲染为图片, 成功返回true, 渲染失败或超时返回false
    * @param pageConfig 
    */
-  async html2Image(pageConfig: TypeTransConfigItem): Promise<boolean> {
+  async html2Image(htmlUri: string, imageUri: string): Promise<boolean> {
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
 
@@ -429,7 +439,7 @@ class GenerateCustomer extends Base {
 
       let render = async () => {
         // this.log("load url -> ", pageConfig.htmlUri)
-        await webview.loadURL(pageConfig.htmlUri);
+        await webview.loadURL(htmlUri);
         // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
         await globalSubWindow.setContentSize(
           Const_Default_Webview_Width,
@@ -454,7 +464,7 @@ class GenerateCustomer extends Base {
         });
         jpgContent = out.data
         fs.writeFileSync(
-          path.resolve(pageConfig.imageUri),
+          path.resolve(imageUri),
           jpgContent,
         );
         // this.log('generateImage complete');
