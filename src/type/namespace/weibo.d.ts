@@ -227,7 +227,7 @@ export type TypeMblog = {
     type: 0
     list_id: 0
   }
-  created_at: '09-08'
+  created_at: '09-08' | string
   /**
    * 需要主动解析为该值, 作为微博发表时间戳
    */
