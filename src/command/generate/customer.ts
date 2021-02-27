@@ -61,6 +61,7 @@ class GenerateCustomer extends Base {
       .add(1, 'year')
       .unix() * 1000
   CUSTOMER_CONFIG_isSkipGeneratePdf: TaskConfig.Customer['isSkipGeneratePdf'] = false
+  CUSTOMER_CONFIG_isRegenerateHtml2PdfImage: TaskConfig.Customer['isRegenerateHtml2PdfImage'] = false
   CUSTOMER_CONFIG_isSkipFetch: TaskConfig.Customer['isSkipFetch'] = false
 
   async execute(args: any, options: any): Promise<any> {
@@ -98,9 +99,12 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_maxBlogInBook = customerTaskConfig.maxBlogInBook
     this.CUSTOMER_CONFIG_isSkipFetch = customerTaskConfig.isSkipFetch
     this.CUSTOMER_CONFIG_isSkipGeneratePdf = customerTaskConfig.isSkipGeneratePdf
+    this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage = customerTaskConfig.isRegenerateHtml2PdfImage
     let configList = customerTaskConfig.configList
     for (let config of configList) {
       let author_uid = config.uid
+      // 配置当前生成的用户uid, 便于缓存
+      this.currentAuthorUid = author_uid
       let userInfo = await MMblogUser.asyncGetUserInfo(author_uid)
       if (_.isEmpty(userInfo)) {
         this.log(`未抓取到对应的用户数据, 自动跳过`)
@@ -303,6 +307,12 @@ class GenerateCustomer extends Base {
     let { weiboDayList } = epubResourcePackage
     this.imgUriPool = new Set()
 
+    // 若配置跳过图片缓存, 则重置
+    if (this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage) {
+      this.log(`配置了重新生成将html转为pdf的图片, 清空pdf图片生成缓存`)
+      this.resetHtml2pdfImageCache()
+    }
+
     // 初始化文件夹
     this.initStaticRecource()
 
@@ -351,21 +361,31 @@ class GenerateCustomer extends Base {
       let weiboIndex = 0
       for (let weiboRecord of weiboDayRecord.weiboList) {
         weiboIndex++
-        let baseFileTitle = `${dayIndex}_${weiboIndex}`
-        this.log(
-          `正在渲染记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
-        )
-        let content = WeiboView.render([weiboRecord])
-        content = this.processContent(content)
-        let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${baseFileTitle}.html`)
-        let imageUri = path.resolve(this.html2ImageCachePath, `${baseFileTitle}.jpg`)
-        fs.writeFileSync(htmlUri, content)
+        // 以微博创建时间和微博id作为唯一key
+        let baseFileTitle = `${moment(weiboRecord.created_timestamp_at).format("YYYY_MM_DD HH_mm_ss")}_${weiboRecord.id}`
+
+        let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
+        let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
         let transConfigItem: TypeTransConfigItem = {
           dayIndex,
           weiboIndex,
           htmlUri,
           imageUri,
         }
+        // 若已生成过文件, 则不需要重新生成, 自动跳过即可
+        if (fs.existsSync(imageUri)) {
+          this.log(
+            `记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博已生成为图片, 不需要重新生成, 自动跳过`,
+          )
+          weiboRecordImgList.configList.push(transConfigItem)
+          continue
+        }
+        this.log(
+          `正在渲染记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+        )
+        let content = WeiboView.render([weiboRecord])
+        content = this.processContent(content)
+        fs.writeFileSync(htmlUri, content)
         // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
         let isRenderSuccess = await this.html2Image(transConfigItem)
         if (isRenderSuccess === false) {

@@ -46,6 +46,10 @@ declare namespace TaskConfig {
      * 是否跳过pdf输出阶段
      */
     isSkipGeneratePdf: boolean
+    /**
+     * 是否重新生成将html转为pdf的图片
+     */
+    isRegenerateHtml2PdfImage: boolean
   }
 }
 
