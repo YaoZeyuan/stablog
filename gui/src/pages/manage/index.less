@@ -1,3 +1,21 @@
-.title {
-  background: rgb(121, 242, 157);
+.manager-container {
+  .user-info {
+    display: flex;
+    font-size: 16px;
+    align-items: center;
+    img.avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 30px;
+      margin-right: 16px;
+    }
+  }
+  .mblog-detail-list-cell {
+    // 所有元素顶部对齐
+    vertical-align: top;
+  }
+  .weibo-raw-item {
+    // 禁止点a标签跳转(跳过去就回不来了)
+    pointer-events: none;
+  }
 }
