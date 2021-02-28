@@ -111,10 +111,12 @@ function createWindow() {
     subWindow = null
   })
 
-  // 设置ua
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    // 设置ua
     details.requestHeaders['User-Agent'] =
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+    // 设置reffer
+    details.requestHeaders['Referer'] = 'https://m.weibo.cn/'
     callback({ cancel: false, requestHeaders: details.requestHeaders })
   })
 
