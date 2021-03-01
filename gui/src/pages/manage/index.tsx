@@ -5,8 +5,8 @@ import { useState, useEffect } from 'react';
 import { enableMapSet } from 'immer';
 enableMapSet();
 import produce from 'immer';
-import { Table } from 'antd';
-
+import { Table, Card, Select } from 'antd';
+let Option = Select.Option;
 let MUser = remote.getGlobal('mUser');
 let MBlog = remote.getGlobal('mBlog');
 
@@ -33,7 +33,7 @@ type BlogDistributionMap = Map<
 
 export default function IndexPage() {
   let [$$userDatabase, set$$UserDatabase] = useState<
-    Map<number, TypeWeibo.TypeWeiboUserInfo>
+    Map<string, TypeWeibo.TypeWeiboUserInfo>
   >(produce(new Map(), (raw) => raw));
   let [
     blogDistributionMap,
@@ -43,26 +43,21 @@ export default function IndexPage() {
   let [isLoading, setIsLoading] = useState<boolean>(false);
   let [selectUserId, setSelectUserId] = useState<string>('');
 
-  let [$$storageSelect, set$$StorageSelect] = useState<{
+  let [storageSelect, setStorageSelect] = useState<{
     year: string;
     month: string;
     day: string;
     yearList: string[];
     monthList: string[];
     blogList: TypeWeibo.TypeMblog[];
-  }>(
-    produce(
-      {
-        year: '',
-        month: '',
-        day: '',
-        yearList: [],
-        monthList: [],
-        blogList: [],
-      },
-      (raw) => raw,
-    ),
-  );
+  }>({
+    year: '',
+    month: '',
+    day: '',
+    yearList: [],
+    monthList: [],
+    blogList: [],
+  });
 
   /**
    * 获取用户信息列表
@@ -73,19 +68,46 @@ export default function IndexPage() {
     for (let record of userInfoList) {
       set$$UserDatabase(($$oldDatabase) => {
         return produce($$oldDatabase, (raw) => {
-          raw.set(record.id, record);
+          raw.set(`${record.id}`, record);
         });
       });
     }
   }
   async function asyncGetDistribute() {
     setIsLoading(true);
-    let distributionMap = (await MBlog.asyncGetWeiboDistribution(
+    let distributionMap: BlogDistributionMap = await MBlog.asyncGetWeiboDistribution(
       selectUserId,
-    )) as BlogDistributionMap;
+    );
     setIsLoading(false);
     // 必须要手工转成obj
     setBlogDistributionMap(distributionMap);
+    // 初始化年份列表
+    if (distributionMap.size === 0) {
+      setStorageSelect({
+        year: '',
+        month: '',
+        day: '',
+        yearList: [],
+        monthList: [],
+        blogList: [],
+      });
+    } else {
+      let yearList: string[] = [];
+      distributionMap.forEach((item) => {
+        let date = item.date;
+        yearList.push(date);
+      });
+      setStorageSelect(() => {
+        return {
+          year: '',
+          month: '',
+          day: '',
+          yearList: yearList,
+          monthList: [],
+          blogList: [],
+        };
+      });
+    }
   }
 
   /**
@@ -100,44 +122,38 @@ export default function IndexPage() {
     return blogList;
   }
 
-  async function asyncHandleSelectChange(
-    currentRow: TypeWeibo.TypeWeiboUserInfo,
-    oldCurrentRow: TypeWeibo.TypeWeiboUserInfo,
-  ) {
-    setSelectUserId(`${currentRow.id}`);
+  async function asyncHandleSelectChange() {
+    // setSelectUserId(`${newSelectUid}`);
     // 清空旧选项
-    // this.resetSelect()
+    resetSelect();
     await asyncGetDistribute();
   }
 
   // 支持点选
   async function asyncHandleStorageSelectInTable(row: BlogDistributionItem) {
     if (row.type === 'year') {
-      set$$StorageSelect(
-        produce($$storageSelect, (raw) => {
-          raw.year = row.date;
-          raw.blogList = [];
-        }),
-      );
+      setStorageSelect({
+        ...storageSelect,
+        year: row.date,
+        blogList: [],
+      });
     }
     if (row.type === 'month') {
-      set$$StorageSelect(
-        produce($$storageSelect, (raw) => {
-          raw.month = row.date;
-          raw.blogList = [];
-        }),
-      );
+      setStorageSelect({
+        ...storageSelect,
+        month: row.date,
+        blogList: [],
+      });
     }
     if (row.type === 'day') {
       let startAt = row.startAt;
       let endAt = row.startAt + 86400 - 1;
       let blogList = await asyncGetBlogListInRange(startAt, endAt);
-      set$$StorageSelect(
-        produce($$storageSelect, (raw) => {
-          raw.day = row.date;
-          raw.blogList = blogList;
-        }),
-      );
+      setStorageSelect({
+        ...storageSelect,
+        day: row.date,
+        blogList: blogList,
+      });
     }
   }
 
@@ -145,24 +161,30 @@ export default function IndexPage() {
    * 重置选择
    */
   function resetSelect() {
-    set$$StorageSelect(
-      produce(
-        {
-          year: '',
-          month: '',
-          day: '',
-          yearList: [],
-          monthList: [],
-          blogList: [],
-        },
-        (raw) => raw,
-      ),
-    );
+    setStorageSelect({
+      year: '',
+      month: '',
+      day: '',
+      yearList: [],
+      monthList: [],
+      blogList: [],
+    });
   }
 
   useEffect(() => {
     asyncFetchUserInfoList();
   }, []);
+
+  useEffect(() => {
+    if ($$userDatabase.has(selectUserId)) {
+      asyncHandleSelectChange();
+    }
+  }, [selectUserId]);
+  useEffect(() => {
+    if ($$userDatabase.has(selectUserId)) {
+      // asyncHandleSelectChange();
+    }
+  }, [blogDistributionMap]);
 
   let userInfoList: TypeWeibo.TypeWeiboUserInfo[] = [];
   for (let key of $$userDatabase.keys()) {
@@ -170,37 +192,66 @@ export default function IndexPage() {
     userInfoList.push(record);
   }
 
+  let currentUserInfo = $$userDatabase.get(selectUserId);
+  console.log(`currentUserInfo => `, currentUserInfo);
+  console.log(`storageSelect => `, storageSelect);
+
+  let yearOptionEleList = storageSelect.yearList.map((item, index) => {
+    console.log('item => ', item);
+    return <Option value={item}>{item}</Option>;
+  });
+  console.log('yearOptionEleList => ', yearOptionEleList);
+  let yearSelectEle = <Select>{yearOptionEleList}</Select>;
+
   return (
     <div className="manager-container">
-      <Table
-        columns={[
-          {
-            title: '已缓存账号',
-            dataIndex: 'screen_name',
-            key: 'screen_name',
-            render: (text, record: TypeWeibo.TypeWeiboUserInfo, index) => {
-              return (
-                <div  className="user-info" key={record.id}>
-                  <img
-                    alt={record.screen_name}
-                    src={record.avatar_hd}
-                    className="avatar"
-                  />
-                  <div className="name">{record.screen_name}</div>
-                  <div className="id">({record.id})</div>
-                </div>
-              );
+      <Card title="Card title">
+        <Table
+          onRow={(record) => {
+            return {
+              onClick: () => {
+                setSelectUserId(`${record.id}`);
+              },
+            };
+          }}
+          columns={[
+            {
+              title: '已缓存账号',
+              dataIndex: 'screen_name',
+              key: 'screen_name',
+              render: (text, record: TypeWeibo.TypeWeiboUserInfo, index) => {
+                return (
+                  <div className="user-info" key={record.id}>
+                    <img
+                      alt={record.screen_name}
+                      src={record.avatar_hd}
+                      className="avatar"
+                    />
+                    <div className="name">{record.screen_name}</div>
+                    <div className="id">({record.id})</div>
+                  </div>
+                );
+              },
             },
-          },
-          {
-            title: '个人简介',
-            dataIndex: 'description',
-            key: 'description',
-          },
-        ]}
-        dataSource={userInfoList}
-        pagination={false}
-      ></Table>
+            {
+              title: '个人简介',
+              dataIndex: 'description',
+              key: 'description',
+            },
+          ]}
+          dataSource={userInfoList}
+          pagination={false}
+        ></Table>
+      </Card>
+      <Card
+        title={
+          currentUserInfo?.screen_name
+            ? `${currentUserInfo?.screen_name} 已完成备份的微博列表`
+            : ''
+        }
+      >
+        {yearSelectEle}
+      </Card>
     </div>
   );
 }
