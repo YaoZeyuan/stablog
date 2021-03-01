@@ -19,6 +19,14 @@ import { TypeWeiboApi_MyBlob_Item } from 'namespace/new_weibo_api_com'
  * weibo.com的新Api对应的创建时间解析格式字符串
  */
 const Const_Moment_Parse_Format_4_WeiboComApi = "ddd MMM DD HH:mm:ss Z YYYY"
+/**
+ * 重试时的等待时间
+ */
+const Const_Retry_Wait_Seconds = 30
+/**
+ * 正常执行抓取流程的等待时间
+ */
+const Const_Fetch_Wati_Seconds = 20
 
 /**
  * 解析微博文章id，方便构造api, 抓取文章内容
@@ -147,16 +155,34 @@ class FetchCustomer extends Base {
           this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
           // 先通过新接口抓取微博记录, 储存在newApiFormatRecordMap中, 方便后续解析创建时间
-          let newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page)
-          for (let newApiFormatRecord of newApiFormatRecordList) {
-            newApiFormatRecordMap.set(`${newApiFormatRecord.id}`, newApiFormatRecord)
+          if (page < this.fetchEndAtPageNo / 2) {
+            // .com系列接口一次返回20条数据, 所以实际需要抓取的页数比页数少一半
+            let newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page).catch(e => { return [] })
+            if (newApiFormatRecordList.length === 0) {
+              // 说明抓取失败, 等待30s后重试一次
+              this.log(`经ApiV2接口抓取第${page}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+              await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page)
+            }
+            if (newApiFormatRecordList.length === 0) {
+              this.log(`经ApiV2接口抓取第${page}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+              await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page)
+            }
+            if (newApiFormatRecordList.length === 0) {
+              this.log(`经ApiV2接口抓取第${page}页数据失败(3/3), 跳过该页的抓取`)
+            }
+
+            for (let newApiFormatRecord of newApiFormatRecordList) {
+              newApiFormatRecordMap.set(`${newApiFormatRecord.id}`, newApiFormatRecord)
+            }
           }
 
+
           await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount, newApiFormatRecordMap)
-          // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
-          let sleep_s = 20
-          this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
-          await Util.asyncSleep(sleep_s * 1000)
+          // 微博的反爬虫措施太强, 只能用每20s抓一次的方式拿数据🤦‍♂️
+          this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${Const_Fetch_Wati_Seconds}s, 避免被封`)
+          await Util.asyncSleep(Const_Fetch_Wati_Seconds * 1000)
         }
       }
       this.log(`用户${userInfo.screen_name}的微博数据抓取完毕`)
@@ -178,8 +204,24 @@ class FetchCustomer extends Base {
       // 避免crash导致整个进程退出
       return []
     })
-    if (_.isEmpty(rawMblogList)) {
-      this.log(`第${page}/${totalPage}页微博记录抓取失败`)
+    if (rawMblogList.length === 0) {
+      // 说明抓取失败, 等待30s后重试一次
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      // 更新st
+      let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+      this.requestConfig.st = newSt
+      // 带着新st重新抓取一次
+      rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+    }
+    if (rawMblogList.length === 0) {
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+    }
+    if (rawMblogList.length === 0) {
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取`)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
       return
     }
     let mblogList: Array<TypeWeibo.TypeMblog> = []
@@ -269,11 +311,19 @@ class FetchCustomer extends Base {
       }
       mblog.created_timestamp_at = createAt
       let raw_json = JSON.stringify(mblog)
+      // 这里可能会出报SQLITE_BUSY: database is locked 
       await MMblog.replaceInto({
         id,
         author_uid,
         raw_json,
         post_publish_at: mblog.created_timestamp_at,
+      }).catch((e: Error) => {
+        this.log("数据库插入出错 => ", {
+          name: e?.name,
+          message: e?.message,
+          stack: e?.stack
+        })
+        return
       })
     }
     this.log(`${target}成功存入数据库`)
