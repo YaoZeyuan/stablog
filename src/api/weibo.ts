@@ -32,7 +32,7 @@ export default class Weibo extends Base {
       let rawStStartStr = jsonStr.split(`st:`)[1]
       let rawStStr = rawStStartStr.split(`,`)[0]
       st = rawStStr.replace(/"|'| /g, '')
-    } catch (e) {}
+    } catch (e) { }
     return st
   }
   static async asyncStep2FetchApiConfig(st: string) {
@@ -83,26 +83,10 @@ export default class Weibo extends Base {
       .catch(e => {
         return undefined
       })
-    if (weiboResponse === undefined) {
-      // 被监控抓住了, 尝试重新获取配置
-      console.log(`被监控抓住了, 尝试重新获取配置, 自动修复`)
-      await Util.asyncSleep(1000)
-      let newSt = await Weibo.asyncStep2FetchApiConfig(st)
-      weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
-        params: config,
-        headers: {
-          Accept: 'application/json, text/plain, */*',
-          'MWeibo-Pwa': 1,
-          'Sec-Fetch-Mode': 'cors',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-XSRF-TOKEN': newSt,
-        },
-      })
-    }
-    if (_.isEmpty(weiboResponse.data.cards)) {
+    if (_.isEmpty(weiboResponse?.data?.cards)) {
       return []
     }
-    const rawRecordList = weiboResponse.data.cards
+    const rawRecordList = weiboResponse?.data?.cards || []
     // 需要按cardType进行过滤, 只要id为9的(微博卡片)
     let recordList = rawRecordList.filter(item => {
       return item.card_type === 9

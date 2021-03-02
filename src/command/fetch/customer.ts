@@ -93,6 +93,8 @@ class FetchCustomer extends Base {
 
     // 记录通过新微博获取的用户微博记录, 方便后续转换出创建时间戳
     let newApiFormatRecordMap = new Map<string, TypeWeiboApi_MyBlob_Item>()
+    // 记录Api V2 已抓取页面列表
+    let newApiFetchPageSet = new Set<number>()
     for (let taskConfig of taskConfigList) {
       let { uid, comment } = taskConfig
       this.log(`待抓取用户uid => ${uid}`)
@@ -155,22 +157,27 @@ class FetchCustomer extends Base {
           this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
           // 先通过新接口抓取微博记录, 储存在newApiFormatRecordMap中, 方便后续解析创建时间
-          if (page < this.fetchEndAtPageNo / 2) {
-            // .com系列接口一次返回20条数据, 所以实际需要抓取的页数比页数少一半
-            let newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page).catch(e => { return [] })
+          // .com系列接口一次返回20条数据, 所以实际需要抓取的页数比页数少一半
+          //  页面页码需要缓存住, 以避免出现从非0页开始抓取的情况
+          let pageApiV2 = Math.floor(page / 2)
+          if (newApiFetchPageSet.has(pageApiV2) === false) {
+            let newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, pageApiV2).catch(e => { return [] })
             if (newApiFormatRecordList.length === 0) {
               // 说明抓取失败, 等待30s后重试一次
-              this.log(`经ApiV2接口抓取第${page}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+              this.log(`经ApiV2接口抓取第${page}~${page + 1}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
               await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page)
+              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, pageApiV2)
             }
             if (newApiFormatRecordList.length === 0) {
-              this.log(`经ApiV2接口抓取第${page}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+              this.log(`经ApiV2接口抓取第${page}~${page + 1}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
               await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, page)
+              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, pageApiV2)
             }
             if (newApiFormatRecordList.length === 0) {
-              this.log(`经ApiV2接口抓取第${page}页数据失败(3/3), 跳过该页的抓取`)
+              this.log(`经ApiV2接口抓取第${page}~${page + 1}页数据失败(3/3), 跳过该页的抓取`)
+            } else {
+              // 抓取成功则备份之
+              newApiFetchPageSet.add(pageApiV2)
             }
 
             for (let newApiFormatRecord of newApiFormatRecordList) {
