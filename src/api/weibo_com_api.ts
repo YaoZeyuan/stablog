@@ -27,7 +27,7 @@ export default class WeiboComApi extends Base {
   ): Promise<Array<TypeNewWeiboApi.TypeWeiboApi_MyBlob_Item>> {
     const baseUrl = `https://weibo.com/ajax/statuses/mymblog?uid=${author_uid}&page=${page}&feature=0`
     const config = {}
-    console.log('url =>', baseUrl)
+    // console.log('url =>', baseUrl)
     let weiboResponse = <TypeNewWeiboApi.TypeWeiboApi_MyBlob_ListResponse>await Base.http
       .get(baseUrl, {
         params: config,
