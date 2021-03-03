@@ -7,13 +7,11 @@ import json5 from 'json5'
 import moment from 'moment'
 
 import ApiWeibo from '~/src/api/weibo'
-import ApiWeiboCom from '~/src/api/weibo_com_api'
 import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
 import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
-import { TypeWeiboApi_MyBlob_Item } from 'namespace/new_weibo_api_com'
 
 /**
  * weibo.com的新Api对应的创建时间解析格式字符串
@@ -90,11 +88,6 @@ class FetchCustomer extends Base {
       [key: string]: Array<string>
     }
     let taskConfigList: Array<TypeTaskConfig.Record> = customerTaskConfig.configList
-
-    // 记录通过新微博获取的用户微博记录, 方便后续转换出创建时间戳
-    let newApiFormatRecordMap = new Map<string, TypeWeiboApi_MyBlob_Item>()
-    // 记录Api V2 已抓取页面列表
-    let newApiFetchPageSet = new Set<number>()
     for (let taskConfig of taskConfigList) {
       let { uid, comment } = taskConfig
       this.log(`待抓取用户uid => ${uid}`)
@@ -156,37 +149,7 @@ class FetchCustomer extends Base {
         if (page > this.fetchEndAtPageNo) {
           this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
-          // 先通过新接口抓取微博记录, 储存在newApiFormatRecordMap中, 方便后续解析创建时间
-          // .com系列接口一次返回20条数据, 所以实际需要抓取的页数比页数少一半
-          //  页面页码需要缓存住, 以避免出现从非0页开始抓取的情况
-          let pageApiV2 = Math.floor(page / 2)
-          if (newApiFetchPageSet.has(pageApiV2) === false) {
-            let newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, pageApiV2).catch(e => { return [] })
-            if (newApiFormatRecordList.length === 0) {
-              // 说明抓取失败, 等待30s后重试一次
-              this.log(`经ApiV2接口抓取第${page}~${page + 1}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
-              await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, pageApiV2)
-            }
-            if (newApiFormatRecordList.length === 0) {
-              this.log(`经ApiV2接口抓取第${page}~${page + 1}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
-              await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-              newApiFormatRecordList = await ApiWeiboCom.asyncStep3GetWeiboList(uid, pageApiV2)
-            }
-            if (newApiFormatRecordList.length === 0) {
-              this.log(`经ApiV2接口抓取第${page}~${page + 1}页数据失败(3/3), 跳过该页的抓取`)
-            } else {
-              // 抓取成功则备份之
-              newApiFetchPageSet.add(pageApiV2)
-            }
-
-            for (let newApiFormatRecord of newApiFormatRecordList) {
-              newApiFormatRecordMap.set(`${newApiFormatRecord.id}`, newApiFormatRecord)
-            }
-          }
-
-
-          await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount, newApiFormatRecordMap)
+          await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
           // 微博的反爬虫措施太强, 只能用每20s抓一次的方式拿数据🤦‍♂️
           this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${Const_Fetch_Wati_Seconds}s, 避免被封`)
           await Util.asyncSleep(Const_Fetch_Wati_Seconds * 1000)
@@ -204,7 +167,7 @@ class FetchCustomer extends Base {
    * @param totalPage 
    * @param newFormatRecordMap 
    */
-  async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number, newFormatRecordMap: Map<string, TypeWeiboApi_MyBlob_Item>) {
+  async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
     let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page).catch(e => {
@@ -303,19 +266,9 @@ class FetchCustomer extends Base {
       // 处理完毕, 将数据存入数据库中
       let id = mblog.id
       let author_uid = `${mblog.user.id}`
-      let idStr = `${id}`
       let createAt = 0
-      // 优先从新Api记录中查阅
-      if (newFormatRecordMap.has(idStr) && newFormatRecordMap.get(idStr)?.created_at) {
-        let newFormatRecord = newFormatRecordMap.get(idStr)
-        let createTimeFormatStr = newFormatRecord?.created_at || ''
-        let createAtMoment = moment(createTimeFormatStr, Const_Moment_Parse_Format_4_WeiboComApi)
-        createAt = createAtMoment.unix()
-        // 解析出正确时间后, 将原数据替换为标准时间
-        mblog.created_at = createAtMoment.format("YYYY-MM-DD HH:mm:ss")
-      } else {
-        createAt = this.parseMblogCreateTimestamp(mblog)
-      }
+      // 目前微博的created_at字段均为标准时区字符串格式
+      createAt = this.parseMblogCreateTimestamp(mblog)
       mblog.created_timestamp_at = createAt
       let raw_json = JSON.stringify(mblog)
       // 这里可能会出报SQLITE_BUSY: database is locked 
@@ -346,7 +299,7 @@ class FetchCustomer extends Base {
       // Mon Sep 16 01:13:45 +0800 2019
       if (rawCreateAtStr.includes('+0800')) {
         // 'Sun Sep 15 00:35:14 +0800 2019' 时区模式
-        return moment(new Date(rawCreateAtStr)).unix()
+        return moment(rawCreateAtStr, Const_Moment_Parse_Format_4_WeiboComApi).unix()
       }
       // '12小时前' | '4分钟前' | '刚刚' | '1小时前' 模式
       // 不含-符号, 表示是最近一天内, 直接认为是当前时间, 不进行细分

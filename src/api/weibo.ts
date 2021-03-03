@@ -68,7 +68,7 @@ export default class Weibo extends Base {
       // page_type: '03',
       // page: page,
     }
-    console.log('url =>', baseUrl)
+    // console.log('url =>', baseUrl)
     let weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http
       .get(baseUrl, {
         params: config,
