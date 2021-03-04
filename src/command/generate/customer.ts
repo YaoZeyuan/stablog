@@ -22,6 +22,7 @@ import * as mozjpeg from "mozjpeg-js"
 import TaskConfig from '~/src/type/namespace/task_config'
 import jsPDF from 'jspdf'
 import { BrowserWindow } from 'electron'
+import CommonUtil from '~/src/library/util/common'
 
 const Const_Render_Html_Timeout_Second = 15
 
@@ -418,6 +419,9 @@ class GenerateCustomer extends Base {
         this.log(`${transConfigItem.htmlUri}渲染失败`)
       }
     }
+
+    // 每生成一张图片休眠0.5s, 避免界面卡死
+    await CommonUtil.asyncSleep(1000 * 0.5)
     return transConfigItem
   }
 
