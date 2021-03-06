@@ -84,7 +84,7 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "shelljs": "^0.8.1",
-    "sqlite3": "^4.1.1"
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.0",
@@ -114,9 +114,9 @@
     "@types/request-promise": "^4.1.42",
     "@types/shelljs": "^0.7.8",
     "babel-plugin-root-import": "^6.1.0",
-    "electron": "^6.0.12",
-    "electron-builder": "^21.2.0",
-    "electron-rebuild": "^1.8.6",
+    "electron": "^8.5.5",
+    "electron-builder": "^22.10.5",
+    "electron-rebuild": "^2.3.5",
     "less": "^4.1.1",
     "watch": "^1.0.2"
   }

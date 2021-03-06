@@ -18,3 +18,26 @@
 9.  ✅ 使用 mozjpeg-js 压缩 jpg 图片
 10. ✅ pdf 中支持目录, 方便跳转
 11. ✅ 将封面字体改为阿里巴巴普惠体. 看起来正经一点
+12. ✅ 将 pdf 首页文字居中
+13. ✅ 增加接口, 通过微博新 api, 为微博记录增加创建时间
+14. 测试图片渲染效果
+15. 测试微博文章的渲染效果
+16. 测试付费微博文章的渲染效果
+17. ✅ 规范图片生成地址
+18. 在抓取微博数据期间, 闲着也是闲着, 把渲染图片的工作干了(以微博 id 为 key)
+    1.  不进行预渲染了
+    2.  抓取失败后, 应重新尝试抓取, 尝试 3 次, 而非直接跳过
+19. ✅ 生成一张图片耗时 1s, 估算时间时要把这个加上
+20. ✅ 图片只生成一次, 增加重置图片选项
+21. 检查 1_13, 周鸿祎的祎显示为乱码的问题
+22. 编写使用说明, 说明两种情况
+    1.  页面抓取过程中停顿
+    2.  页面生成过程中停顿
+    3.  登陆时无法输入验证码
+23. 升级 Electron 版本
+    1.  Electron 升级到 12 后 sqlite3 需要手工安装, 对应命令为`npm install sqlite3 --build-from-source --runtime=electron --target=12.0.0 --dist-url=https://electronjs.org/headers`
+24. jspdf 有这个限制. A page in a PDF can not be wider or taller than 14400 userUnit. jsPDF limits the width/height to 14400
+25. 分卷标题需要改正 tombkeeper -第 2／5 卷 2012-12-01~2015-03-31
+26. jspdf 最大只能输出 500mb 体积的 pdf, 原因为 content.join 的时候字符串体积超出了 js 引擎最大限制. 两个办法,1. 修复 bug. 2. 限制每本电子书最多只能有 5000 条微博
+27. jspdf 的最大页宽只有 14400, 也需要改正. 考虑把 js 代码嵌入到项目中, 单独使用
+28. 手上没有 mac 机器, 只能用 github-action 构建, 需要保证可以在 mac 上编译出可用的 sqlite3 版本, 而 sqlite 最高只支持到 8.x, 所以选用可用的 Electron 的最高版本
