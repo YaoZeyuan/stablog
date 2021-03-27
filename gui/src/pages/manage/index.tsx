@@ -7,6 +7,7 @@ enableMapSet();
 import produce from 'immer';
 import { Table, Card, Select, Button } from 'antd';
 import Util from '@/library/util';
+import moment from 'moment';
 let Option = Select.Option;
 let MUser = remote.getGlobal('mUser');
 let MBlog = remote.getGlobal('mBlog');
@@ -284,6 +285,90 @@ export default function IndexPage() {
   let weiboStorageSummaryList = rawSummaryList;
   console.log('weiboStorageSummaryList => ', weiboStorageSummaryList);
 
+  let blogListEle = null;
+  if ($$storageSelect.blogList.length > 0) {
+    blogListEle = (
+      <Card
+        title={`${$$userDatabase.get(selectUserId)?.screen_name} 在${
+          $$storageSelect.year
+        }${$$storageSelect.month}${$$storageSelect.day}发布的微博列表`}
+      >
+        <Table
+          dataSource={$$storageSelect.blogList}
+          columns={[
+            {
+              title: '发布时间',
+              width: '120px',
+              render: (record) => {
+                return (
+                  <span title={'微博id:' + record.id}>
+                    {moment
+                      .unix(record.created_timestamp_at)
+                      .format('YYYY-MM-DD HH:mm:ss')}
+                  </span>
+                );
+              },
+            },
+            {
+              title: '发布内容',
+              render: (record: TypeWeibo.TypeMblog) => {
+                let picEleList = [];
+                let picList = record?.pics || [];
+                for (let picItem of picList) {
+                  picEleList.push(<img key={picItem.pid} src={picItem.url} />);
+                }
+                let retweetedEle = null;
+                if (record.retweeted_status) {
+                  let picEleList = [];
+                  let picList = record?.retweeted_status?.pics || [];
+                  for (let picItem of picList) {
+                    picEleList.push(
+                      <img key={picItem.pid} src={picItem.url} />,
+                    );
+                  }
+                  retweetedEle = (
+                    <div
+                      className="weibo-repost-item"
+                      v-if="scope.row.retweeted_status"
+                    >
+                      <hr />
+                      <div
+                        className="weibo-text"
+                        dangerouslySetInnerHTML={{
+                          __html:
+                            record.retweeted_status.raw_text ||
+                            record.retweeted_status.text,
+                        }}
+                      />
+                      <div className="weibo-img-list">{picEleList}</div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="weibo">
+                    <div className="weibo-raw-item">
+                      <div
+                        className="weibo-text"
+                        dangerouslySetInnerHTML={{
+                          __html: record.raw_text || record.text,
+                        }}
+                      />
+                      <div className="weibo-img-list">
+                        <div>{picEleList}</div>
+                      </div>
+                      {retweetedEle}
+                    </div>
+                  </div>
+                );
+              },
+            },
+          ]}
+        ></Table>
+      </Card>
+    );
+  }
+
   return (
     <div className="manager-container">
       <Card title="Card title">
@@ -328,6 +413,7 @@ export default function IndexPage() {
           pagination={false}
         ></Table>
       </Card>
+      {blogListEle}
       <Card
         title={
           currentUserInfo?.screen_name
@@ -357,9 +443,7 @@ export default function IndexPage() {
           刷新数据
         </Button>
         <Table
-          pagination={{
-            defaultCurrent: 1,
-          }}
+          pagination={false}
           loading={isLoading}
           rowSelection={{
             selectedRowKeys: [$$storageSelect.day],
@@ -403,3 +487,45 @@ export default function IndexPage() {
     </div>
   );
 }
+
+// visible: (...)
+// created_at: (...)
+// id: (...)
+// mid: (...)
+// can_edit: (...)
+// show_additional_indication: (...)
+// text: (...)
+// source: (...)
+// favorited: (...)
+// pic_ids: (...)
+// pic_types: (...)
+// is_paid: (...)
+// mblog_vip_type: (...)
+// user: (...)
+// pid: (...)
+// pidstr: (...)
+// retweeted_status: (...)
+// reposts_count: (...)
+// comments_count: (...)
+// attitudes_count: (...)
+// pending_approval_count: (...)
+// isLongText: (...)
+// reward_exhibition_type: (...)
+// hide_flag: (...)
+// mlevel: (...)
+// darwin_tags: (...)
+// mblogtype: (...)
+// rid: (...)
+// more_info_type: (...)
+// extern_safe: (...)
+// number_display_strategy: (...)
+// enable_comment_guide: (...)
+// content_auth: (...)
+// pic_num: (...)
+// alchemy_params: (...)
+// mblog_menu_new_style: (...)
+// reads_count: (...)
+// title: (...)
+// raw_text: (...)
+// bid: (...)
+// created_timestamp_at: (...)
