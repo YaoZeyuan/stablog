@@ -50,6 +50,8 @@ export default function IndexPage() {
 
   let [isLoading, setIsLoading] = useState<boolean>(false);
   let [selectUserId, setSelectUserId] = useState<string>('');
+  let [selectWeiboListPageNo, setSelectWeiboListPageNo] = useState<number>(1);
+  let [selectDateListPageNo, setSelectDateListPageNo] = useState<number>(1);
 
   let [$$storageSelect, set$$StorageSelect] = useState<{
     year: string;
@@ -75,7 +77,7 @@ export default function IndexPage() {
   }
   async function asyncGetDistribute() {
     setIsLoading(true);
-    console.log('start to load distributionMap');
+    // console.log('start to load distributionMap');
     let distributionObj: BlogDistributionObj = await MBlog.asyncGetWeiboDistribution(
       selectUserId,
     );
@@ -162,6 +164,8 @@ export default function IndexPage() {
    * 重置选择
    */
   function resetSelect() {
+    setSelectDateListPageNo(1);
+    setSelectWeiboListPageNo(1);
     set$$StorageSelect(() => {
       return produce(Const_Default_Storage_Select, (raw) => raw);
     });
@@ -175,6 +179,8 @@ export default function IndexPage() {
     setBlogDistributionObj({});
     set$$StorageSelect(produce(Const_Default_Storage_Select, (raw) => raw));
     setSelectUserId('');
+    setSelectDateListPageNo(1);
+    setSelectWeiboListPageNo(1);
     setIsLoading(false);
     await asyncFetchUserInfoList();
   }
@@ -238,20 +244,22 @@ export default function IndexPage() {
     </Select>
   );
 
-  console.log('blogDistributionObj => ', blogDistributionObj);
+  // console.log('blogDistributionObj => ', blogDistributionObj);
 
   function getSummaryList() {
     if (Object.keys(blogDistributionObj).length === 0) {
       return [];
     }
     const { year, month } = $$storageSelect;
-    console.log(`refresh data => ${year} ${month}`, $$storageSelect);
+    // console.log(`refresh data => ${year} ${month}`, $$storageSelect);
     let summaryList: BlogDistributionItem[] = [];
     if (year === '') {
       // 按年展示
       Object.keys(blogDistributionObj).forEach((year_str) => {
+        let item = blogDistributionObj[year_str];
         summaryList.push({
-          ...blogDistributionObj[year_str],
+          ...item,
+          key: `${item.date}`,
         });
       });
       return summaryList;
@@ -260,8 +268,10 @@ export default function IndexPage() {
       // 按月展示
       let yearDistributionObj = blogDistributionObj[year]['childrenMap'];
       Object.keys(yearDistributionObj).forEach((month_str) => {
+        let item = yearDistributionObj[month_str];
         summaryList.push({
-          ...yearDistributionObj[month_str],
+          ...item,
+          key: `${item.date}`,
         });
       });
       return summaryList;
@@ -270,8 +280,10 @@ export default function IndexPage() {
     let monthDistributionObj =
       blogDistributionObj[year]['childrenMap'][month]['childrenMap'];
     Object.keys(monthDistributionObj).forEach((day_str) => {
+      let item = monthDistributionObj[day_str];
       summaryList.push({
-        ...monthDistributionObj[day_str],
+        ...item,
+        key: `${item.date}`,
       });
     });
     return summaryList;
@@ -283,7 +295,7 @@ export default function IndexPage() {
     return a.startAt - b.startAt;
   });
   let weiboStorageSummaryList = rawSummaryList;
-  console.log('weiboStorageSummaryList => ', weiboStorageSummaryList);
+  // console.log('weiboStorageSummaryList => ', weiboStorageSummaryList);
 
   let blogListEle = null;
   if ($$storageSelect.blogList.length > 0) {
@@ -294,6 +306,12 @@ export default function IndexPage() {
         }${$$storageSelect.month}${$$storageSelect.day}发布的微博列表`}
       >
         <Table
+          pagination={{
+            onChange: (page) => {
+              setSelectWeiboListPageNo(page);
+            },
+            current: selectWeiboListPageNo,
+          }}
           dataSource={$$storageSelect.blogList}
           columns={[
             {
@@ -346,7 +364,7 @@ export default function IndexPage() {
                 }
 
                 return (
-                  <div className="weibo">
+                  <div className="weibo" key={record.id}>
                     <div className="weibo-raw-item">
                       <div
                         className="weibo-text"
@@ -413,7 +431,6 @@ export default function IndexPage() {
           pagination={false}
         ></Table>
       </Card>
-      {blogListEle}
       <Card
         title={
           currentUserInfo?.screen_name
@@ -443,7 +460,12 @@ export default function IndexPage() {
           刷新数据
         </Button>
         <Table
-          pagination={false}
+          pagination={{
+            onChange: (page) => {
+              setSelectDateListPageNo(page);
+            },
+            current: selectDateListPageNo,
+          }}
           loading={isLoading}
           rowSelection={{
             selectedRowKeys: [$$storageSelect.day],
@@ -478,12 +500,13 @@ export default function IndexPage() {
                     break;
                 }
 
-                console.log(`click ${index} => `, record);
+                // console.log(`click ${index} => `, record);
               },
             };
           }}
         ></Table>
       </Card>
+      {blogListEle}
     </div>
   );
 }
