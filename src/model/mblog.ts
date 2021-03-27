@@ -23,6 +23,18 @@ type BlogDistributionMap = Map<
   }
 >
 
+
+type BlogDistributionObj = {
+  [key: string]: {
+    date: string
+    key: string
+    type: 'year' | 'month' | 'day'
+    startAt: number
+    count: number
+    childrenMap: BlogDistributionObj
+  }
+}
+
 export default class Mblog extends Base {
   static TABLE_NAME = `total_mblog`
   static TABLE_COLUMN = [`id`, `author_uid`, `raw_json`]
@@ -78,7 +90,7 @@ export default class Mblog extends Base {
    * 获取数据库中的微博记录数分布
    * @param uid
    */
-  static async asyncGetWeiboDistribution(uid: string): Promise<BlogDistributionMap> {
+  static async asyncGetWeiboDistribution(uid: string): Promise<BlogDistributionObj> {
     let postPublishAtList = <Array<{ post_publish_at: number }>>await this.db
       .select(`post_publish_at`)
       .from(this.TABLE_NAME)
@@ -88,6 +100,25 @@ export default class Mblog extends Base {
         return []
       })
     let distributionMap: Map<string, Map<string, Map<string, number[]>>> = new Map()
+    // 使用map在前端会出现返回数据不及时的问题, 因此改为使用对象
+    let distributionObj: {
+      [year: string]: {
+        // 增加publish_start_at字段, 方便前端排序
+        "publish_start_at": number,
+        datbase: {
+          [month: string]: {
+            // 增加publish_start_at字段, 方便前端排序
+            "publish_start_at": number,
+            "database": {
+              [day: string]: {
+                "publish_start_at": number,
+                database: number[]
+              }
+            }
+          }
+        }
+      }
+    } = {}
 
     for (let item of postPublishAtList) {
       let publishAt = item.post_publish_at
@@ -95,37 +126,52 @@ export default class Mblog extends Base {
       let MM = moment.unix(publishAt).format('MM')
       let DD = moment.unix(publishAt).format('DD')
 
-      if (distributionMap.has(YYYY) === false) {
-        distributionMap.set(YYYY, new Map())
+      if (distributionObj[YYYY] === undefined) {
+        distributionObj[YYYY] = {
+          "publish_start_at": moment.unix(publishAt).startOf("year").unix(),
+          datbase: {}
+        }
       }
-      let yearMap = distributionMap.get(YYYY)!
-      if (yearMap.has(MM) === false) {
-        yearMap.set(MM, new Map())
+
+      let yearDatabase = distributionObj[YYYY].datbase
+
+      // let yearMap = distributionMap.get(YYYY)!
+      if (yearDatabase[MM] === undefined) {
+        yearDatabase[MM] = {
+          "publish_start_at": moment.unix(publishAt).startOf("month").unix(),
+          database: {},
+        }
       }
-      let monthMap = yearMap.get(MM)!
-      if (monthMap.has(DD) === false) {
-        monthMap.set(DD, [])
+      let monthDatabase = distributionObj[YYYY].datbase[MM].database
+
+      if (monthDatabase[DD] === undefined) {
+        monthDatabase[DD] = {
+          "publish_start_at": moment.unix(publishAt).startOf("day").unix(),
+          database: [],
+        }
       }
-      let dayList = monthMap.get(DD)!
+
+      let dayList = monthDatabase[DD].database
+
       dayList.push(publishAt)
-      monthMap.set(DD, dayList)
-      yearMap.set(MM, monthMap)
-      distributionMap.set(YYYY, yearMap)
+      monthDatabase[DD].database = dayList
+      yearDatabase[MM].database = monthDatabase
+      distributionObj[YYYY].datbase = yearDatabase
     }
 
-    let newYearMap: BlogDistributionMap = new Map()
-    for (let year of distributionMap.keys()) {
+    let newYearObj: BlogDistributionObj = {}
+    for (let year of Object.keys(distributionObj)) {
       let yearCounter = 0
-      let yearMap = distributionMap.get(year)!
-      let newMonthMap: BlogDistributionMap = new Map()
-      for (let month of yearMap.keys()) {
+      let yearObj = distributionObj[year]
+      let newMonthObj: BlogDistributionObj = {}
+      for (let month of Object.keys(yearObj.datbase)) {
         let monthCounter = 0
-        let monthMap = yearMap.get(month)!
-        let newDayMap: BlogDistributionMap = new Map()
-        for (let day of monthMap.keys()) {
-          let dayCounter = monthMap.get(day)!.length
+        let monthObj = yearObj.datbase[month]
+        let newDayObj: BlogDistributionObj = {}
+        for (let day of Object.keys(monthObj.database)) {
+          let dayCounter = monthObj.database[day].database.length
           monthCounter += dayCounter
-          newDayMap.set(`${day}日`, {
+          newDayObj[`${day}日`] = {
             date: `${day}日`,
             key: `${year}-${month}-${day}`,
             type: 'day',
@@ -133,11 +179,11 @@ export default class Mblog extends Base {
               .startOf('day')
               .unix(),
             count: dayCounter,
-            childrenMap: new Map(),
-          })
+            childrenMap: {},
+          }
         }
         yearCounter += monthCounter
-        newMonthMap.set(`${month}月`, {
+        newMonthObj[`${month}月`] = {
           date: `${month}月`,
           key: `${year}-${month}`,
           type: 'month',
@@ -145,10 +191,10 @@ export default class Mblog extends Base {
             .startOf('day')
             .unix(),
           count: monthCounter,
-          childrenMap: newDayMap,
-        })
+          childrenMap: newDayObj,
+        }
       }
-      newYearMap.set(`${year}年`, {
+      newYearObj[`${year}年`] = {
         date: `${year}年`,
         key: `${year}`,
         type: 'year',
@@ -156,9 +202,10 @@ export default class Mblog extends Base {
           .startOf('day')
           .unix(),
         count: yearCounter,
-        childrenMap: newMonthMap,
-      })
+        childrenMap: newMonthObj,
+      }
     }
-    return newYearMap
+
+    return newYearObj
   }
 }
