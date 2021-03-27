@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { enableMapSet } from 'immer';
 enableMapSet();
 import produce from 'immer';
-import { Table, Card, Select } from 'antd';
+import { Table, Card, Select, Button } from 'antd';
 import Util from '@/library/util';
 let Option = Select.Option;
 let MUser = remote.getGlobal('mUser');
@@ -78,14 +78,8 @@ export default function IndexPage() {
     let distributionObj: BlogDistributionObj = await MBlog.asyncGetWeiboDistribution(
       selectUserId,
     );
-    await Util.asyncSleepMs(1000);
-    console.log(
-      'distributionMap has load complete, distributionMap.size => ',
-      distributionObj,
-    );
     // distributionObj.forEach((item) => console.log(item));
     setIsLoading(false);
-    // 必须要手工转成obj
     setBlogDistributionObj(distributionObj);
 
     set$$StorageSelect(
@@ -93,51 +87,6 @@ export default function IndexPage() {
         raw.yearList = Object.keys(distributionObj);
       }),
     );
-    console.log('setBlogDistributionMap');
-    // 初始化年份列表
-    // if (distributionMap.size === 0) {
-    //   console.log('distributionMap size => 0');
-    //   set$$StorageSelect(() => {
-    //     return produce(Const_Default_Storage_Select, (raw) => raw);
-    //   });
-    // } else {
-    //   console.log('distributionMap size !== 0');
-    //   let yearList: string[] = [];
-    //   if (distributionMap) {
-    //     console.log('distributionMap =>', distributionMap);
-    //     // console.log('distributionMap.values =>', distributionMap.values());
-    //     for (let item of Object.keys(distributionMap)) {
-    //       console.log('item.date => ', item);
-    //       yearList.push(distributionMap[item].date);
-    //     }
-    //     console.log('yearList => ', yearList);
-    //     // distributionMap.forEach((item) => {
-    //     //   let date = item.date;
-    //     //   console.log('date => ', date);
-    //     //   yearList.push(date);
-    //     // });
-
-    //     set$$StorageSelect(() => {
-    //       console.log('start set storage');
-
-    //       return produce(Const_Default_Storage_Select, (raw) => {
-    //         raw.yearList = yearList;
-    //         raw.year = yearList[0];
-
-    //         if (raw.year) {
-    //           let monthList: string[] = [];
-    //           for (let month of Object.keys(
-    //             distributionMap[raw.year].childrenMap,
-    //           )) {
-    //             monthList.push(month);
-    //           }
-    //           raw.monthList = monthList;
-    //           raw.month = monthList[0] || '';
-    //         }
-    //       });
-    //     });
-    //   }
-    // }
   }
 
   /**
@@ -217,6 +166,18 @@ export default function IndexPage() {
     });
   }
 
+  /**
+   * 重置选择数据
+   */
+  async function asyncRefreshData() {
+    set$$UserDatabase(produce(new Map(), (raw) => raw));
+    setBlogDistributionObj({});
+    set$$StorageSelect(produce(Const_Default_Storage_Select, (raw) => raw));
+    setSelectUserId('');
+    setIsLoading(false);
+    await asyncFetchUserInfoList();
+  }
+
   useEffect(() => {
     asyncFetchUserInfoList();
   }, []);
@@ -231,7 +192,10 @@ export default function IndexPage() {
   let userInfoList: TypeWeibo.TypeWeiboUserInfo[] = [];
   for (let key of $$userDatabase.keys()) {
     let record = $$userDatabase.get(key);
-    userInfoList.push(record);
+    userInfoList.push({
+      key: `${record?.id}`,
+      ...record,
+    });
   }
 
   let currentUserInfo = $$userDatabase.get(selectUserId);
@@ -280,11 +244,14 @@ export default function IndexPage() {
       return [];
     }
     const { year, month } = $$storageSelect;
+    console.log(`refresh data => ${year} ${month}`, $$storageSelect);
     let summaryList: BlogDistributionItem[] = [];
     if (year === '') {
       // 按年展示
       Object.keys(blogDistributionObj).forEach((year_str) => {
-        summaryList.push(blogDistributionObj[year_str]);
+        summaryList.push({
+          ...blogDistributionObj[year_str],
+        });
       });
       return summaryList;
     }
@@ -292,7 +259,9 @@ export default function IndexPage() {
       // 按月展示
       let yearDistributionObj = blogDistributionObj[year]['childrenMap'];
       Object.keys(yearDistributionObj).forEach((month_str) => {
-        summaryList.push(yearDistributionObj[month_str]);
+        summaryList.push({
+          ...yearDistributionObj[month_str],
+        });
       });
       return summaryList;
     }
@@ -300,7 +269,9 @@ export default function IndexPage() {
     let monthDistributionObj =
       blogDistributionObj[year]['childrenMap'][month]['childrenMap'];
     Object.keys(monthDistributionObj).forEach((day_str) => {
-      summaryList.push(monthDistributionObj[day_str]);
+      summaryList.push({
+        ...monthDistributionObj[day_str],
+      });
     });
     return summaryList;
   }
@@ -324,11 +295,15 @@ export default function IndexPage() {
               },
             };
           }}
+          rowSelection={{
+            selectedRowKeys: [selectUserId],
+            type: 'radio',
+          }}
           columns={[
             {
               title: '已缓存账号',
               dataIndex: 'screen_name',
-              key: 'screen_name',
+              key: 'id',
               render: (text, record: TypeWeibo.TypeWeiboUserInfo, index) => {
                 return (
                   <div className="user-info" key={record.id}>
@@ -361,8 +336,35 @@ export default function IndexPage() {
         }
       >
         {yearSelectEle}
+        &nbsp;
         {monthSelectEle}
+        &nbsp;
+        <Button
+          type="default"
+          onClick={() => {
+            resetSelect();
+          }}
+        >
+          重选
+        </Button>
+        &nbsp;
+        <Button
+          type="primary"
+          onClick={() => {
+            asyncRefreshData();
+          }}
+        >
+          刷新数据
+        </Button>
         <Table
+          pagination={{
+            defaultCurrent: 1,
+          }}
+          loading={isLoading}
+          rowSelection={{
+            selectedRowKeys: [$$storageSelect.day],
+            type: 'radio',
+          }}
           dataSource={weiboStorageSummaryList}
           columns={[
             {
