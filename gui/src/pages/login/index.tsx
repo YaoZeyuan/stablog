@@ -6,7 +6,11 @@ const { TabPane } = Tabs;
 export default function IndexPage() {
   return (
     <div className="login-container">
-      <webview id="foo" src="https://m.weibo.cn/" disablewebsecurity></webview>
+      <webview
+        id="foo"
+        src="https://m.weibo.cn/"
+        disablewebsecurity="true"
+      ></webview>
     </div>
   );
 }
