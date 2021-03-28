@@ -97,7 +97,7 @@
 
 0.  必须使用 node12
     1.  Electron 版本必须和环境中的 node 版本一致, 才能正常编译 sqlite
-        1.  目前使用的是 Electron@6.0.12, 自带 node 为 12.4.0, 因此要求环境 node 也需要为 12.x.x
+        1.  目前使用的是 Electron@6.0.12, 自带 node 为 12.4.0, 因此要求环境 node 也需要为 12.4.0
 1.  建议只开发命令版
     1.  使用`npm run ace`启动
 1.  GUI 版需要为 Electron 编译 sqlite3, 非常麻烦, 不建议尝试
@@ -136,7 +136,7 @@
 3.  利用微博接口抓取数据
 4.  ace/command 提供命令行支持
 5.  sqlite3 提供数据库支持
-6.  图形界面使用React编写.
+6.  图形界面使用 React 编写.
     1.  基于[immer](https://immerjs.github.io/immer/docs/introduction) & Hooks 进行状态管理
 
 ## 实现方式
@@ -155,7 +155,9 @@
     1.  执行`npm run dist`
 4.  注意事项
     1.  Electron 需要编译 sqlite3 后才能启动, 不容易搞, 建议直接使用`npm run ace`命令行方式进行调试
-    2.  命令使用说明详见代码
+    2.  本地 Node 版本要与 Electron 主版本一致(目前 Electron@8.5 对应于 node@12.13.0)
+    3.  使用 6.0.12 版本, 以直接使用 sqlite3 提供的官方 npm 包, 绕过本地编译流程
+    4.  命令使用说明详见代码
 
 # 功能建议
 

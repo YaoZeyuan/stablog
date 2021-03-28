@@ -200,8 +200,8 @@ export default function IndexPage() {
   for (let key of $$userDatabase.keys()) {
     let record = $$userDatabase.get(key);
     userInfoList.push({
-      key: `${record?.id}`,
       ...record,
+      key: `${key}`,
     });
   }
 
@@ -299,6 +299,7 @@ export default function IndexPage() {
 
   let blogListEle = null;
   if ($$storageSelect.blogList.length > 0) {
+    // console.log('$$storageSelect.blogList => ', $$storageSelect.blogList);
     blogListEle = (
       <Card
         title={`${$$userDatabase.get(selectUserId)?.screen_name} 在${
@@ -313,13 +314,14 @@ export default function IndexPage() {
             current: selectWeiboListPageNo,
           }}
           dataSource={$$storageSelect.blogList}
+          rowKey={(item) => item.id}
           columns={[
             {
               title: '发布时间',
               width: '120px',
               render: (record) => {
                 return (
-                  <span title={'微博id:' + record.id}>
+                  <span title={'微博id:' + record.id} key={record.id}>
                     {moment
                       .unix(record.created_timestamp_at)
                       .format('YYYY-MM-DD HH:mm:ss')}
@@ -402,11 +404,11 @@ export default function IndexPage() {
             selectedRowKeys: [selectUserId],
             type: 'radio',
           }}
+          rowKey={(item) => item.id}
           columns={[
             {
               title: '已缓存账号',
               dataIndex: 'screen_name',
-              key: 'id',
               render: (text, record: TypeWeibo.TypeWeiboUserInfo, index) => {
                 return (
                   <div className="user-info" key={record.id}>
