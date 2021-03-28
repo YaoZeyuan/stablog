@@ -6,8 +6,7 @@ body {
   background: #f2f2f2;
   text-indent: 0em !important;
   font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
-  word-wrap: break-word;
-  /* 自动折行 */
+  word-wrap: break-word;/* 自动折行 */
 }
 .container {
   display: flex;
@@ -363,6 +362,17 @@ body {
 .mblog-container .card-wrap .weibo-main .weibo-rp .weibo-text {
   margin-bottom: 14px;
 }
+.mblog-container .card-wrap .weibo-main .weibo-article-container div.article-split-line {
+  display: block;
+  width: 100%;
+  background-color: #939393;
+  height: 1px;
+}
+.mblog-container .card-wrap .weibo-main .weibo-article-container .main_toppic {
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 15px;
+}
 .mblog-container .card-wrap .weibo-main .weibo-article-container .main_toppic img {
   width: 100%;
 }
@@ -372,6 +382,8 @@ body {
   font-size: 1.5rem;
   color: #333;
   line-height: 1.875rem;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 .mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .art-con p,
 .mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .article-content p {
