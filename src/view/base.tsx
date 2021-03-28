@@ -122,16 +122,17 @@ class Base {
       let articleElement = null
       if (articleRecord) {
         // 渲染文章元素
-        let isExistCoverImg = articleRecord && articleRecord.config && articleRecord.config.cover_img
+        let isExistCoverImg = articleRecord?.cover_img?.image?.url
         let coverImgEle = isExistCoverImg ? (
           <div className="main_toppic">
             <div className="picbox">
-              <img node-type="articleHeaderPic" src={articleRecord.config.cover_img} />
+              <img node-type="articleHeaderPic" src={articleRecord?.cover_img?.image?.url} />
             </div>
           </div>
         ) : null
         articleElement = (
           <div className="WB_artical">
+            <div className="article-split-line"></div>
             {coverImgEle}
             <div className="main_editor " node-type="articleContent">
               <div className="title" node-type="articleTitle">
@@ -194,16 +195,17 @@ class Base {
     let articleElement = null
     if (articleRecord) {
       // 渲染文章元素
-      let isExistCoverImg = articleRecord && articleRecord.config && articleRecord.config.cover_img
+      let isExistCoverImg = articleRecord?.cover_img?.image?.url
       let coverImgEle = isExistCoverImg ? (
         <div className="main_toppic">
           <div className="picbox">
-            <img node-type="articleHeaderPic" src={articleRecord.config.cover_img} />
+            <img node-type="articleHeaderPic" src={articleRecord?.cover_img?.image?.url} />
           </div>
         </div>
       ) : null
       articleElement = (
         <div className="WB_artical">
+          <div className="article-split-line"></div>
           {coverImgEle}
           <div className="main_editor " node-type="articleContent">
             <div className="title" node-type="articleTitle">

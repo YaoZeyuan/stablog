@@ -12,6 +12,7 @@ import MMblogUser from '~/src/model/mblog_user'
 import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
+import querystring from 'query-string'
 
 /**
  * weibo.com的新Api对应的创建时间解析格式字符串
@@ -29,6 +30,11 @@ const Const_Fetch_Wati_Seconds = 20
 /**
  * 解析微博文章id，方便构造api, 抓取文章内容
  * @param rawUrl
+ * 原始
+ * rawurl格式 => https://m.weibo.cn/feature/applink?scheme=sinaweibo%3A%2F%2Farticlebrowser%3Fobject_id%3D1022%253A2309404446645566701785%26url%3Dhttps%253A%252F%252Fcard.weibo.com%252Farticle%252Fm%252Fshow%252Fid%252F2309404446645566701785%253F_wb_client_%253D1%26extparam%3Dlmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
+ * 解码后=>  https://m.weibo.cn/feature/applink?scheme=sinaweibo://articlebrowser?object_id=1022:2309404446645566701785&url=https://card.weibo.com/article/m/show/id/2309404446645566701785?_wb_client_=1&extparam=lmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
+ * 2021年3月28日新增
+ * rawurl格式 => https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
  */
 function getArticleId(rawUrl = '') {
   if (!rawUrl) {
@@ -39,6 +45,13 @@ function getArticleId(rawUrl = '') {
   if (!decodeUrl) {
     return ''
   }
+  if (decodeUrl.includes("id=") && decodeUrl.includes("/ttarticle/p/show")) {
+    // 说明是新格式 https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
+    let rawQuery = querystring.parseUrl(decodeUrl).query
+    let articleId = rawQuery?.id || ''
+    return articleId
+  }
+
   let rawArticleUrl = decodeUrl.split('url=')[1]
   if (!rawArticleUrl) {
     return ''
@@ -244,7 +257,7 @@ class FetchCustomer extends Base {
           mblog.retweeted_status.article = articleRecord
         }
       }
-      if (rawMblog.mblog.page_info && rawMblog.mblog.page_info.type === 'article') {
+      if (rawMblog?.mblog?.page_info?.type === 'article') {
         // 文章类型为微博文章
         let pageInfo = rawMblog.mblog.page_info
         let articleId = getArticleId(pageInfo.page_url)
