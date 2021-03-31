@@ -9,6 +9,10 @@ body {
     Microsoft YaHei, Arial, sans-serif;
   word-wrap: break-word; /* 自动折行 */
 }
+/* 屏蔽滚动条, 方便分屏截取dom节点 */
+body::-webkit-scrollbar {
+  display: none;
+}
 .container {
   display: flex;
   max-width: 750px;
