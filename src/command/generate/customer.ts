@@ -374,13 +374,14 @@ class GenerateCustomer extends Base {
         this.log(
           `将记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染为图片`,
         )
-        let { htmlUri, imageUri } = await this.transWeiboRecord2Image(weiboRecord)
+        let { htmlUri, imageUri, htmlContent } = await this.transWeiboRecord2Image(weiboRecord)
 
         let transConfigItem: TypeTransConfigItem = {
           dayIndex,
           weiboIndex,
           htmlUri,
           imageUri,
+          htmlContent
         };
 
         weiboRecordImgList.configList.push(transConfigItem)
@@ -397,17 +398,20 @@ class GenerateCustomer extends Base {
 
     let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
     let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
+    let content = WeiboView.render([weiboRecord])
+    content = this.processContent(content)
+
     let transConfigItem = {
       htmlUri,
       imageUri,
+      htmlContent: content
     }
     // 若已生成过文件, 则不需要重新生成, 自动跳过即可
     if (fs.existsSync(imageUri)) {
       return transConfigItem
     }
 
-    let content = WeiboView.render([weiboRecord])
-    content = this.processContent(content)
+
     fs.writeFileSync(htmlUri, content)
     // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
     let isRenderSuccess = await this.html2Image(htmlUri, imageUri)
@@ -672,6 +676,10 @@ class GenerateCustomer extends Base {
               width: width,
               height: height
             })
+          doc.setFontSize(0.001)
+          doc.text(weiboRecord.htmlContent, 0, 0, {
+            // align: 'center',
+          })
           currentPageNo = currentPageNo + 1
         }
       }
