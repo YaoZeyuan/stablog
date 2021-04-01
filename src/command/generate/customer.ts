@@ -17,6 +17,7 @@ import path from 'path'
 import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
 import * as mozjpeg from "mozjpeg-js"
+import sharp from "sharp"
 
 // 将img输出为pdf
 import TaskConfig from '~/src/type/namespace/task_config'
@@ -24,7 +25,14 @@ import jsPDF from 'jspdf'
 import { BrowserWindow } from 'electron'
 import CommonUtil from '~/src/library/util/common'
 
-const Const_Render_Html_Timeout_Second = 15
+/**
+ * 单张页面渲染时间不能超过20秒
+ */
+const Const_Render_Html_Timeout_Second = 20
+/**
+ * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
+ */
+const Const_Max_Webview_Render_Height_Px = 5000
 
 // 硬编码传入
 let globalSubWindow: InstanceType<typeof BrowserWindow> = null
@@ -421,7 +429,7 @@ class GenerateCustomer extends Base {
     }
 
     // 每生成一张图片休眠1s, 避免界面卡死
-    await CommonUtil.asyncSleep(1000 * 1)
+    await CommonUtil.asyncSleep(1000 * 3000)
     return transConfigItem
   }
 
@@ -454,13 +462,92 @@ class GenerateCustomer extends Base {
         let scrollHeight = await webview.executeJavaScript(
           `document.children[0].children[1].scrollHeight`,
         );
-        // this.log('scrollHeight => ', scrollHeight);
-        // this.log("setContentSize with scrollHeight -> ", scrollHeight)
-        await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
-        // 生成图片
-        // this.log('start generateImage');
-        let nativeImg = await webview.capturePage();
-        let jpgContent = nativeImg.toJPEG(100);
+
+        let jpgContent: Buffer
+        if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
+          // html页面太大, 需要分页输出, 最后再合成一张图片返回
+          let imgContentList: any[] = []
+          let remainHeight = scrollHeight
+          await subWindow.setContentSize(Const_Default_Webview_Width, Const_Max_Webview_Render_Height_Px);
+          // console.log("remainHeight => ", remainHeight)
+          // console.log("Const_Max_Height_Px => ", Const_Max_Height_Px)
+
+          let mergeImg = sharp({
+            create: {
+              width: Const_Default_Webview_Width,
+              height: scrollHeight,
+              channels: 4,
+              background: {
+                r: 255, g: 255, b: 255, alpha: 1,
+              },
+            }
+          }).jpeg({ quality: 100 })
+
+          while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
+            let imgIndex = imgContentList.length;
+            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgIndex
+            // 先移动到offset高度
+            let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
+            await webview.executeJavaScript(command);
+
+            // 然后对界面截屏
+            // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
+            await CommonUtil.asyncSleep(1000 * 0.5)
+            let nativeImg = await webview.capturePage();
+            let content = await nativeImg.toJPEG(100)
+            remainHeight = remainHeight - Const_Max_Webview_Render_Height_Px
+
+            imgContentList.push(
+              {
+                input: content,
+                top: Const_Max_Webview_Render_Height_Px * imgIndex,
+                left: 0,
+              }
+            )
+          }
+          if (remainHeight > 0) {
+            // 最后捕捉剩余高度页面
+
+            // 首先调整页面高度
+            await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight);
+            // 然后走流程, 捕捉界面
+            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgContentList.length
+            let imgIndex = imgContentList.length;
+
+            // 先移动到offset高度
+            let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
+            await webview.executeJavaScript(command);
+            // 然后对界面截屏
+            // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
+            await CommonUtil.asyncSleep(1000 * 0.5)
+            let nativeImg = await webview.capturePage();
+
+            let content = await nativeImg.toJPEG(100)
+            imgContentList.push(
+              {
+                input: content,
+                top: Const_Max_Webview_Render_Height_Px * imgIndex,
+                left: 0,
+              }
+            )
+          }
+
+          // 最后将imgContentList合并为一张图片
+          mergeImg.composite(
+            imgContentList
+          )
+
+          jpgContent = await mergeImg.toBuffer()
+
+        } else {
+          // 小于最大宽度, 只要截屏一次就可以
+          await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
+
+          // this.log("setContentSize with scrollHeight -> ", scrollHeight)
+          let nativeImg = await webview.capturePage();
+          jpgContent = await nativeImg.toJPEG(100);
+        }
+
         // 基于mozjpeg压缩图片
         let out = mozjpeg.encode(jpgContent, {
           //处理质量 百分比

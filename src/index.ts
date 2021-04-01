@@ -98,10 +98,11 @@ function createWindow() {
   }
   // 通过Electron自身将html渲染为图片, 借此将代码体积由300mb压缩至90mb
   subWindow = new BrowserWindow({
+    enableLargerThanScreen: true,
     width: 760,
     height: 10,
     // 配置最大高度, 该值默认值为屏幕高度, 如果大于该高度, 会出现滚动条
-    maxHeight: 1000000000,
+    maxHeight: 100000,
     // 负责渲染的子窗口不需要显示出来, 避免被用户误关闭
     show: false
   })
