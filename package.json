@@ -83,6 +83,7 @@
     "react-dom": "^16.7.0",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
+    "sharp": "^0.28.0",
     "shelljs": "^0.8.1",
     "sqlite3": "^5.0.2"
   },
@@ -113,6 +114,7 @@
     "@types/react-dom": "^16.0.11",
     "@types/request": "^2.48.1",
     "@types/request-promise": "^4.1.42",
+    "@types/sharp": "^0.27.3",
     "@types/shelljs": "^0.7.8",
     "babel-plugin-root-import": "^6.1.0",
     "electron": "^6.0.12",
