@@ -429,7 +429,7 @@ class GenerateCustomer extends Base {
     }
 
     // 每生成一张图片休眠1s, 避免界面卡死
-    await CommonUtil.asyncSleep(1000 * 3000)
+    await CommonUtil.asyncSleep(1000 * 1)
     return transConfigItem
   }
 
@@ -548,16 +548,21 @@ class GenerateCustomer extends Base {
           jpgContent = await nativeImg.toJPEG(100);
         }
 
+        // this.log(`jpgContent 渲染完毕. length => ${jpgContent.length}`)
         // 基于mozjpeg压缩图片
         let out = mozjpeg.encode(jpgContent, {
           //处理质量 百分比
           quality: 80
         });
+
         jpgContent = out.data
+        // this.log(`jpgContent 压缩完毕. length => ${jpgContent.length}`)
         fs.writeFileSync(
           path.resolve(imageUri),
           jpgContent,
         );
+        // this.log(`jpgContent 输出完毕. length => ${jpgContent.length}`)
+
         // this.log('generateImage complete');
         // 每张图片最大渲染时间不能超过10s
         clearTimeout(timmerId)
