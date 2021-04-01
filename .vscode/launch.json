@@ -5,10 +5,21 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "调试Electron",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+      },
+      "args": ["."]
+    },
+    {
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
-      "name": "测试electron",
+      "name": "测试在electron中生成pdf",
       "program": "${workspaceFolder}/src/command/generate/customer.ts",
       "args": [
         // 抓取数据
