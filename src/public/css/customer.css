@@ -7,7 +7,8 @@ body {
   text-indent: 0em !important;
   font-family: -apple-system, system-ui, BlinkMacSystemFont, Helvetica Neue, PingFang SC, Hiragino Sans GB,
     Microsoft YaHei, Arial, sans-serif;
-  word-wrap: break-word; /* 自动折行 */
+  word-wrap: break-word;
+  /* 自动折行 */
 }
 /* 屏蔽滚动条, 方便分屏截取dom节点 */
 body::-webkit-scrollbar {
@@ -368,6 +369,10 @@ body::-webkit-scrollbar {
 .mblog-container .card-wrap .weibo-main .weibo-rp .weibo-text {
   margin-bottom: 14px;
 }
+.mblog-container .card-wrap .weibo-main .weibo-article-container {
+  padding-left: 15px;
+  padding-right: 15px;
+}
 .mblog-container .card-wrap .weibo-main .weibo-article-container div.article-split-line {
   display: block;
   width: 100%;
@@ -375,28 +380,31 @@ body::-webkit-scrollbar {
   height: 1px;
 }
 .mblog-container .card-wrap .weibo-main .weibo-article-container .main_toppic {
-  padding-left: 15px;
-  padding-right: 15px;
   padding-top: 15px;
 }
 .mblog-container .card-wrap .weibo-main .weibo-article-container .main_toppic img {
   width: 100%;
 }
 .mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .title {
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-  font-size: 1.5rem;
-  color: #333;
   line-height: 1.875rem;
-  padding-left: 15px;
-  padding-right: 15px;
+  font-size: 30px;
+  word-wrap: break-word;
+  color: #000;
+  margin-bottom: 24px;
+  margin-top: 24px;
 }
-.mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .art-con p,
-.mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .article-content p {
-  margin: 0 0 16px;
-  padding: 0;
-  font-size: 22px;
-  line-height: 1.5;
+.mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .art-con,
+.mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .article-content {
+  background: #fff;
+  font-size: 16px;
+  line-height: 1.65;
+  word-wrap: break-word;
+  color: #333333;
+}
+.mblog-container .card-wrap .weibo-main .weibo-article-container .main_editor .art-line {
+  height: 0;
+  border-bottom: 1px dashed #e6e6e6;
+  margin-bottom: 20px;
 }
 .mblog-container .card-wrap footer.m-ctrl-box {
   border-top-width: 1px;

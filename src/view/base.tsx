@@ -138,6 +138,7 @@ class Base {
               <div className="title" node-type="articleTitle">
                 {articleRecord.title}
               </div>
+              <div className="art-line"></div>
               <div className="WB_editor_iframe_new" node-type="contentBody">
                 {/* 正文 */}
                 <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }} />
@@ -211,6 +212,7 @@ class Base {
             <div className="title" node-type="articleTitle">
               {articleRecord.title}
             </div>
+            <div className="art-line"></div>
             <div className="WB_editor_iframe_new" node-type="contentBody">
               {/* 正文 */}
               <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }} />
