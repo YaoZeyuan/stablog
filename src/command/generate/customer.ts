@@ -72,6 +72,8 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_isSkipGeneratePdf: TaskConfig.Customer['isSkipGeneratePdf'] = false
   CUSTOMER_CONFIG_isRegenerateHtml2PdfImage: TaskConfig.Customer['isRegenerateHtml2PdfImage'] = false
   CUSTOMER_CONFIG_isSkipFetch: TaskConfig.Customer['isSkipFetch'] = false
+  CUSTOMER_CONFIG_isOnlyArticle: TaskConfig.Customer['isOnlyArticle'] = false
+  CUSTOMER_CONFIG_isOnlyOriginal: TaskConfig.Customer['isOnlyOriginal'] = false
 
   async execute(args: any, options: any): Promise<any> {
     let { subWindow } = args
@@ -109,6 +111,9 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_isSkipFetch = customerTaskConfig.isSkipFetch
     this.CUSTOMER_CONFIG_isSkipGeneratePdf = customerTaskConfig.isSkipGeneratePdf
     this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage = customerTaskConfig.isRegenerateHtml2PdfImage
+    this.CUSTOMER_CONFIG_isOnlyArticle = customerTaskConfig.isOnlyArticle
+    this.CUSTOMER_CONFIG_isOnlyOriginal = customerTaskConfig.isOnlyOriginal
+
     let configList = customerTaskConfig.configList
     for (let config of configList) {
       let author_uid = config.uid
@@ -125,10 +130,22 @@ class GenerateCustomer extends Base {
 
       this.log(`获取数据记录`)
 
+      let article_status_in = [0, 1]
+      let retweet_status_in = [0, 1]
+      if (this.CUSTOMER_CONFIG_isOnlyOriginal) {
+        retweet_status_in = [0]
+      }
+
+      if (this.CUSTOMER_CONFIG_isOnlyArticle) {
+        article_status_in = [1]
+      }
+
       let mblogList = await MMblog.asyncGetMblogList(
         author_uid,
         this.CUSTOMER_CONFIG_outputStartAtMs / 1000,
         this.CUSTOMER_CONFIG_outputEndAtMs / 1000,
+        retweet_status_in,
+        article_status_in
       )
       mblogList.sort((a, b) => {
         // 先进行排序

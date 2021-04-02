@@ -14,9 +14,9 @@ class CommandDebug extends Base {
   }
 
   async execute() {
-    let result = await MBlog.asyncGetWeiboDistribution('1221171697')
-    this.log(`debug it`)
-    console.log(result)
+    // let result = await MBlog.autoUpdate()
+    // this.log(`debug it`)
+    // console.log(result)
   }
 }
 

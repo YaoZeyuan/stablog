@@ -9,6 +9,8 @@ type TypeMblogRecord = {
   author_uid: string
   raw_json: string
   post_publish_at: number
+  is_retweet: number
+  is_article: number
 }
 
 type BlogDistributionMap = Map<
@@ -37,19 +39,44 @@ type BlogDistributionObj = {
 
 export default class Mblog extends Base {
   static TABLE_NAME = `total_mblog`
-  static TABLE_COLUMN = [`id`, `author_uid`, `raw_json`]
+  static TABLE_COLUMN = [`id`, `author_uid`, `post_publish_at`, `is_retweet`, `is_article`, `raw_json`]
+
+  // 更新数据库数据
+  // static async autoUpdate() {
+  //   let recordList = <Array<TypeMblogRecord>>await this.db
+  //     .select(this.TABLE_COLUMN)
+  //     .from(this.TABLE_NAME)
+  //   // .where('author_uid', '=', '2656274875')
+  //   console.log("total record count => ", recordList.length)
+  //   for (let i = 0; i < recordList.length; i++) {
+  //     if (i % 10 === 0) {
+  //       console.log(`处理第${i}/${recordList.length}条数据`)
+  //     }
+  //     let record = recordList[i];
+  //     let mblog = JSON.parse(record.raw_json)
+  //     let is_retweet = mblog.retweeted_status ? 1 : 0
+  //     let is_article = mblog.article ? 1 : 0
+  //     record.is_article = is_article
+  //     record.is_retweet = is_retweet
+  //     await this.replaceInto(record, this.TABLE_NAME)
+  //   }
+
+  //   return
+  // }
 
   /**
    * 从数据库中获取微博记录列表
    * @param id
    */
-  static async asyncGetMblogList(uid: string, startAt: number, endAt: number): Promise<Array<TypeWeibo.TypeMblog>> {
+  static async asyncGetMblogList(uid: string, startAt: number, endAt: number, retweet_status_in = [0, 1], article_status_in = [0, 1]): Promise<Array<TypeWeibo.TypeMblog>> {
     let recordList = <Array<TypeMblogRecord>>await this.db
       .select(this.TABLE_COLUMN)
       .from(this.TABLE_NAME)
       .where('author_uid', '=', uid)
       .andWhere('post_publish_at', '>=', startAt)
       .andWhere('post_publish_at', '<=', endAt)
+      .whereIn('is_retweet', retweet_status_in)
+      .whereIn('is_article', article_status_in)
       .catch(() => {
         return []
       })
