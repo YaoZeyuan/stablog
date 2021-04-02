@@ -637,6 +637,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               // 启动任务进程
               TaskUtils.startBackupTask();
             }}
+            type="primary"
           >
             开始备份
           </Button>
