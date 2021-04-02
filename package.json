@@ -11,20 +11,18 @@
   "license": "MIT",
   "scripts": {
     "startgui": "node gui/script/dev-server.js",
-    "buildgui": "echo 1",
+    "buildgui": "cd ./gui && npm run build",
     "start": "electron dist/index.js --debug",
     "prod": "electron dist/index.js",
     "ace": "node dist/ace.js",
     "epub": "node dist/ace.js Generate:Epub",
-    "serve": "node dist/server.js",
-    "watch-node": "nodemon dist/server.js",
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "build": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
     "pack": "npm run build && npm run buildgui && electron-builder --dir",
     "dist": "npm run build && npm run buildgui && electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
-    "watch-less": "node ./script/watch-less.js"
+    "watch-less": "less-watch-compiler"
   },
   "build": {
     "productName": "稳部落",
@@ -121,6 +119,7 @@
     "electron-builder": "^21.2.0",
     "electron-rebuild": "^2.3.5",
     "less": "^4.1.1",
+    "less-watch-compiler": "^1.14.6",
     "node-gyp": "^7.1.2",
     "watch": "^1.0.2"
   }
