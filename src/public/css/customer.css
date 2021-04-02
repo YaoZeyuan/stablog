@@ -354,6 +354,31 @@ body::-webkit-scrollbar {
 .mblog-container .card-wrap .weibo-main .weibo-img-list-container img {
   page-break-after: always;
 }
+.mblog-container .card-wrap .weibo-main .weibo-video-container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+.mblog-container .card-wrap .weibo-main .weibo-video-container .video-img-container img {
+  border-radius: 8px;
+  width: 720px;
+}
+.mblog-container .card-wrap .weibo-main .weibo-video-container .video-info-container {
+  height: 45px;
+  padding-top: 18.75px;
+  padding-bottom: 6.25px;
+  display: flex;
+  width: 720px;
+  color: #fff;
+  line-height: 20px;
+  font-size: 20px;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.4);
+  justify-content: space-between;
+  margin-top: -50px;
+  margin-bottom: 10px;
+  padding-left: 20px;
+  padding-right: 10px;
+}
 .mblog-container .card-wrap .weibo-main .weibo-rp {
   background-color: #f7f7f7;
   margin-top: -2px;
