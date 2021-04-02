@@ -21,7 +21,7 @@ import sharp from "sharp"
 
 // 将img输出为pdf
 import TaskConfig from '~/src/type/namespace/task_config'
-import jsPDF from 'jspdf'
+import jsPDF from '~/src/library/pdf/jspdf.node.js'
 import { BrowserWindow } from 'electron'
 import CommonUtil from '~/src/library/util/common'
 
