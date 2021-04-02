@@ -284,10 +284,15 @@ class FetchCustomer extends Base {
       createAt = this.parseMblogCreateTimestamp(mblog)
       mblog.created_timestamp_at = createAt
       let raw_json = JSON.stringify(mblog)
+      let is_retweet = mblog.retweeted_status ? 1 : 0
+      let is_article = mblog.article ? 1 : 0
+
       // 这里可能会出报SQLITE_BUSY: database is locked 
       await MMblog.replaceInto({
         id,
         author_uid,
+        is_retweet,
+        is_article,
         raw_json,
         post_publish_at: mblog.created_timestamp_at,
       }).catch((e: Error) => {
