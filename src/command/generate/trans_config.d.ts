@@ -18,6 +18,14 @@ export type TypeTransConfigItem = {
 export type TypeTransConfigPackage = {
     title: string,
     "dayIndex": number,
+    /**
+     * 容器内微博开始时间
+     */
+    'postStartAt': number,
+    /**
+     * 容器内微博截止时间
+     */
+    'postEndAt': number,
     "configList": TypeTransConfigItem[]
 }
 

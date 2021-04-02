@@ -158,16 +158,16 @@ class GenerateCustomer extends Base {
         bookCounter++
         let booktitle = ''
         if (weiboEpubList.length <= 1) {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理(${moment
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-(${moment
             .unix(resourcePackage.startDayAt)
             .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
               .unix(resourcePackage.endDayAt)
               .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         } else {
           booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${resourcePackage.totalBookCount
-            }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-              .unix(resourcePackage.endDayAt)
-              .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+          }卷-(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+            .unix(resourcePackage.endDayAt)
+            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         }
         this.log(`输出第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}`)
         await this.asyncGenerateEbook(bookCounter, booktitle, resourcePackage)
@@ -365,6 +365,8 @@ class GenerateCustomer extends Base {
       let weiboRecordImgList: TypeTransConfigPackage = {
         title: weiboDayRecord.title,
         dayIndex,
+        postStartAt: weiboDayRecord.postStartAt,
+        postEndAt: weiboDayRecord.postEndAt,
         configList: []
       }
       let weiboIndex = 0
@@ -594,13 +596,24 @@ class GenerateCustomer extends Base {
     doc.setFont(fontName, "normal");
     doc.setFontSize(32)
 
-    // demo =>  yaozeyuan93-微博整理(2011-07-07~2012-01-25)
+    // demo =>  yaozeyuan93-微博整理-第1/2卷-(2011-07-07~2012-01-25)
     let rawBooktitle = this.bookname
-    let contentList = rawBooktitle.split(`-微博整理`)
+    let contentList = rawBooktitle.split(`-微博整理-`)
     let accountName = contentList[0]
-    let timeRangeStr = contentList[1]
-    timeRangeStr = timeRangeStr.replace("(", "")
-    timeRangeStr = timeRangeStr.replace(")", "")
+
+    let timeRangeStartAt = contentList[1].indexOf('(')
+    let timeRangeEndAt = contentList[1].indexOf(')')
+    let timeRangeStr = contentList[1].slice(timeRangeStartAt + '('.length, timeRangeEndAt)
+
+    let columnStartAt = contentList[1].indexOf('第')
+    let columnEndAt = contentList[1].indexOf('卷')
+    let columnStr = ''
+    if (columnStartAt >= 0) {
+      // 先把关键语句提取出来, 后续根据需要再处理
+      columnStr = contentList[1].slice(columnStartAt + '第'.length, columnEndAt)
+      columnStr = `-第${columnStr}卷`
+    }
+
 
     let lineAt = 0
     let lineHeight = 40
@@ -621,8 +634,8 @@ class GenerateCustomer extends Base {
       })
     }
     addLine("")
-    addLine("微博整理")
     addLine(accountName)
+    addLine(`微博整理${columnStr}`)
     addLine(timeRangeStr)
     addLine("")
     addLine("该文件由稳部落自动生成")
