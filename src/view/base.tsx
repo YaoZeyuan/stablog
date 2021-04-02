@@ -164,6 +164,24 @@ class Base {
           mblogPictureList.push(picEle)
         }
       }
+      let videoEle = null
+      if (mblog?.page_info?.type === 'video') {
+        let imgUrl = mblog?.page_info?.page_pic?.url || ''
+        let during_s = mblog?.page_info?.media_info?.duration || 0
+        let during_str = CommonUtil.seconds2DuringStr(during_s)
+        videoEle = (
+          <div className="weibo-video-container">
+            <div className="video-img-container">
+              <img src={imgUrl} className="video-img"></img>
+            </div>
+            <div className="video-info-container">
+              <div className="card-video_plusInfo"> {mblog?.page_info?.play_count} </div>
+              <div className="card-video_during">{during_str}</div>
+            </div>
+          </div>
+        )
+      }
+
       mblogEle = (
         <div className="weibo-rp">
           <div className="weibo-text">
@@ -179,6 +197,8 @@ class Base {
               <ul className="m-auto-list">{mblogPictureList}</ul>
             </div>
           </div>
+          {/* 视频内容 */}
+          {videoEle}
           <div className="weibo-article-container">
             {/* 文章内容 */}
             {articleElement}
@@ -239,6 +259,24 @@ class Base {
       }
     }
 
+    let videoEle = null
+    if (mblog?.page_info?.type === 'video') {
+      let imgUrl = mblog?.page_info?.page_pic?.url || ''
+      let during_s = mblog?.page_info?.media_info?.duration || 0
+      let during_str = CommonUtil.seconds2DuringStr(during_s)
+      videoEle = (
+        <div className="weibo-video-container">
+          <div className="video-img-container">
+            <img src={imgUrl} className="video-img"></img>
+          </div>
+          <div className="video-info-container">
+            <div className="card-video_plusInfo"> {mblog?.page_info?.play_count} </div>
+            <div className="card-video_during">{during_str}</div>
+          </div>
+        </div>
+      )
+    }
+
     let mblogElement = (
       <div key={CommonUtil.getUuid()} className="mblog-container">
         <div className="card m-panel card9 weibo-member card-vip">
@@ -280,6 +318,8 @@ class Base {
                     <ul className="m-auto-list">{mblogPictureList}</ul>
                   </div>
                 </div>
+                {/* 视频内容 */}
+                {videoEle}
                 {/* 所发布文章内容 */}
                 <div className="weibo-article-container">{articleElement}</div>
                 {/* 所转发的微博 */}
