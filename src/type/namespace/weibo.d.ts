@@ -217,6 +217,13 @@ export type TypePageInfo = {
   icon: 'https://h5.sinaimg.cn/upload/2016/12/28/14/feed_headlines_icon_flash20161228_2.png'
   type: TypePageType
   object_id: '1022:2309404414789865570479'
+  // 视频中带的key
+  play_count: "36万次播放"
+  "media_info": {
+    "duration": 161.957,
+    "stream_url": "https://f.video.weibocdn.com/NMJVsI9olx07LzZ45oti01041200k0S70E010.mp4?label=mp4_ld&template=640x360.25.0&trans_finger=40a32e8439c5409a63ccf853562a60ef&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=9i8xY5%2Bsww&KID=unistore,video",
+    "stream_url_hd": "https://f.video.weibocdn.com/UmEGuRZXlx07LzZ4GhsA01041200uhlA0E010.mp4?label=mp4_hd&template=852x480.25.0&trans_finger=62b30a3f061b162e421008955c73f536&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=iHKgDfh3oq&KID=unistore,video"
+  },
 }
 
 /**
