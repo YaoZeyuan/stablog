@@ -9,8 +9,9 @@
 3.  ✅ 体积优化-> 将体积优化到 100mb 以内
 4.  ✅ 允许备份他人微博
 5.  ✅ 优化 html 文件样式, 调整为 octoman 备份出的样式
-6.  导出关注人 uid 列表[不建议做]
-7.  解决用户名折行问题[https://github.com/YaoZeyuan/stablog/issues/33]
+6.  ❌ 导出关注人 uid 列表[不建议做]
+    1.  没意义, 不如新起一个项目
+7.  ✅ 解决用户名折行问题[https://github.com/YaoZeyuan/stablog/issues/33]
 8.  ❌ 测试微博新版 api 有没有防爬虫功能.
     1.  看起来可以尝试 => https://weibo.com/ajax/statuses/mymblog?uid=1764741287&page=9&feature=0
     2.  经测试, 新版 api 一样有反爬虫功能, 10s 一次爬取也会被拦截.
@@ -29,19 +30,20 @@
     2.  抓取失败后, 应重新尝试抓取, 尝试 3 次, 而非直接跳过
 19. ✅ 生成一张图片耗时 1s, 估算时间时要把这个加上
 20. ✅ 图片只生成一次, 增加重置图片选项
-21. 检查 1_13, 周鸿祎的祎显示为乱码的问题
+21. ❌ 检查 1_13, 周鸿祎的祎显示为乱码的问题
+    1.  原数据如此, 该问题无解
 22. 编写使用说明, 说明两种情况
     1.  页面抓取过程中停顿
     2.  页面生成过程中停顿
     3.  登陆时无法输入验证码
 23. 升级 Electron 版本
     1.  Electron 升级到 12 后 sqlite3 需要手工安装, 对应命令为`npm install sqlite3 --build-from-source --runtime=electron --target=12.0.0 --dist-url=https://electronjs.org/headers`
-24. jspdf 有这个限制. A page in a PDF can not be wider or taller than 14400 userUnit. jsPDF limits the width/height to 14400
-25. 分卷标题需要改正 tombkeeper -第 2／5 卷 2012-12-01~2015-03-31
-26. jspdf 最大只能输出 500mb 体积的 pdf, 原因为 content.join 的时候字符串体积超出了 js 引擎最大限制. 两个办法,1. 修复 bug. 2. 限制每本电子书最多只能有 5000 条微博
-27. jspdf 的最大页宽只有 14400, 也需要改正. 考虑把 js 代码嵌入到项目中, 单独使用
+24. ✅jspdf 有这个限制. A page in a PDF can not be wider or taller than 14400 userUnit. jsPDF limits the width/height to 14400
+25. ✅ 分卷标题需要改正 tombkeeper -第 2／5 卷 2012-12-01~2015-03-31
+26. ✅jspdf 最大只能输出 500mb 体积的 pdf, 原因为 content.join 的时候字符串体积超出了 js 引擎最大限制. 两个办法,1. 修复 bug. 2. 限制每本电子书最多只能有 5000 条微博
+27. ✅jspdf 的最大页宽只有 14400, 也需要改正. 考虑把 js 代码嵌入到项目中, 单独使用
 28. 手上没有 mac 机器, 只能用 github-action 构建, 需要保证可以在 mac 上编译出可用的 sqlite3 版本, 而 sqlite 最高只支持到 8.x, 所以选用可用的 Electron 的最高版本
-29. 替换 pdf-js 库, 支持输出大体积 pdf 文件
+29. ✅ 替换 jspdf 库, 支持输出大体积 pdf 文件
 30. ✅ 输出 pdf 文件时, 添加不可见文本, 以方便搜索
 31. ✅ 测试微博文章渲染效果
 32. ✅ 支持渲染微博视频封面
@@ -53,5 +55,5 @@
     1.  需修改数据库表结构, 增加以下字段
         1.  是否原创
         2.  是否微博文章
-35. 解除 pdf-js 最大图片 14400 的限制, 解除 pdf-js 生成 pdf 最大 2gb 的体积限制
-36. 生成日级别书签, 而非只是月级别
+35. ✅ 解除 jspdf 最大图片 14400 的限制, 解除 jspdf 生成 pdf 最大 2gb 的体积限制
+36. ✅ 生成日级别书签, 而非只是月级别
