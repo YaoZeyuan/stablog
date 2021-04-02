@@ -123,6 +123,8 @@ let taskConfig: TypeTaskConfig.Customer = {
   isSkipFetch: false,
   isSkipGeneratePdf: false,
   isRegenerateHtml2PdfImage: false,
+  isOnlyOriginal: false,
+  isOnlyArticle: false,
 };
 if (taskConfig.configList.length === 0) {
   // 如果没有数据, 就要手工补上一个, 确保数据完整
@@ -181,6 +183,8 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   useEffect(() => {
     let a = async () => {
       await asyncCheckIsLogin();
+      // 同步用户信息
+      await asyncSyncUserInfo();
     };
     a();
   }, []);
@@ -217,8 +221,16 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       $$database.taskConfig.configList[0].rawInputText,
     );
     console.log('uid =>', uid);
+    if (uid === '') {
+      return;
+    }
     // 然后更新用户信息
     let userInfo = await TaskUtils.asyncGetUserInfo(uid);
+    if (userInfo.screen_name === '') {
+      // 说明请求失败
+      return;
+    }
+
     set$$Database(
       produce($$database, (raw) => {
         raw.taskConfig.configList[0].uid = uid;
@@ -262,6 +274,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   if ($$database.taskConfig.isSkipFetch) {
     needBackupWeiboPageCount = 0;
   }
+  console.log('needBackupWeiboPageCount => ', needBackupWeiboPageCount);
   // 总需要等待的时长(秒)
   let needWaitSecond =
     needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2;
@@ -388,7 +401,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               <Descriptions.Item label="微博总页面数">
                 {$$database.currentUserInfo.total_page_count}
               </Descriptions.Item>
-              <Descriptions.Item label="待抓取页面范围">
+              <Descriptions.Item label="待抓取页面范围[从0开始计数]">
                 从{$$database.taskConfig.fetchStartAtPageNo}~
                 {$$database.taskConfig.fetchEndAtPageNo}页, 共
                 {$$database.taskConfig.fetchEndAtPageNo -
@@ -416,7 +429,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         </Form.Item>
         <Divider>备份配置</Divider>
 
-        <Form.Item
+        {/* <Form.Item
           label={
             <span>
               备份范围&nbsp;
@@ -444,10 +457,63 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               max={$$database?.currentUserInfo?.total_page_count || 1000}
             />
           </Form.Item>
+        </Form.Item> */}
+        <Form.Item
+          label={
+            <span>
+              备份范围&nbsp;
+              <Tooltip title="可通过配置备份页面范围, 实现断点续传/只备份指定范围内的微博">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+        >
+          <div className="flex-container">
+            <span>从第&nbsp;</span>
+            <Form.Item name="fetchStartAtPageNo" noStyle>
+              <InputNumber step={1} min={0} />
+            </Form.Item>
+            <span>&nbsp;页备份到第&nbsp;</span>
+            <Form.Item name="fetchEndAtPageNo" noStyle>
+              <InputNumber
+                step={1}
+                max={$$database.currentUserInfo.total_page_count || 0}
+              />
+            </Form.Item>
+            <span>&nbsp;页&nbsp;</span>
+          </div>
         </Form.Item>
 
         <Divider>输出规则</Divider>
 
+        <Form.Item
+          label={
+            <span>
+              只导出原创微博&nbsp;
+              <Tooltip title="只导出原创微博, 跳过转发的微博">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isOnlyOriginal"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
+        <Form.Item
+          label={
+            <span>
+              只导出微博文章&nbsp;
+              <Tooltip title="只导出原创的微博文章">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="isOnlyArticle"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
         <Form.Item label="微博排序" name="postAtOrderBy">
           <Radio.Group buttonStyle="solid">
             <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>

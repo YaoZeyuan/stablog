@@ -50,6 +50,14 @@ export namespace TypeTaskConfig {
      * 是否重新生成将html转为pdf的图片
      */
     isRegenerateHtml2PdfImage: boolean
+    /**
+    * 是否只看微博文章(微博文章一定是原创, 转发微博不算原创)
+    */
+    isOnlyArticle: boolean
+    /**
+     * 是否只看原创
+     */
+    isOnlyOriginal: boolean
   }
 
   // 作为常量

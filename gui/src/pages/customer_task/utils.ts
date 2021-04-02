@@ -35,7 +35,12 @@ export async function asyncGetUid(rawInputUrl: string) {
         rawAccount = rawAccount.split('?')[0]
         account = rawAccount.split('/')[0]
         console.log("account => ", account)
-    } else {
+    }
+    if (rawInputUrl.includes('weibo.com/') === false) {
+        // 避免用户填写错误数据, 导致页面崩溃
+        return ''
+    }
+    else {
         let rawAccount = rawInputUrl.split(`weibo.com/`)[1]
         rawAccount = rawAccount.split('?')[0]
         account = rawAccount.split('/')[0] // 有可能会加一个/home/
