@@ -9,6 +9,8 @@ import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
 import fs from 'fs'
 import _ from 'lodash'
+import sharp from 'sharp'
+import path from 'path'
 
 let argv = process.argv
 let isDebug = argv.includes('--debug')
@@ -106,6 +108,120 @@ function createWindow() {
     // 负责渲染的子窗口不需要显示出来, 避免被用户误关闭
     show: false
   })
+
+  async function debugCaputure() {
+    let targetSource = "file:///F:/www/share/github/stablog/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/%E5%85%94%E4%B8%BB%E5%B8%AD-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86(2021-03-08~2021-03-27)/html_to_pdf/2021%EF%BC%8D03%EF%BC%8D27%2013%EF%BC%9A27%EF%BC%9A40_4619352240819112.html"
+    let demoUri = path.resolve(__dirname, "../demo.jpg")
+
+    const Const_Max_Webview_Render_Height_Px = 5000
+    const Const_Default_Webview_Width = 760
+    const Const_Default_Webview_Height = 10
+
+    let webview = subWindow.webContents
+    let globalSubWindow = subWindow
+
+    await webview.loadURL(targetSource);
+    // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
+    await globalSubWindow.setContentSize(
+      Const_Default_Webview_Width,
+      Const_Default_Webview_Height,
+    );
+    // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
+    // this.log("resize page, executeJavaScript ")
+    let scrollHeight = await webview.executeJavaScript(
+      `document.children[0].children[1].scrollHeight`,
+    );
+
+    let jpgContent: Buffer
+    if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
+      // html页面太大, 需要分页输出, 最后再合成一张图片返回
+      let imgContentList: any[] = []
+      let remainHeight = scrollHeight
+      await subWindow.setContentSize(Const_Default_Webview_Width, Const_Max_Webview_Render_Height_Px);
+      // console.log("remainHeight => ", remainHeight)
+      // console.log("Const_Max_Height_Px => ", Const_Max_Height_Px)
+
+      let mergeImg = sharp({
+        create: {
+          width: Const_Default_Webview_Width,
+          height: scrollHeight,
+          channels: 4,
+          background: {
+            r: 255, g: 255, b: 255, alpha: 1,
+          },
+        }
+      }).jpeg({ quality: 100 })
+
+      while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
+        let imgIndex = imgContentList.length;
+        let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgIndex
+        // 先移动到offset高度
+        let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
+        await webview.executeJavaScript(command);
+
+        // 然后对界面截屏
+        // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
+        await CommonUtil.asyncSleep(1000 * 0.5)
+        let nativeImg = await webview.capturePage();
+        let content = await nativeImg.toJPEG(100)
+        remainHeight = remainHeight - Const_Max_Webview_Render_Height_Px
+
+        imgContentList.push(
+          {
+            input: content,
+            top: Const_Max_Webview_Render_Height_Px * imgIndex,
+            left: 0,
+          }
+        )
+      }
+      if (remainHeight > 0) {
+        // 最后捕捉剩余高度页面
+
+        // 首先调整页面高度
+        await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight);
+        // 然后走流程, 捕捉界面
+        let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgContentList.length
+        let imgIndex = imgContentList.length;
+
+        // 先移动到offset高度
+        let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
+        await webview.executeJavaScript(command);
+        // 然后对界面截屏
+        // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
+        await CommonUtil.asyncSleep(1000 * 0.5)
+        let nativeImg = await webview.capturePage();
+
+        let content = await nativeImg.toJPEG(100)
+        imgContentList.push(
+          {
+            input: content,
+            top: Const_Max_Webview_Render_Height_Px * imgIndex,
+            left: 0,
+          }
+        )
+      }
+
+      // 最后将imgContentList合并为一张图片
+      mergeImg.composite(
+        imgContentList
+      )
+
+      jpgContent = await mergeImg.toBuffer()
+
+    } else {
+      // 小于最大宽度, 只要截屏一次就可以
+      await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
+
+      // this.log("setContentSize with scrollHeight -> ", scrollHeight)
+      let nativeImg = await webview.capturePage();
+      jpgContent = await nativeImg.toJPEG(100);
+    }
+
+    console.log("demoUri => ", demoUri)
+    fs.writeFileSync(demoUri, jpgContent)
+  }
+
+  // debugCaputure()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {
