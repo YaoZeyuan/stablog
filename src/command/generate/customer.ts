@@ -165,9 +165,9 @@ class GenerateCustomer extends Base {
               .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         } else {
           booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${resourcePackage.totalBookCount
-          }卷-(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-            .unix(resourcePackage.endDayAt)
-            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+            }卷-(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+              .unix(resourcePackage.endDayAt)
+              .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         }
         this.log(`输出第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}`)
         await this.asyncGenerateEbook(bookCounter, booktitle, resourcePackage)
@@ -699,9 +699,86 @@ class GenerateCustomer extends Base {
     }
     // 开始补充导航栏
     var node = doc.outline.add(null, '首页', { pageNumber: 1 });
-    for (let outlineConfig of outlineConfigList) {
-      doc.outline.add(node, outlineConfig.title, { pageNumber: outlineConfig.pageNo });
+    // 通过hack的方式, 生成年月日三级目录
+    type Type_Node = {
+      node: any,
+      pageNo: number,
+      children: {
+        [key: string]: Type_Node
+      }
+    }
 
+    let node_map: {
+      [year: string]: Type_Node
+    } = {}
+    for (let outlineConfig of outlineConfigList) {
+      let [year, month, day] = outlineConfig.title.split('-');
+      if (node_map[year] === undefined) {
+        // 初始化年份
+        let yearNode = doc.outline.add(node, year, { pageNumber: outlineConfig.pageNo });
+        node_map[year] = {
+          node: yearNode,
+          pageNo: outlineConfig.pageNo,
+          children: {}
+        }
+        let monthNode = doc.outline.add(yearNode, `${year}-${month}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year] = {
+          node: yearNode,
+          pageNo: outlineConfig.pageNo,
+          children: {
+            [month]: {
+              node: monthNode,
+              pageNo: outlineConfig.pageNo,
+              children: {}
+            }
+          }
+        }
+        let dayNode = doc.outline.add(monthNode, `${year}-${month}-${day}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year] = {
+          node: yearNode,
+          pageNo: outlineConfig.pageNo,
+          children: {
+            [month]: {
+              node: monthNode,
+              pageNo: outlineConfig.pageNo,
+              children: {
+                [day]: {
+                  node: dayNode,
+                  pageNo: outlineConfig.pageNo,
+                  children: {}
+                }
+              }
+            }
+          }
+        }
+        continue;
+      }
+      if (node_map[year]['children'][month] === undefined) {
+        // 初始化月份
+        let yearNode = node_map[year]['node']
+        let monthNode = doc.outline.add(yearNode, `${year}-${month}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year]['children'][month] = {
+          node: monthNode,
+          pageNo: outlineConfig.pageNo,
+          children: {}
+        }
+        let dayNode = doc.outline.add(monthNode, `${year}-${month}-${day}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year]['children'][month]['children'][day] = {
+          node: dayNode,
+          pageNo: outlineConfig.pageNo,
+          children: {}
+        }
+        continue;
+      }
+      // 否则, 添加日期节点
+      let yearNode = node_map[year]['node']
+      let monthNode = node_map[year]['children'][month]['node']
+      let dayNode = doc.outline.add(monthNode, `${year}-${month}-${day}`, { pageNumber: outlineConfig.pageNo });
+      node_map[year]['children'][month]['children'][day] = {
+        node: dayNode,
+        pageNo: outlineConfig.pageNo,
+        children: {}
+      }
     }
 
     await doc.save(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`), { returnPromise: true })
