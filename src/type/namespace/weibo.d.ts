@@ -238,7 +238,7 @@ export type TypeMblog = {
   /**
    * 需要主动解析为该值, 作为微博发表时间戳
    */
-  created_timestamp_at?: number
+  created_timestamp_at: number
   /**
    * 当delete值存在时,表示该微博已被删除. 此时created_timestamp_at不存在. 所有字段存在性都不能保证
    */
