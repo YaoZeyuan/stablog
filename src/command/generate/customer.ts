@@ -55,10 +55,10 @@ class GenerateCustomer extends Base {
   /**
    * 分类依据
    */
-  CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
+  CONST_CONFIG_DATE_FORMAT = DATE_FORMAT.DATABASE_BY_DAY
   CUSTOMER_CONFIG_bookname: TaskConfig.Customer['bookTitle'] = ''
   CUSTOMER_CONFIG_comment: TaskConfig.Customer['comment'] = ''
-  CUSTOMER_CONFIG_mergeBy: TaskConfig.Customer['mergeBy'] = 'day'
+  CONST_CONFIG_mergeBy: TaskConfig.Customer['mergeBy'] = 'day'
   CUSTOMER_CONFIG_mergeCount: TaskConfig.Customer['mergeCount'] = 1000
   CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
@@ -85,24 +85,9 @@ class GenerateCustomer extends Base {
 
     this.CUSTOMER_CONFIG_bookname = customerTaskConfig.bookTitle
     this.CUSTOMER_CONFIG_comment = customerTaskConfig.comment
-    this.CUSTOMER_CONFIG_mergeBy = customerTaskConfig.mergeBy
     this.CUSTOMER_CONFIG_outputStartAtMs = customerTaskConfig.outputStartAtMs
     this.CUSTOMER_CONFIG_outputEndAtMs = customerTaskConfig.outputEndAtMs
-    // 根据mergeBy类别, 生成日期格式化参数
-    switch (this.CUSTOMER_CONFIG_mergeBy) {
-      case 'day':
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
-        break
-      case 'month':
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_MONTH
-        break
-      case 'year':
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_YEAR
-        break
-      default:
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
-        break
-    }
+
     this.CUSTOMER_CONFIG_mergeCount = customerTaskConfig.mergeCount
     this.CUSTOMER_CONFIG_postAtOrderBy = customerTaskConfig.postAtOrderBy
     this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
@@ -196,7 +181,9 @@ class GenerateCustomer extends Base {
   /**
    * 1. 将微博按时间顺序排列
    * 2. 将微博按配置合并到一起
-   * 3. 按配置单本电子书最大微博数, 切分成微博Epub列表
+   * 3. 按配置
+   *    1.  单本电子书最大微博数, 切分成微博Epub列表
+   *    2.  按年切分成微博Epub列表
    * @param mblogList
    * @param userInfo
    */
@@ -208,22 +195,13 @@ class GenerateCustomer extends Base {
       index++
       let splitByStr = ''
       let mblogCreateAtTimestamp = <number>mblog.created_timestamp_at
-      if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
-        // 按条数分页
-        splitByStr = `${Math.ceil(index / this.CUSTOMER_CONFIG_mergeCount)}`
-      } else {
-        // 按日期分页
-        splitByStr = moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)
-      }
+      // 按日期分页
+      splitByStr = moment.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)
       let record = mblogListByMergeBy.get(splitByStr)
       if (record === undefined) {
         let a: TypeWeiboListByDay = {
           title:
-            this.CUSTOMER_CONFIG_mergeBy === 'count'
-              ? `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
-                .unix(mblogCreateAtTimestamp)
-                .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
-              : `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`,
+            `${moment.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)}`,
           dayStartAt: moment
             .unix(mblogCreateAtTimestamp)
             .startOf(DATE_FORMAT.UNIT.DAY)
@@ -246,11 +224,6 @@ class GenerateCustomer extends Base {
             .unix(mblogCreateAtTimestamp)
             .startOf(DATE_FORMAT.UNIT.DAY)
             .unix()
-        }
-        if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
-          record.title = `${moment.unix(record.postStartAt).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
-            .unix(record.postEndAt)
-            .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
         }
       }
       mblogListByMergeBy.set(splitByStr, record)
