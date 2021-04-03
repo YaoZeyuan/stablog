@@ -452,7 +452,7 @@ class GenerateCustomer extends Base {
     }
 
     // 每生成一张图片休眠1s, 避免界面卡死
-    await CommonUtil.asyncSleep(1000 * 1)
+    await CommonUtil.asyncSleep(1000 * 0.1)
     return transConfigItem
   }
 
@@ -515,7 +515,7 @@ class GenerateCustomer extends Base {
 
             // 然后对界面截屏
             // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
-            await CommonUtil.asyncSleep(1000 * 0.5)
+            await CommonUtil.asyncSleep(1000 * 0.2)
             let nativeImg = await webview.capturePage();
             let content = await nativeImg.toJPEG(100)
             remainHeight = remainHeight - Const_Max_Webview_Render_Height_Px
@@ -542,7 +542,7 @@ class GenerateCustomer extends Base {
             await webview.executeJavaScript(command);
             // 然后对界面截屏
             // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
-            await CommonUtil.asyncSleep(1000 * 0.5)
+            await CommonUtil.asyncSleep(1000 * 0.2)
             let nativeImg = await webview.capturePage();
 
             let content = await nativeImg.toJPEG(100)
