@@ -516,4 +516,46 @@ body::-webkit-scrollbar {
   text-decoration: none;
   color: #5c6975;
 }
+.footer-container {
+  position: fixed;
+  top: 93vh;
+  width: 750px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-top-width: 1px;
+  border-right-width: 0;
+  border-bottom-width: 0;
+  border-left-width: 0;
+  border-color: #e6e6e6;
+  border-style: solid;
+  height: 43.5px;
+}
+.footer-container .action {
+  color: #939393;
+  height: 100%;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+}
+.footer-container .action a {
+  text-decoration: none;
+  color: #0170fe;
+}
+.footer-container .action-disable a {
+  color: #c0c0c0;
+}
+.footer-container .gradient {
+  -webkit-mask: -webkit-linear-gradient(top, transparent, #000 30%, #000 70%, transparent 100%);
+  width: 1px;
+  background-color: #e6e6e6;
+  height: 1.5rem;
+}
+.footer-container-placeholder {
+  height: 7vh;
+}
 /*# sourceMappingURL=customer.css.map */

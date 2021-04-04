@@ -353,6 +353,41 @@ class Base {
     return mblogElement
   }
 
+  /**
+   * 生成页面底部的导航action
+   * @returns
+   */
+  static generateFooterGuideAction(
+    param: {
+      backUrl: string
+      nextUrl: string
+      indexUrl: string
+    } = {
+      backUrl: '#',
+      nextUrl: '#',
+      indexUrl: '#',
+    },
+  ) {
+    return (
+      <div key="footer-guide">
+        <div className="footer-container">
+          <div className={`action action-go-back ${param.backUrl === '#' ? 'action-disable' : ''}`}>
+            <a href={param.backUrl || '#'}>上一页</a>
+          </div>
+          <span className="gradient"></span>
+          <div className="action action-go-category">
+            <a href={param.indexUrl || '#'}>目录</a>
+          </div>
+          <span className="gradient"></span>
+          <div className={`action action-go-next ${param.nextUrl === '#' ? 'action-disable' : ''}`}>
+            <a href={param.nextUrl || '#'}>下一页</a>
+          </div>
+        </div>
+        <div className="footer-container-placeholder"></div>
+      </div>
+    )
+  }
+
   static renderToString(contentElement: React.ReactElement<any>) {
     return ReactDomServer.renderToString(contentElement)
   }

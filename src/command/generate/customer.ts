@@ -369,9 +369,19 @@ class GenerateCustomer extends Base {
 
     this.log(`生成微博记录html列表`)
     let htmlUriList = []
+    let recordCounter = 0
     for (let weiboDayRecord of weiboDayList) {
+      // 生成前一页, 后一页导航栏
+      recordCounter++
+      let beforeRecord = weiboDayList[recordCounter - 2]
+      let nextRecord = weiboDayList[recordCounter]
+
       let title = weiboDayRecord.title
-      let content = WeiboView.render(weiboDayRecord.weiboList)
+      let content = WeiboView.render(weiboDayRecord.weiboList, {
+        renderGuideLine: true,
+        nextRecord: nextRecord,
+        beforeRecord: beforeRecord
+      })
       content = this.processContent(content)
       let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${title}.html`)
       fs.writeFileSync(htmlUri, content)
