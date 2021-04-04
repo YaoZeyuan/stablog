@@ -99,10 +99,10 @@ const defaultConfigItem = {
   rawInputText: '',
   comment: '',
 };
-const MergeBy: { [key: string]: string } = {
+const Const_Volume_Split_By: { [key: string]: string } = {
+  ['不拆分']: 'single',
   ['年']: 'year',
   ['月']: 'month',
-  ['日']: 'day',
   ['微博条数']: 'count',
 };
 
@@ -114,8 +114,8 @@ let taskConfig: TypeTaskConfig.Customer = {
   postAtOrderBy: TaskConfigType.CONST_Order_Asc,
   bookTitle: '',
   comment: '',
-  mergeBy: TaskConfigType.CONST_Merge_By_月,
-  mergeCount: 1000,
+  volumeSplitBy: TaskConfigType.CONST_Volume_Split_By_不拆分,
+  volumeSplitCount: 10000,
   fetchStartAtPageNo: 0,
   fetchEndAtPageNo: 100000,
   outputStartAtMs: moment('2010-01-01 00:00:00').unix() * 1000,
@@ -358,8 +358,9 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                   raw.taskConfig['outputEndAtMs'] =
                     changedValues[updateKey][1].unix() * 1000;
                   break;
-                case 'mergeBy':
-                  raw.taskConfig['mergeBy'] = changedValues['mergeBy'];
+                case 'volumeSplitBy':
+                  raw.taskConfig['volumeSplitBy'] =
+                    changedValues['volumeSplitBy'];
                   break;
                 default:
                   raw.taskConfig[updateKey] = changedValues[updateKey];
@@ -527,15 +528,6 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           </Radio.Group>
         </Form.Item>
 
-        <Form.Item label="自动分卷">
-          <div className="flex-container">
-            <span>每&nbsp;</span>
-            <Form.Item name="maxBlogInBook">
-              <InputNumber min={100} step={100} />
-            </Form.Item>
-            <span>&nbsp;条微博输出一本电子书</span>
-          </div>
-        </Form.Item>
         <Form.Item label="时间范围">
           <div className="flex-container">
             <span>只输出从</span>
@@ -548,32 +540,36 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           </div>
         </Form.Item>
 
-        <Form.Item label="分页依据">
+        <Form.Item label="电子书拆分规则">
           <div className="flex-container">
-            按 &nbsp;
-            <Form.Item name="mergeBy" noStyle>
-              <Select labelInValue={false} style={{ width: 120 }}>
-                <Option value={MergeBy.年}>年</Option>
-                <Option value={MergeBy.月}>月</Option>
-                <Option value={MergeBy.日}>日</Option>
-                <Option value={MergeBy.微博条数}>微博条数</Option>
+            <Form.Item name="volumeSplitBy" noStyle>
+              <Select labelInValue={false} style={{ width: 180 }}>
+                <Option value={Const_Volume_Split_By.不拆分}>不拆分</Option>
+                <Option value={Const_Volume_Split_By.年}>按年拆分</Option>
+                <Option value={Const_Volume_Split_By.月}>按月拆分</Option>
+                <Option value={Const_Volume_Split_By.微博条数}>
+                  按微博条数拆分
+                </Option>
               </Select>
             </Form.Item>
-            &nbsp; 汇集为一页
-            {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
+            {$$database.taskConfig.volumeSplitBy ===
+            Const_Volume_Split_By.微博条数 ? (
               <span>, 每&nbsp;</span>
             ) : null}
-            {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
-              <Form.Item name="mergeCount" noStyle>
+            {$$database.taskConfig.volumeSplitBy ===
+            Const_Volume_Split_By.微博条数 ? (
+              <Form.Item name="volumeSplitCount" noStyle>
                 <InputNumber
-                  placeholder="每n条微博一页"
-                  min={100}
-                  step={100}
+                  // placeholder="每n条微博拆分为一卷"
+                  min={1000}
+                  step={1000}
+                  style={{ width: 120 }}
                 ></InputNumber>
               </Form.Item>
             ) : null}
-            {$$database.taskConfig.mergeBy === MergeBy.微博条数 ? (
-              <span>&nbsp;条微博一页</span>
+            {$$database.taskConfig.volumeSplitBy ===
+            Const_Volume_Split_By.微博条数 ? (
+              <span>&nbsp;条微博一卷</span>
             ) : null}
           </div>
         </Form.Item>

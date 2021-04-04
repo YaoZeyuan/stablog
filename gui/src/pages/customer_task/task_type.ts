@@ -15,9 +15,6 @@ export namespace TypeTaskConfig {
     bookTitle: string // 书名
     comment: string // 备注
     maxBlogInBook: maxBlogInBook // 自动分卷: 单本电子书中最大微博数
-    mergeBy: 'day' | 'month' | 'year' | 'count' // 按天/月/年/微博条数合并微博记录
-    // 若按count合并微博, 单页中处理多少条微博记录
-    mergeCount: number
     /**
      * 微博排序方式: 按发布事件升序排列, 按发布时间降序排列
      */
@@ -58,6 +55,14 @@ export namespace TypeTaskConfig {
      * 是否只看原创
      */
     isOnlyOriginal: boolean
+    /**
+     * 电子书分卷依据
+     */
+    volumeSplitBy: 'single' | 'year' | 'month' | 'count'
+    /**
+     * 若按单本电子书内微博总数进行分卷, 单卷最大微博数
+     */
+    volumeSplitCount: number
   }
 
   // 作为常量
@@ -70,8 +75,8 @@ export namespace TypeTaskConfig {
   export const CONST_Pdf_Quilty_清晰 = 70
   export const CONST_Pdf_Quilty_超清 = 90
   export const CONST_Pdf_Quilty_原图 = 100
-  export const CONST_Merge_By_年 = 'year'
-  export const CONST_Merge_By_月 = 'month'
-  export const CONST_Merge_By_日 = 'day'
-  export const CONST_Merge_By_按篇数分割 = 'count'
+  export const CONST_Volume_Split_By_不拆分 = 'single'
+  export const CONST_Volume_Split_By_年 = 'year'
+  export const CONST_Volume_Split_By_月 = 'month'
+  export const CONST_Volume_Split_By_按微博条数分割 = 'count'
 }
