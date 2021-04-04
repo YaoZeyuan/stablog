@@ -14,10 +14,6 @@ declare namespace TaskConfig {
     pdfQuilty: 50 | 60 | 70 | 90 | 100 // pdf输出质量(默认60, 质量体积平衡点)
     bookTitle: string // 书名
     comment: string // 备注
-    maxBlogInBook: maxBlogInBook // 自动分卷: 单本电子书中最大微博数
-    mergeBy: 'day' | 'month' | 'year' | 'count' // 按天/月/年/微博条数合并微博记录
-    // 若按count合并微博, 单页中处理多少条微博记录
-    mergeCount: number
     /**
      * 微博排序方式: 按发布事件升序排列, 按发布时间降序排列
      */
@@ -58,6 +54,14 @@ declare namespace TaskConfig {
      * 是否只看原创
      */
     isOnlyOriginal: boolean
+    /**
+     * 电子书分卷依据
+     */
+    volumeSplitBy: 'single' | 'year' | 'month' | 'count'
+    /**
+     * 若按单本电子书内微博总数进行分卷, 单卷最大微博数
+     */
+    volumeSplitCount: number
   }
 }
 
