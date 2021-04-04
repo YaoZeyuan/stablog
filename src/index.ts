@@ -21,6 +21,8 @@ let mainWindow: Electron.BrowserWindow
 
 // 关闭https证书校验
 app.commandLine.appendSwitch('ignore-certificate-errors', 'true')
+// 解除node.js内存限制
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
 
 let isRunning = false
 // subWindow需要放在外边, 以便在全局中传递
