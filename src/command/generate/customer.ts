@@ -270,10 +270,8 @@ class GenerateCustomer extends Base {
         weiboEpub.startDayAt = mblogListByDay.dayStartAt
         weiboEpub.bookIndex = bookIndex
       } else {
-        // weiboEpub.weiboDayList.push(mblogListByDay)
-        // weiboEpub.mblogInThisBookCount += mblogListByDay.weiboList.length
         if (this.CUSTOMER_CONFIG_volumeSplitBy !== 'single') {
-          // 如果分卷依据不是single, 那么要按照设定的分卷条件, 检查是否需要进行分卷
+          // 如果分卷依据不是single, 那么要先按照设定的分卷条件, 检查是否需要进行分卷
           switch (this.CUSTOMER_CONFIG_volumeSplitBy) {
             case 'year':
               {
@@ -327,9 +325,9 @@ class GenerateCustomer extends Base {
                 }
               }
           }
-          weiboEpub.weiboDayList.push(mblogListByDay)
-          weiboEpub.mblogInThisBookCount = weiboEpub.mblogInThisBookCount + mblogListByDay.weiboList.length
         }
+        weiboEpub.weiboDayList.push(mblogListByDay)
+        weiboEpub.mblogInThisBookCount = weiboEpub.mblogInThisBookCount + mblogListByDay.weiboList.length
       }
     }
     // 循环结束, 记录最后一卷数据
