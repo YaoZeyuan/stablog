@@ -12,9 +12,9 @@
 
 最新版本: 3.0.0
 
-[点击下载-win](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%202.0.0.exe#)
+[点击下载-win](https://wws.lanzous.com/ie2ECnpdjoj)
 
-[点击下载-mac](http://stablog.bookflaneur.cn/release/%E7%A8%B3%E9%83%A8%E8%90%BD-2.0.0.dmg#)
+[点击下载-mac](https://wws.lanzous.com/iD5Bgnpdjkf)
 
 [更新历史](./changelog.md)
 
@@ -77,7 +77,7 @@
 答: 作者可以保证从项目 Github 主页上下载的软件安全可靠. 项目源代码开放, 实在不放心可以基于源代码自行编译. 由于是微博备份项目,只有登录自己的微博账号后才能看到发布的所有微博, 所以必须要登录.
 
 问: 为什么备份这么慢? 为什么每次都要等 20s 之后才抓取下一条微博?
-答: 新浪对爬虫进行了严格限制, 20s 抓一次是我试验多次之后, 可以安全备份微博数据的最短间隔. 作为为非开发人员提供的备份工具, **稳定**第一 
+答: 新浪对爬虫进行了严格限制, 20s 抓一次是我试验多次之后, 可以安全备份微博数据的最短间隔. 作为为非开发人员提供的备份工具, **稳定**第一
 
 问: 安装完之后无法运行, 弹框提示:"A JavaScript error occurred in main process" 是怎么回事?
 答: 一般是因为软件没有写入文件权限, 改装到 D 盘就可以了
