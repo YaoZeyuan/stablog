@@ -25,6 +25,7 @@ jobs:
       - name: Show version number
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
       - run: yarn
+      - run: cd ./gui && yarn && cd ..
       - run: yarn dist
         env:
           CI: true
