@@ -25,6 +25,8 @@ class DispatchCommand extends Base {
   }
 
   async execute(args: any, options: any) {
+    // 硬编码传入
+    let { subWindow } = args
     // 初始化运行环境
     let initCommand = new InitEnvCommand()
     await initCommand.handle({}, {})
@@ -35,7 +37,7 @@ class DispatchCommand extends Base {
     await fetchCommand.handle({}, {})
     this.log(`抓取命令执行完毕`)
     this.log(`执行生成电子书命令`)
-    await generateCommand.handle({}, {})
+    await generateCommand.handle({ subWindow }, {})
     this.log(`生成电子书命令执行完毕`)
     this.log(`所有命令执行完毕`)
   }

@@ -8,6 +8,7 @@ import DATE_FORMAT from '~/src/constant/date_format'
 import imageSize from 'image-size'
 import _ from 'lodash'
 import json5 from 'json5'
+import { TypeTransConfigItem, TypeTransConfigPackageList, TypeTransConfigPackage } from "./trans_config"
 
 import WeiboView from '~/src/view/weibo'
 import BaseView from '~/src/view/base'
@@ -15,14 +16,28 @@ import fs from 'fs'
 import path from 'path'
 import StringUtil from '~/src/library/util/string'
 import moment from 'moment'
-
-// 将本地html渲染为img
-import puppeteer from 'puppeteer'
+import * as mozjpeg from "mozjpeg-js"
+import sharp from "sharp"
 
 // 将img输出为pdf
-import PDFKit from 'pdfkit'
 import TaskConfig from '~/src/type/namespace/task_config'
+import jsPDF from '~/src/library/pdf/jspdf.node.js'
+import { BrowserWindow } from 'electron'
+import CommonUtil from '~/src/library/util/common'
 
+/**
+ * 单张页面渲染时间不能超过20秒
+ */
+const Const_Render_Html_Timeout_Second = 20
+/**
+ * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
+ */
+const Const_Max_Webview_Render_Height_Px = 5000
+
+// 硬编码传入
+let globalSubWindow: InstanceType<typeof BrowserWindow> = null
+const Const_Default_Webview_Width = 760;
+const Const_Default_Webview_Height = 10;
 class GenerateCustomer extends Base {
   static get signature() {
     return `
@@ -40,24 +55,28 @@ class GenerateCustomer extends Base {
   /**
    * 分类依据
    */
-  CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
+  CONST_CONFIG_DATE_FORMAT = DATE_FORMAT.DATABASE_BY_DAY
   CUSTOMER_CONFIG_bookname: TaskConfig.Customer['bookTitle'] = ''
   CUSTOMER_CONFIG_comment: TaskConfig.Customer['comment'] = ''
-  CUSTOMER_CONFIG_mergeBy: TaskConfig.Customer['mergeBy'] = 'day'
-  CUSTOMER_CONFIG_mergeCount: TaskConfig.Customer['mergeCount'] = 1000
+  CUSTOMER_CONFIG_volumeSplitBy: TaskConfig.Customer['volumeSplitBy'] = 'single'
+  CUSTOMER_CONFIG_volumeSplitCount: TaskConfig.Customer['volumeSplitCount'] = 10000
   CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
   CUSTOMER_CONFIG_pdfQuilty: TaskConfig.Customer['pdfQuilty'] = 70
-  CUSTOMER_CONFIG_maxBlogInBook: TaskConfig.Customer['maxBlogInBook'] = 1000
   CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
   CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] =
     moment()
       .add(1, 'year')
       .unix() * 1000
   CUSTOMER_CONFIG_isSkipGeneratePdf: TaskConfig.Customer['isSkipGeneratePdf'] = false
+  CUSTOMER_CONFIG_isRegenerateHtml2PdfImage: TaskConfig.Customer['isRegenerateHtml2PdfImage'] = false
   CUSTOMER_CONFIG_isSkipFetch: TaskConfig.Customer['isSkipFetch'] = false
+  CUSTOMER_CONFIG_isOnlyArticle: TaskConfig.Customer['isOnlyArticle'] = false
+  CUSTOMER_CONFIG_isOnlyOriginal: TaskConfig.Customer['isOnlyOriginal'] = false
 
   async execute(args: any, options: any): Promise<any> {
+    let { subWindow } = args
+    globalSubWindow = subWindow
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
     let fetchConfigJSON = fs.readFileSync(PathConfig.customerTaskConfigUri).toString()
     this.log('content =>', fetchConfigJSON)
@@ -65,34 +84,25 @@ class GenerateCustomer extends Base {
 
     this.CUSTOMER_CONFIG_bookname = customerTaskConfig.bookTitle
     this.CUSTOMER_CONFIG_comment = customerTaskConfig.comment
-    this.CUSTOMER_CONFIG_mergeBy = customerTaskConfig.mergeBy
     this.CUSTOMER_CONFIG_outputStartAtMs = customerTaskConfig.outputStartAtMs
     this.CUSTOMER_CONFIG_outputEndAtMs = customerTaskConfig.outputEndAtMs
-    // 根据mergeBy类别, 生成日期格式化参数
-    switch (this.CUSTOMER_CONFIG_mergeBy) {
-      case 'day':
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
-        break
-      case 'month':
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_MONTH
-        break
-      case 'year':
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_YEAR
-        break
-      default:
-        this.CUSTOMER_CONFIG_DATE_FORMAT = DATE_FORMAT.DISPLAY_BY_DAY
-        break
-    }
-    this.CUSTOMER_CONFIG_mergeCount = customerTaskConfig.mergeCount
+
+    this.CUSTOMER_CONFIG_volumeSplitBy = customerTaskConfig.volumeSplitBy
+    this.CUSTOMER_CONFIG_volumeSplitCount = customerTaskConfig.volumeSplitCount
     this.CUSTOMER_CONFIG_postAtOrderBy = customerTaskConfig.postAtOrderBy
     this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
     this.CUSTOMER_CONFIG_pdfQuilty = customerTaskConfig.pdfQuilty || 60 // 加上默认值
-    this.CUSTOMER_CONFIG_maxBlogInBook = customerTaskConfig.maxBlogInBook
     this.CUSTOMER_CONFIG_isSkipFetch = customerTaskConfig.isSkipFetch
     this.CUSTOMER_CONFIG_isSkipGeneratePdf = customerTaskConfig.isSkipGeneratePdf
+    this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage = customerTaskConfig.isRegenerateHtml2PdfImage
+    this.CUSTOMER_CONFIG_isOnlyArticle = customerTaskConfig.isOnlyArticle
+    this.CUSTOMER_CONFIG_isOnlyOriginal = customerTaskConfig.isOnlyOriginal
+
     let configList = customerTaskConfig.configList
     for (let config of configList) {
       let author_uid = config.uid
+      // 配置当前生成的用户uid, 便于缓存
+      this.currentAuthorUid = author_uid
       let userInfo = await MMblogUser.asyncGetUserInfo(author_uid)
       if (_.isEmpty(userInfo)) {
         this.log(`未抓取到对应的用户数据, 自动跳过`)
@@ -104,10 +114,22 @@ class GenerateCustomer extends Base {
 
       this.log(`获取数据记录`)
 
+      let article_status_in = [0, 1]
+      let retweet_status_in = [0, 1]
+      if (this.CUSTOMER_CONFIG_isOnlyOriginal) {
+        retweet_status_in = [0]
+      }
+
+      if (this.CUSTOMER_CONFIG_isOnlyArticle) {
+        article_status_in = [1]
+      }
+
       let mblogList = await MMblog.asyncGetMblogList(
         author_uid,
         this.CUSTOMER_CONFIG_outputStartAtMs / 1000,
         this.CUSTOMER_CONFIG_outputEndAtMs / 1000,
+        retweet_status_in,
+        article_status_in
       )
       mblogList.sort((a, b) => {
         // 先进行排序
@@ -137,21 +159,20 @@ class GenerateCustomer extends Base {
         bookCounter++
         let booktitle = ''
         if (weiboEpubList.length <= 1) {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理(${moment
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-(${moment
             .unix(resourcePackage.startDayAt)
             .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-            .unix(resourcePackage.endDayAt)
-            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+              .unix(resourcePackage.endDayAt)
+              .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         } else {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${
-            resourcePackage.totalBookCount
-          }卷(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
-            .unix(resourcePackage.endDayAt)
-            .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${resourcePackage.totalBookCount
+            }卷-(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+              .unix(resourcePackage.endDayAt)
+              .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         }
         this.log(`输出第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}`)
         await this.asyncGenerateEbook(bookCounter, booktitle, resourcePackage)
-        this.log(`第第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}输出完毕`)
+        this.log(`第${bookCounter}/${weiboEpubList.length}本电子书:${booktitle}输出完毕`)
       }
     }
   }
@@ -159,7 +180,9 @@ class GenerateCustomer extends Base {
   /**
    * 1. 将微博按时间顺序排列
    * 2. 将微博按配置合并到一起
-   * 3. 按配置单本电子书最大微博数, 切分成微博Epub列表
+   * 3. 按配置
+   *    1.  单本电子书最大微博数, 切分成微博Epub列表
+   *    2.  按年切分成微博Epub列表
    * @param mblogList
    * @param userInfo
    */
@@ -171,22 +194,13 @@ class GenerateCustomer extends Base {
       index++
       let splitByStr = ''
       let mblogCreateAtTimestamp = <number>mblog.created_timestamp_at
-      if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
-        // 按条数分页
-        splitByStr = `${Math.ceil(index / this.CUSTOMER_CONFIG_mergeCount)}`
-      } else {
-        // 按日期分页
-        splitByStr = moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)
-      }
+      // 按日期分页
+      splitByStr = moment.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)
       let record = mblogListByMergeBy.get(splitByStr)
       if (record === undefined) {
         let a: TypeWeiboListByDay = {
           title:
-            this.CUSTOMER_CONFIG_mergeBy === 'count'
-              ? `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
-                  .unix(mblogCreateAtTimestamp)
-                  .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
-              : `${moment.unix(mblogCreateAtTimestamp).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`,
+            `${moment.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)}`,
           dayStartAt: moment
             .unix(mblogCreateAtTimestamp)
             .startOf(DATE_FORMAT.UNIT.DAY)
@@ -210,21 +224,21 @@ class GenerateCustomer extends Base {
             .startOf(DATE_FORMAT.UNIT.DAY)
             .unix()
         }
-        if (this.CUSTOMER_CONFIG_mergeBy === 'count') {
-          record.title = `${moment.unix(record.postStartAt).format(this.CUSTOMER_CONFIG_DATE_FORMAT)}-${moment
-            .unix(record.postEndAt)
-            .format(this.CUSTOMER_CONFIG_DATE_FORMAT)}`
-        }
       }
       mblogListByMergeBy.set(splitByStr, record)
     }
     // 然后, 按日期先后对记录
-    let mblogListByDayList = []
+    let mblogListByDayList_OrderByPostStartAt = []
     for (let record of mblogListByMergeBy.values()) {
-      mblogListByDayList.push(record)
+      mblogListByDayList_OrderByPostStartAt.push(record)
     }
+    // 按记录开始日期从早到晚排序
+    mblogListByDayList_OrderByPostStartAt.sort((a, b) => {
+      return a.postStartAt - b.postStartAt
+    })
+
     // 解除引用依赖
-    mblogListByDayList = _.cloneDeep(mblogListByDayList)
+    mblogListByDayList_OrderByPostStartAt = _.cloneDeep(mblogListByDayList_OrderByPostStartAt)
     // 最后, 按条目数拆分微博记录, 将微博列表分包
     let rawWeiboEpubList: Array<TypeWeiboEpub> = []
     // book index 应该从1开始
@@ -243,7 +257,9 @@ class GenerateCustomer extends Base {
     }
     let weiboEpub = _.cloneDeep(weiboEpubTemplate)
     let bufEndDayAt = moment().unix()
-    for (let mblogListByDay of mblogListByDayList) {
+
+    // 将按时间顺序排列的日级别微博记录, 处理为电子书数据包
+    for (let mblogListByDay of mblogListByDayList_OrderByPostStartAt) {
       // 备份一下, 循环结束时使用
       bufEndDayAt = mblogListByDay.postEndAt
 
@@ -254,18 +270,64 @@ class GenerateCustomer extends Base {
         weiboEpub.startDayAt = mblogListByDay.dayStartAt
         weiboEpub.bookIndex = bookIndex
       } else {
+        if (this.CUSTOMER_CONFIG_volumeSplitBy !== 'single') {
+          // 如果分卷依据不是single, 那么要先按照设定的分卷条件, 检查是否需要进行分卷
+          switch (this.CUSTOMER_CONFIG_volumeSplitBy) {
+            case 'year':
+              {
+                if (moment.unix(weiboEpub.startDayAt).format("YYYY") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY")) {
+                  // 发生换年, 需要进行分卷
+                  weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+                  let buffer = _.cloneDeep(weiboEpub)
+                  rawWeiboEpubList.push(buffer)
+                  // 重新起一个
+                  bookCounter = bookCounter + 1
+                  bookIndex = bookIndex + 1
+                  weiboEpub = _.cloneDeep(weiboEpubTemplate)
+                  // 初始化新容器
+                  weiboEpub.startDayAt = mblogListByDay.dayStartAt
+                  weiboEpub.bookIndex = bookIndex
+                }
+              }
+              break;
+            case 'month':
+              {
+                if (moment.unix(weiboEpub.startDayAt).format("YYYY-MM") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY-MM")) {
+                  // 发生换月, 需要进行分卷
+                  weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+                  let buffer = _.cloneDeep(weiboEpub)
+                  rawWeiboEpubList.push(buffer)
+                  // 重新起一个
+                  bookCounter = bookCounter + 1
+                  bookIndex = bookIndex + 1
+                  weiboEpub = _.cloneDeep(weiboEpubTemplate)
+                  // 初始化新容器
+                  weiboEpub.startDayAt = mblogListByDay.dayStartAt
+                  weiboEpub.bookIndex = bookIndex
+                }
+              }
+              break;
+            case 'count':
+            default:
+              {
+                if (weiboEpub.mblogInThisBookCount > this.CUSTOMER_CONFIG_volumeSplitCount) {
+                  // 超出单卷最大微博数, 需要进行分卷
+                  weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+                  let buffer = _.cloneDeep(weiboEpub)
+                  rawWeiboEpubList.push(buffer)
+                  // 重新起一个
+                  bookCounter = bookCounter + 1
+                  bookIndex = bookIndex + 1
+                  weiboEpub = _.cloneDeep(weiboEpubTemplate)
+                  // 初始化新容器
+                  weiboEpub.startDayAt = mblogListByDay.dayStartAt
+                  weiboEpub.bookIndex = bookIndex
+                }
+              }
+          }
+        }
         weiboEpub.weiboDayList.push(mblogListByDay)
-        weiboEpub.mblogInThisBookCount += mblogListByDay.weiboList.length
-      }
-      if (weiboEpub.mblogInThisBookCount > this.CUSTOMER_CONFIG_maxBlogInBook) {
-        // 超出阈值, 该分卷了
-        weiboEpub.endDayAt = mblogListByDay.postEndAt
-        let buffer = _.cloneDeep(weiboEpub)
-        rawWeiboEpubList.push(buffer)
-        // 重新起一个
-        bookCounter = bookCounter + 1
-        bookIndex = bookIndex + 1
-        weiboEpub = _.cloneDeep(weiboEpubTemplate)
+        weiboEpub.mblogInThisBookCount = weiboEpub.mblogInThisBookCount + mblogListByDay.weiboList.length
       }
     }
     // 循环结束, 记录最后一卷数据
@@ -296,14 +358,30 @@ class GenerateCustomer extends Base {
     let { weiboDayList } = epubResourcePackage
     this.imgUriPool = new Set()
 
+    // 若配置跳过图片缓存, 则重置
+    if (this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage) {
+      this.log(`配置了重新生成将html转为pdf的图片, 清空pdf图片生成缓存`)
+      this.resetHtml2pdfImageCache()
+    }
+
     // 初始化文件夹
     this.initStaticRecource()
 
     this.log(`生成微博记录html列表`)
     let htmlUriList = []
+    let recordCounter = 0
     for (let weiboDayRecord of weiboDayList) {
+      // 生成前一页, 后一页导航栏
+      recordCounter++
+      let beforeRecord = weiboDayList[recordCounter - 2]
+      let nextRecord = weiboDayList[recordCounter]
+
       let title = weiboDayRecord.title
-      let content = WeiboView.render(weiboDayRecord.weiboList)
+      let content = WeiboView.render(weiboDayRecord.weiboList, {
+        renderGuideLine: true,
+        nextRecord: nextRecord,
+        beforeRecord: beforeRecord
+      })
       content = this.processContent(content)
       let htmlUri = path.resolve(this.htmlCacheHtmlPath, `${title}.html`)
       fs.writeFileSync(htmlUri, content)
@@ -321,131 +399,446 @@ class GenerateCustomer extends Base {
     if (this.CUSTOMER_CONFIG_isSkipGeneratePdf) {
       this.log(`isSkipGeneratePdf为${this.CUSTOMER_CONFIG_isSkipGeneratePdf}, 自动跳过pdf输出阶段`)
     } else {
-      await this.generatePdf(weiboDayList)
+      let weiboDayConfigList = await this.transWeiboDayList2Image(weiboDayList)
+      await this.generatePdf(weiboDayConfigList)
     }
     // 输出完毕后, 将结果复制到dist文件夹中
     await this.asyncCopyToDist()
     this.log(`第${bookCounter}本电子书${this.bookname}生成完毕`)
   }
 
-  async generatePdf(weiboDayList: TypeWeiboEpub['weiboDayList']) {
-    // 启动Chrome
-    const browser = await puppeteer.launch({
-      defaultViewport: {
-        width: 750,
-        height: 1, // 要设的足够小
-      },
-    })
-    let page = await browser.newPage()
-    // 初始化pdf类
-    let pdfDocument = new PDFKit({
-      margin: 0,
-      layout: 'landscape',
-      size: [667, 375 * 2], // a smaller document for small badge printers
-    })
-    let fontUri = path.resolve(__dirname, '../../public/font/yangrendong_zhushi.ttf')
-    pdfDocument.font(fontUri)
-    pdfDocument.fontSize(48)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    let rawBooktitle = this.bookname
-    let contentList = rawBooktitle.split(`-微博整理`)
-    // 调整展示格式
-    pdfDocument.text(`${contentList[0]}`, {
-      align: 'center',
-    })
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`微博整理`, {
-      align: 'center',
-    })
-    pdfDocument.text(`${contentList[1].replace(/^-/, '')}`, {
-      align: 'center',
-    })
-    pdfDocument.fontSize(20)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`由稳部落自动生成`, {
-      align: 'center',
-    })
-    pdfDocument.text(`\n`)
-    pdfDocument.text(`项目主页`, {
-      align: 'center',
-    })
-    pdfDocument.text(`\n`)
-    pdfDocument.font('Times-Roman')
-    pdfDocument.fillColor('blue').text(`https://www.yaozeyuan.online/stablog`, {
-      align: 'center',
-      link: `https://www.yaozeyuan.online/stablog`,
+  async transWeiboDayList2Image(weiboDayList: TypeWeiboEpub['weiboDayList']) {
+    // 首先生成单条微博对应的静态html文件, 以及对应配置
+    let dayIndex = 0
+    let weiboDayConfigList: TypeTransConfigPackageList = []
+    for (let weiboDayRecord of weiboDayList) {
+      dayIndex++
+      this.log(`开始将记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下的微博渲染为图片`)
+      let weiboRecordImgList: TypeTransConfigPackage = {
+        title: weiboDayRecord.title,
+        dayIndex,
+        postStartAt: weiboDayRecord.postStartAt,
+        postEndAt: weiboDayRecord.postEndAt,
+        configList: []
+      }
+      let weiboIndex = 0
+      for (let weiboRecord of weiboDayRecord.weiboList) {
+        weiboIndex++
+
+        this.log(
+          `将记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染为图片`,
+        )
+        let { htmlUri, imageUri, htmlContent } = await this.transWeiboRecord2Image(weiboRecord)
+
+        let transConfigItem: TypeTransConfigItem = {
+          dayIndex,
+          weiboIndex,
+          htmlUri,
+          imageUri,
+          htmlContent
+        };
+
+        weiboRecordImgList.configList.push(transConfigItem)
+      }
+      weiboDayConfigList.push(weiboRecordImgList)
+    }
+    // 处理完毕, 返回配置内容
+    return weiboDayConfigList
+  }
+
+  async transWeiboRecord2Image(weiboRecord: TypeMblog) {
+    // 以微博创建时间和微博id作为唯一key
+    let baseFileTitle = `${moment.unix(weiboRecord.created_timestamp_at).format("YYYY-MM-DD HH：mm：ss")}_${weiboRecord.id}`
+
+    let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
+    let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
+    let content = WeiboView.render([weiboRecord])
+    content = this.processContent(content)
+
+    let transConfigItem = {
+      htmlUri,
+      imageUri,
+      htmlContent: content
+    }
+    // 若已生成过文件, 则不需要重新生成, 自动跳过即可
+    if (fs.existsSync(imageUri)) {
+      return transConfigItem
+    }
+
+
+    fs.writeFileSync(htmlUri, content)
+    // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
+    let isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+    if (isRenderSuccess === false) {
+      this.log(`${transConfigItem.htmlUri}第1次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+      isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+      if (isRenderSuccess === true) {
+        this.log(`${transConfigItem.htmlUri}渲染成功`)
+      }
+    }
+    if (isRenderSuccess === false) {
+      this.log(`${transConfigItem.htmlUri}第2次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+      isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+      if (isRenderSuccess === true) {
+        this.log(`${transConfigItem.htmlUri}渲染成功`)
+      } else {
+        this.log(`${transConfigItem.htmlUri}渲染失败`)
+      }
+    }
+
+    // 每生成一张图片休眠1s, 避免界面卡死
+    await CommonUtil.asyncSleep(1000 * 0.1)
+    return transConfigItem
+  }
+
+
+  /**
+   * 将html渲染为图片, 成功返回true, 渲染失败或超时返回false
+   * @param pageConfig 
+   */
+  async html2Image(htmlUri: string, imageUri: string): Promise<boolean> {
+    let webview = globalSubWindow.webContents;
+    let subWindow = globalSubWindow
+
+    return await new Promise((reslove, reject) => {
+      let timmerId = setTimeout(() => {
+        // 增加20s超时退出限制
+        globalSubWindow.reload()
+        reslove(false)
+      }, Const_Render_Html_Timeout_Second * 1000)
+
+      let render = async () => {
+        // this.log("load url -> ", pageConfig.htmlUri)
+        await webview.loadURL(htmlUri);
+        // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
+        await globalSubWindow.setContentSize(
+          Const_Default_Webview_Width,
+          Const_Default_Webview_Height,
+        );
+        // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
+        // this.log("resize page, executeJavaScript ")
+        let scrollHeight = await webview.executeJavaScript(
+          `document.children[0].children[1].scrollHeight`,
+        );
+
+        let jpgContent: Buffer
+        if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
+          // html页面太大, 需要分页输出, 最后再合成一张图片返回
+          let imgContentList: any[] = []
+          let remainHeight = scrollHeight
+          await subWindow.setContentSize(Const_Default_Webview_Width, Const_Max_Webview_Render_Height_Px);
+          // console.log("remainHeight => ", remainHeight)
+          // console.log("Const_Max_Height_Px => ", Const_Max_Height_Px)
+
+          let mergeImg = sharp({
+            create: {
+              width: Const_Default_Webview_Width,
+              height: scrollHeight,
+              channels: 4,
+              background: {
+                r: 255, g: 255, b: 255, alpha: 1,
+              },
+            }
+          }).jpeg({ quality: 100 })
+
+          while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
+            let imgIndex = imgContentList.length;
+            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgIndex
+            // 先移动到offset高度
+            let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
+            await webview.executeJavaScript(command);
+
+            // 然后对界面截屏
+            // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
+            await CommonUtil.asyncSleep(1000 * 0.2)
+            let nativeImg = await webview.capturePage();
+            let content = await nativeImg.toJPEG(100)
+            remainHeight = remainHeight - Const_Max_Webview_Render_Height_Px
+
+            imgContentList.push(
+              {
+                input: content,
+                top: Const_Max_Webview_Render_Height_Px * imgIndex,
+                left: 0,
+              }
+            )
+          }
+          if (remainHeight > 0) {
+            // 最后捕捉剩余高度页面
+
+            // 首先调整页面高度
+            await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight);
+            // 然后走流程, 捕捉界面
+            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgContentList.length
+            let imgIndex = imgContentList.length;
+
+            // 先移动到offset高度
+            let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
+            await webview.executeJavaScript(command);
+            // 然后对界面截屏
+            // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
+            await CommonUtil.asyncSleep(1000 * 0.2)
+            let nativeImg = await webview.capturePage();
+
+            let content = await nativeImg.toJPEG(100)
+            imgContentList.push(
+              {
+                input: content,
+                top: Const_Max_Webview_Render_Height_Px * imgIndex,
+                left: 0,
+              }
+            )
+          }
+
+          // 最后将imgContentList合并为一张图片
+          mergeImg.composite(
+            imgContentList
+          )
+
+          jpgContent = await mergeImg.toBuffer()
+
+        } else {
+          // 小于最大宽度, 只要截屏一次就可以
+          await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
+
+          // this.log("setContentSize with scrollHeight -> ", scrollHeight)
+          let nativeImg = await webview.capturePage();
+          jpgContent = await nativeImg.toJPEG(100);
+        }
+
+        // this.log(`jpgContent 渲染完毕. length => ${jpgContent.length}`)
+        // 基于mozjpeg压缩图片
+        let out = mozjpeg.encode(jpgContent, {
+          //处理质量 百分比
+          quality: 80
+        });
+
+        jpgContent = out.data
+        // this.log(`jpgContent 压缩完毕. length => ${jpgContent.length}`)
+        fs.writeFileSync(
+          path.resolve(imageUri),
+          jpgContent,
+        );
+        // this.log(`jpgContent 输出完毕. length => ${jpgContent.length}`)
+
+        // this.log('generateImage complete');
+        // 每张图片最大渲染时间不能超过10s
+        clearTimeout(timmerId)
+        reslove(true)
+      }
+
+      render()
     })
 
-    let pdfSaveStream = fs.createWriteStream(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`))
-    pdfDocument.pipe(pdfSaveStream)
+  }
+
+  async generatePdf(weiboDayList: TypeTransConfigPackageList) {
+
+    let doc = new jsPDF({
+      unit: 'px',
+      format: [Const_Default_Webview_Width, 500],
+      orientation: "landscape"
+    })
+    let fontUri = path.resolve(__dirname, '../../public/font/alibaba_PuHuiTi_Regular.ttf')
+    let fontContent = fs.readFileSync(fontUri)
+    let fontName = "alibaba_PuHuiTi_Regular"
+
+    doc.addFileToVFS(`${fontName}.ttf`, fontContent.toString("base64"))
+    doc.addFont(`${fontName}.ttf`, fontName, "normal")
+    doc.setFont(fontName, "normal");
+    doc.setFontSize(32)
+
+    // demo =>  yaozeyuan93-微博整理-第1/2卷-(2011-07-07~2012-01-25)
+    let rawBooktitle = this.bookname
+    let contentList = rawBooktitle.split(`-微博整理-`)
+    let accountName = contentList[0]
+
+    let timeRangeStartAt = contentList[1].indexOf('(')
+    let timeRangeEndAt = contentList[1].indexOf(')')
+    let timeRangeStr = contentList[1].slice(timeRangeStartAt + '('.length, timeRangeEndAt)
+
+    let columnStartAt = contentList[1].indexOf('第')
+    let columnEndAt = contentList[1].indexOf('卷')
+    let columnStr = ''
+    if (columnStartAt >= 0) {
+      // 先把关键语句提取出来, 后续根据需要再处理
+      columnStr = contentList[1].slice(columnStartAt + '第'.length, columnEndAt)
+      columnStr = `-第${columnStr}卷`
+    }
+
+
+    let lineAt = 0
+    let lineHeight = 40
+    let paddingLeft = Const_Default_Webview_Width / 2
+
+    function addLine(content: string) {
+      lineAt = lineAt + 1
+      doc.text(content, paddingLeft, lineHeight * lineAt, {
+        align: 'center',
+      })
+    }
+    function addLink(content: string) {
+      lineAt = lineAt + 1
+      doc.setTextColor("blue")
+      doc.textWithLink(content, paddingLeft, lineHeight * lineAt, {
+        align: 'center',
+        url: content
+      })
+    }
+    addLine("")
+    addLine(accountName)
+    addLine(`微博整理${columnStr}`)
+    addLine(timeRangeStr)
+    addLine("")
+    addLine("该文件由稳部落自动生成")
+    addLine("")
+    addLine("项目主页")
+    addLink("https://www.yaozeyuan.online/stablog")
+
+
+    let currentPageNo = 2
+    let outlineConfigList: {
+      title: string,
+      pageNo: number,
+    }[] = []
     // 先加一页, 避免出现空白页
     let dayIndex = 0
     for (let weiboDayRecord of weiboDayList) {
       dayIndex++
-      this.log(`将网页渲染为pdf, 正在处理第${dayIndex}/${weiboDayList.length}卷微博记录`)
+      this.log(`将页面${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)添加到pdf文件中`)
       let weiboIndex = 0
-      for (let weiboRecord of weiboDayRecord.weiboList) {
+      outlineConfigList.push({
+        title: weiboDayRecord.title,
+        pageNo: currentPageNo,
+      })
+
+      for (let weiboRecord of weiboDayRecord.configList) {
         weiboIndex++
         this.log(
-          `正在处理第${dayIndex}/${weiboDayList.length}卷中,第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博`,
+          `正在添加页面${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下,第${weiboIndex}/${weiboDayRecord.configList.length}条微博`,
         )
-        let content = WeiboView.render([weiboRecord])
-        content = this.processContent(content)
-        let htmlUri = path.resolve(this.htmlCacheHtmlPath, `demo.html`)
-        fs.writeFileSync(htmlUri, content)
-        await page.setViewport({
-          width: 750,
-          height: 1,
-        })
-        // mac的chrome上需要加前缀后才能打开页面
-        await page.goto('file://' + htmlUri)
-        // 对比了50/60/70/90/100五种情况,60比较合适, 体积小, 文字下也没有阴影, 适合阅读
-        let imageBuffer = await page.screenshot({
-          type: 'jpeg',
-          quality: this.CUSTOMER_CONFIG_pdfQuilty,
-          fullPage: true,
-          omitBackground: true,
-        })
-        if (imageBuffer.length < 1000) {
+        let imgUri = weiboRecord.imageUri
+        if (fs.existsSync(imgUri) === false) {
           // 图片渲染失败
-          this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染失败, 自动跳过`)
+          this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染失败, 自动跳过`)
           continue
         } else {
-          this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染成功`)
+          let imageBuffer = fs.readFileSync(imgUri)
+
           let size = await imageSize.imageSize(imageBuffer)
           let { width, height } = size
-          this.log(`图片size=>`, { width, height })
           if (!width || width <= 0 || !height || height <= 0) {
-            this.log(`第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博截图捕获失败, 自动跳过`)
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
             continue
           }
 
-          // 将图片数据添加到pdf文件中
-          pdfDocument.addPage({
-            margin: 0,
-            layout: 'landscape',
-            size: [height, width], // a smaller document for small badge printers
+          doc.addPage([width, height], width > height ? "landscape" : "portrait")
+          doc.addImage(
+            {
+              imageData: imageBuffer,
+              x: 0,
+              y: 0,
+              width: width,
+              height: height
+            })
+          doc.setFontSize(0.001)
+          doc.text(weiboRecord.htmlContent, 0, 0, {
+            // align: 'center',
           })
-          pdfDocument.image(imageBuffer)
+          currentPageNo = currentPageNo + 1
+          if (currentPageNo % 10 === 0) {
+            // 休眠0.1秒, 避免因频繁添加页面导致界面卡死
+            await CommonUtil.asyncSleep(1000 * 0.1)
+          }
         }
       }
     }
-    await page.close()
-    await browser.close()
-    pdfDocument.end()
-    // 等待pdf文件写入完毕
-    await new Promise((resolve, reject) => {
-      pdfSaveStream.on('finish', function() {
-        // do stuff with the PDF file
-        resolve()
-      })
-    })
+    // 开始补充导航栏
+    var node = doc.outline.add(null, '首页', { pageNumber: 1 });
+    // 通过hack的方式, 生成年月日三级目录
+    type Type_Node = {
+      node: any,
+      pageNo: number,
+      children: {
+        [key: string]: Type_Node
+      }
+    }
+
+    let node_map: {
+      [year: string]: Type_Node
+    } = {}
+    for (let outlineConfig of outlineConfigList) {
+      let [year, month, day] = outlineConfig.title.split('-');
+      if (node_map[year] === undefined) {
+        // 初始化年份
+        let yearNode = doc.outline.add(node, year, { pageNumber: outlineConfig.pageNo });
+        node_map[year] = {
+          node: yearNode,
+          pageNo: outlineConfig.pageNo,
+          children: {}
+        }
+        let monthNode = doc.outline.add(yearNode, `${year}-${month}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year] = {
+          node: yearNode,
+          pageNo: outlineConfig.pageNo,
+          children: {
+            [month]: {
+              node: monthNode,
+              pageNo: outlineConfig.pageNo,
+              children: {}
+            }
+          }
+        }
+        let dayNode = doc.outline.add(monthNode, `${year}-${month}-${day}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year] = {
+          node: yearNode,
+          pageNo: outlineConfig.pageNo,
+          children: {
+            [month]: {
+              node: monthNode,
+              pageNo: outlineConfig.pageNo,
+              children: {
+                [day]: {
+                  node: dayNode,
+                  pageNo: outlineConfig.pageNo,
+                  children: {}
+                }
+              }
+            }
+          }
+        }
+        continue;
+      }
+      if (node_map[year]['children'][month] === undefined) {
+        // 初始化月份
+        let yearNode = node_map[year]['node']
+        let monthNode = doc.outline.add(yearNode, `${year}-${month}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year]['children'][month] = {
+          node: monthNode,
+          pageNo: outlineConfig.pageNo,
+          children: {}
+        }
+        let dayNode = doc.outline.add(monthNode, `${year}-${month}-${day}`, { pageNumber: outlineConfig.pageNo });
+        node_map[year]['children'][month]['children'][day] = {
+          node: dayNode,
+          pageNo: outlineConfig.pageNo,
+          children: {}
+        }
+        continue;
+      }
+      // 否则, 添加日期节点
+      let yearNode = node_map[year]['node']
+      let monthNode = node_map[year]['children'][month]['node']
+      let dayNode = doc.outline.add(monthNode, `${year}-${month}-${day}`, { pageNumber: outlineConfig.pageNo });
+      node_map[year]['children'][month]['children'][day] = {
+        node: dayNode,
+        pageNo: outlineConfig.pageNo,
+        children: {}
+      }
+    }
+
+    await doc.save(path.resolve(this.htmlCachePdfPath, `${this.bookname}.pdf`), { returnPromise: true })
     this.log(`pdf输出完毕`)
   }
 }
-
 export default GenerateCustomer

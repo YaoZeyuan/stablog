@@ -217,6 +217,13 @@ export type TypePageInfo = {
   icon: 'https://h5.sinaimg.cn/upload/2016/12/28/14/feed_headlines_icon_flash20161228_2.png'
   type: TypePageType
   object_id: '1022:2309404414789865570479'
+  // 视频中带的key
+  play_count: "36万次播放"
+  "media_info": {
+    "duration": 161.957,
+    "stream_url": "https://f.video.weibocdn.com/NMJVsI9olx07LzZ45oti01041200k0S70E010.mp4?label=mp4_ld&template=640x360.25.0&trans_finger=40a32e8439c5409a63ccf853562a60ef&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=9i8xY5%2Bsww&KID=unistore,video",
+    "stream_url_hd": "https://f.video.weibocdn.com/UmEGuRZXlx07LzZ4GhsA01041200uhlA0E010.mp4?label=mp4_hd&template=852x480.25.0&trans_finger=62b30a3f061b162e421008955c73f536&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=iHKgDfh3oq&KID=unistore,video"
+  },
 }
 
 /**
@@ -227,11 +234,11 @@ export type TypeMblog = {
     type: 0
     list_id: 0
   }
-  created_at: '09-08'
+  created_at: '09-08' | string
   /**
    * 需要主动解析为该值, 作为微博发表时间戳
    */
-  created_timestamp_at?: number
+  created_timestamp_at: number
   /**
    * 当delete值存在时,表示该微博已被删除. 此时created_timestamp_at不存在. 所有字段存在性都不能保证
    */
@@ -355,145 +362,105 @@ export type TypeLongTextWeiboResponse = {
 }
 
 export type TypeWeiboArticleRecord = {
-  object_id: '1022:2309404414789865570479'
-  title: '香港反对派推促的美国反华法案对香港经济的影响？'
-  url: 'https://media.weibo.cn/article?id=2309404414789865570479'
-  status: '1'
-  object_type: 'article'
-  article_type: 'top_article'
-  content: '昨天香港反对派（包括同情运动的一般群众及作为运动先锋的连登年轻人等等）'
-  use_new_readcount_v3: 1
-  biz_exempt: 1
-  is_new_style: 1
-  dynamic_img_list: ['48c999f1ly1g6tsoj62rmj20jy0aen2y']
-  show_dynamic_card: true
-  top_info: {
-    read_level: 1
-    read_type: 0
-    fans_level: 2
-    fans_type: 0
-    max_fans_level: 2
-  }
-  mid: '4414789868083942'
-  wenda_object_id: '1022:2313474414789873958941'
-  update_at: '2019-09-11 02:22:18'
-  update_ip: '117.136.40.251'
-  history: [
-    {
-      time: '2019-09-11 02:22:18'
-      object_id: '1022:2309404415160428134405'
+  "object_id": "1022:2309404619352241471539",
+  "vuid": 0,
+  "uid": 1221171697,
+  "cover_img": {
+    "image": {
+      "url": "https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg",
+      "height": 450,
+      "width": 800
     },
-  ]
-  read_count_num: 627707
-  target_url: 'https://media.weibo.cn/article?id=2309404414789865570479'
-  pic_map: {
-    'https://wx2.sinaimg.cn/large/48c999f1ly1g6tsoj62rmj20jy0aen2y.jpg': '48c999f1ly1g6tsoj62rmj20jy0aen2y'
-    'https://wx4.sinaimg.cn/large/48c999f1ly1g6tsojbfk8j20dd06776h.jpg': '48c999f1ly1g6tsojbfk8j20dd06776h'
-  }
-  scheme_url: 'sinaweibo://article?object_id=1022:2309404414789865570479'
-  show_edit: 1
-  userinfo: {
-    id: 1221171697
-    screen_name: '兔主席'
-    profile_image_url: 'https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1568538686&ssig=QEqSlCcSBM'
-    verified: true
-    verified_type: 0
-    verified_reason: '知名历史博主 头条文章作者'
-    close_blue_v: false
-    description: '大历史。大社会。 独立。理性。批判。建设。'
-    gender: 'm'
-    follow_me: false
-    following: false
-    followers_count: '107万'
-    cover_image_phone: 'https://tva1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg'
-    idstr: '1221171697'
-    friends_count: 470
-    name: '兔主席'
-    avatar_large: 'https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1568538686&ssig=QEqSlCcSBM'
-    avatar_hd: 'https://ww3.sinaimg.cn/orj480/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg'
-    vicon: 'yellowv'
-    att: 0
-    friendships_relation: 0
-  }
-  created_at: '09.10 01:49'
-  follow_button: {
-    skip_format: 1
-    sub_type: 0
-    type: 'follow'
-    name: '加关注'
-    params: {
-      uid: 1221171697
+    "full_image": {
+      "url": "https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg",
+      "height": 562,
+      "width": 1000
     }
-  }
-  flow: {
-    flow_type: 1
-    flow_title: '推荐阅读'
-  }
-  sharecontent: {
-    description: ''
-    pic_url: ''
-  }
-  read_count: '62万+'
-  page_id: '2309404414789865570479'
-  article_version: 2
-  scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479'
-  article_fingerprinting: '6f6ee4f5c587fb98807ca8f6ad37c669'
-  refresh_placeholder_pic: 'https://h5.sinaimg.cn/upload/1000/48/2018/11/19/iPhone.png'
-  edit_scheme: 'sinaweibo://articleedit?oid=1022:2309404414789865570479'
-  edit_history_url: 'https://card.weibo.com/article/m/history/list/?showmenu=0#/id=2309404414789865570479'
-  created_time: '2019-09-10T01:49:50Z'
-  mblog: {
-    id: '4414789868083942'
-    reposts_count: 453
-    comments_count: 825
-    attitudes_count: 6152
-    scheme_wb: 'sinaweibo://detail?mblogid=4414789868083942&luicode=10000370'
-  }
-  isMyself: 0
-  liked: 0
-  reward_users: []
-  ok: 1
-  msg: '文章内容获取成功'
-  exp: {
-    uid: null
-    isLogin: false
-    loginUrl: 'https://passport.weibo.cn/signin/welcome?entry=mweibo&r=https%3A%2F%2Fmedia.weibo.cn%2Farticle%3Fobject_id%3D1022%253A2309404414789865570479%26extparam%3Dlmid--4414789868083942%26luicode%3D10000011%26lfid%3D2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO%26id%3D2309404414789865570479'
-    wx_callback: 'https://passport.weibo.com/othersitebind/authorize?entry=h53rdlanding&site=qq&callback=http%3A%2F%2Fmedia.weibo.cn%2Farticle%3Fobject_id%3D1022%253A2309404414789865570479%26extparam%3Dlmid--4414789868083942%26luicode%3D10000011%26lfid%3D2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO%26id%3D2309404414789865570479'
-    wx_authorize: 'https://passport.weibo.com/othersitebind/authorize?site=weixin&entry=sinawap&type=normal&callback=http%3A%2F%2Fmedia.weibo.cn%2Farticle%3Fobject_id%3D1022%253A2309404414789865570479%26extparam%3Dlmid--4414789868083942%26luicode%3D10000011%26lfid%3D2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO%26id%3D2309404414789865570479'
-    passport_login_url: 'https://passport.weibo.cn/signin/login?entry=mweibo&r=http%3A%2F%2Fmedia.weibo.cn%2Farticle%3Fobject_id%3D1022%253A2309404414789865570479%26extparam%3Dlmid--4414789868083942%26luicode%3D10000011%26lfid%3D2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO%26id%3D2309404414789865570479'
-    deviceType: 'Windows'
-    browserType: 'Chrome'
-    online: true
-    wm: null
-    st: false
-    isInClient: 0
-    isWechat: 0
-    hideHeaderBanner: 0
-    request_key: '07f922d7d66e5af5576627583b969630'
-  }
-  token: ''
-  rewards: {
-    version: '6f2685094e508b25'
-    rewardComponent: 'seller=1221171697&bid=1000207805&oid=1022:2309404414789865570479&share=1&access_type=mobileLayer&sign=fa9a82c795aa3c971b5c0adedf4a639f'
-    extendParam: 'type=layer&extparam=lmid--4414789868083942'
-    displayPayRead: 0
-    isreward: 1
-  }
-  wxConfig: ''
-  config: {
-    id: '1022:2309404414789865570479'
-    extparam: 'lmid--4414789868083942'
-    cover_img: 'https://wx4.sinaimg.cn/wap720/48c999f1gy1g6uza6a6qlj20d407egm6.jpg'
-  }
-  callUinversalLink: true
-  callWeibo: true
-  amphtml: '<link rel="amphtml" href="https://media.weibo.cn/article/amp?id=2309404414789865570479">'
-  scheme_user_profile: 'sinaweibo://userinfo?uid=1221171697&luicode=10000370'
-  home_scheme: 'sinaweibo://gotohome?luicode=10000370'
-  scheme_wb: 'sinaweibo://detail?mblogid=4414789868083942&luicode=10000370'
-  article_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&luicode=10000370'
-  reward_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=reward&luicode=10000370'
-  pay_scheme: 'sinaweibo://article?object_id=1022:2309404414789865570479&pos=1&anchor=pay&luicode=10000370'
+  },
+  "target_url": "https://card.weibo.com/article/m/show/id/2309404619352241471539",
+  "title": "理解西方人对“种族灭绝”的近代历史心结",
+  "create_at": "03-27 13:27",
+  "read_count": "40万+",
+  "summary": "",
+  "writer": [],
+  "ourl": "",
+  "url": "https://weibo.com/ttarticle/p/show?id=2309404619352241471539",
+  "is_pay": 0,
+  "is_reward": 0,
+  "is_vclub": 0,
+  "is_original": 0,
+  "pay_status": 0,
+  "follow_to_read": 1,
+  "userinfo": {
+    "uid": 1221171697,
+    "id": 1221171697,
+    "screen_name": "兔主席",
+    "description": "大历史。大社会。 独立。理性。批判。建设。",
+    "followers_count": 1762801,
+    "friends_count": 465,
+    "verified": true,
+    "verified_type": 0,
+    "verified_type_ext": 0,
+    "verified_reason": "知名历史博主 头条文章作者",
+    "avatar_large": "https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=rphdPBquHf",
+    "profile_image_url": "https://tva3.sinaimg.cn/crop.0.0.180.180.50/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=eXClERRC%2FH",
+    "cover_image": "",
+    "cover_image_phone": "https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg",
+    "following": false,
+    "mbtype": 11,
+    "mbrank": 6,
+    "url": "https://weibo.com/u/1221171697",
+    "target_url": "https://m.weibo.cn/profile/1221171697",
+    "scheme_url": "sinaweibo://userinfo?uid=1221171697",
+    "is_vclub": 0,
+    "is_vclub_gold": 0
+  },
+  "content": "文本内容",
+  "is_import": 0,
+  "is_repost_to_share": 0,
+  "reward_data": {
+    "seller": 1221171697,
+    "bid": 1000207805,
+    "oid": "1022:2309404619352241471539",
+    "access_type": "mobileLayer",
+    "share": 1,
+    "sign": "6233ad671c5222c7f2aee451af28a202"
+  },
+  "copyright": 0,
+  "mid": 4619352240819112,
+  "is_word": 1,
+  "article_browser": 1,
+  "scheme_url": "sinaweibo://articlebrowser?object_id=1022:2309404619352241471539&url=https%3A%2F%2Fcard.weibo.com%2Farticle%2Fm%2Fshow%2Fid%2F2309404619352241471539",
+  "article_recommend": [],
+  "article_recommend_info": {
+    "type": 1
+  },
+  "ignore_read_count": 0,
+  "is_new_style": 1,
+  "card_list": [],
+  "object_info": [],
+  "extra": null,
+  "article_type": "v3_h5",
+  "history": "",
+  "origin_oid": "",
+  "update_at": "",
+  "show_edit": 0,
+  "pay_info": [],
+  "pay_info_ext": [],
+  "pay_edit_tips": "",
+  "pay_data": {
+    "version": "531294344d21a6d3",
+    "ua": "h5",
+    "vuid": 1221171697,
+    "body_btn": [],
+    "footer_btn": []
+  },
+  "is_checking": null,
+  "real_oid": null,
+  "hide_share_button": 0,
+  "hide_repost_button": 0,
+  "article_fingerprinting": "f8a66a53c0cf5b726a6703d83df4fdd9",
+  "is_follow": 0
 }
 
 /**

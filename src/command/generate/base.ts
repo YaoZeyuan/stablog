@@ -15,12 +15,17 @@ import logger from '~/src/library/logger'
 import StringUtil from '~/src/library/util/string'
 import TypeTaskConfig from '~/src/type/namespace/task_config'
 
-class FetchBase extends Base {
+class GenerateBase extends Base {
   imageQuilty: TypeTaskConfig.imageQuilty = 'hd'
 
   imgUriPool: Set<string> = new Set()
 
   bookname = ''
+
+  /**
+   * 作者uid, 根据uid在图片池中生成pdf预览图片
+   */
+  currentAuthorUid = ''
 
   get htmlCachePath() {
     return path.resolve(PathConfig.htmlCachePath, this.bookname)
@@ -30,6 +35,16 @@ class FetchBase extends Base {
   }
   get htmlCachePdfPath() {
     return path.resolve(this.htmlCachePath, 'pdf')
+  }
+
+  // 用于生成pdf的图片应该放在公共图片库中, 以方便缓存, 避免每次重新生成
+  get html2ImageCache_ImagePath() {
+    return path.resolve(PathConfig.imgCachePath, 'pdf_resource', this.currentAuthorUid, 'html2image')
+  }
+
+  // 用于生成pdf的html应该和html同一层级
+  get html2ImageCache_HtmlPath() {
+    return path.resolve(this.htmlCachePath, 'html_to_pdf')
   }
 
   get htmlCacheCssPath() {
@@ -58,6 +73,15 @@ class FetchBase extends Base {
     return '生成电子书'
   }
 
+  /**
+   * 重置html2pdf的图片缓存文件夹
+   */
+  resetHtml2pdfImageCache() {
+    this.log(`重置html2pdf的图片缓存文件夹`)
+    shelljs.rm('-rf', this.html2ImageCache_ImagePath)
+    shelljs.mkdir('-p', this.html2ImageCache_ImagePath)
+  }
+
   // 初始化静态资源(电子书 & html目录)
   initStaticRecource() {
     this.log(`删除旧目录`)
@@ -77,9 +101,12 @@ class FetchBase extends Base {
     shelljs.mkdir('-p', this.htmlCacheFontPath)
     shelljs.mkdir('-p', this.htmlCacheImgPath)
     shelljs.mkdir('-p', this.htmlCachePdfPath)
+    shelljs.mkdir('-p', this.html2ImageCache_ImagePath)
+    shelljs.mkdir('-p', this.html2ImageCache_HtmlPath)
     shelljs.mkdir('-p', this.htmlOutputPath)
     this.log(`电子书:${this.bookname}对应文件夹创建完毕`)
   }
+
   processContent(content: string) {
     let that = this
     // 删除noscript标签内的元素
@@ -203,7 +230,7 @@ class FetchBase extends Base {
     this.log(`[第${index}张图片]-4-第${index}/${this.imgUriPool.size}张图片储存完毕`)
   }
 
-  copyImgToCache(imgCachePath: string) {
+  async asyncCopyImgToCache(imgCachePath: string) {
     let index = 0
     for (let src of this.imgUriPool) {
       index++
@@ -220,6 +247,10 @@ class FetchBase extends Base {
       } else {
         this.log(`第${index}/${this.imgUriPool.size}张图片不存在, 自动跳过`)
         this.log(`src => ${src}`)
+      }
+      if (index % 100 === 0) {
+        // 每复制100张图片休眠0.1秒, 避免页面因快速复制卡死
+        await CommonUtil.asyncSleep(1000 * 0.1)
       }
     }
     this.log(`全部图片复制完毕`)
@@ -239,7 +270,7 @@ class FetchBase extends Base {
       fs.copyFileSync(copyFromUri, copyToUri)
     }
     // 图片资源
-    for (let filename of ['cover.jpg', 'kanshan.png']) {
+    for (let filename of ['cover.jpg', 'kanshan.png', 'sprite.svg']) {
       let copyFromUri = path.resolve(PathConfig.resourcePath, 'image', filename)
       let copyToUri = path.resolve(this.htmlCacheImgPath, filename)
       fs.copyFileSync(copyFromUri, copyToUri)
@@ -258,17 +289,17 @@ class FetchBase extends Base {
     await this.downloadImg()
     this.log(`图片下载完毕`)
     this.log(`将图片从图片池复制到电子书文件夹中`)
-    this.copyImgToCache(this.htmlCacheImgPath)
+    await this.asyncCopyImgToCache(this.htmlCacheImgPath)
     this.log(`图片复制完毕`)
 
     this.log(`复制静态资源`)
     this.copyStaticResource()
-    this.log(`静态资源完毕`)
+    this.log(`静态资源复制完毕`)
   }
   async asyncCopyToDist() {
     this.log(`将输出电子书复制到结果目录中`)
     shelljs.cp('-r', path.resolve(this.htmlCachePath, './*'), path.resolve(this.htmlOutputPath))
-    this.log(`输出电子书复制完毕`)
+    this.log(`电子书复制完毕`)
   }
 
   /**
@@ -299,4 +330,4 @@ class FetchBase extends Base {
   }
 }
 
-export default FetchBase
+export default GenerateBase

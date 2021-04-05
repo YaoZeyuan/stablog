@@ -106,7 +106,7 @@ class Base {
                 <a>---</a>:
               </span>
               {/* <div>${mblog.text}</div> */}
-              <div dangerouslySetInnerHTML={{ __html: `${mblog.text}` }} />
+              <span dangerouslySetInnerHTML={{ __html: `${mblog.text}` }} />
             </div>
             <div>
               {/* 如果是图片的话, 需要展示九张图 */}
@@ -122,21 +122,23 @@ class Base {
       let articleElement = null
       if (articleRecord) {
         // 渲染文章元素
-        let isExistCoverImg = articleRecord && articleRecord.config && articleRecord.config.cover_img
+        let isExistCoverImg = articleRecord?.cover_img?.image?.url
         let coverImgEle = isExistCoverImg ? (
           <div className="main_toppic">
             <div className="picbox">
-              <img node-type="articleHeaderPic" src={articleRecord.config.cover_img} />
+              <img node-type="articleHeaderPic" src={articleRecord?.cover_img?.image?.url} />
             </div>
           </div>
         ) : null
         articleElement = (
           <div className="WB_artical">
+            <div className="article-split-line"></div>
             {coverImgEle}
             <div className="main_editor " node-type="articleContent">
               <div className="title" node-type="articleTitle">
                 {articleRecord.title}
               </div>
+              <div className="art-line"></div>
               <div className="WB_editor_iframe_new" node-type="contentBody">
                 {/* 正文 */}
                 <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }} />
@@ -162,6 +164,24 @@ class Base {
           mblogPictureList.push(picEle)
         }
       }
+      let videoEle = null
+      if (mblog?.page_info?.type === 'video') {
+        let imgUrl = mblog?.page_info?.page_pic?.url || ''
+        let during_s = mblog?.page_info?.media_info?.duration || 0
+        let during_str = CommonUtil.seconds2DuringStr(during_s)
+        videoEle = (
+          <div className="weibo-video-container">
+            <div className="video-img-container">
+              <img src={imgUrl} className="video-img"></img>
+            </div>
+            <div className="video-info-container">
+              <div className="card-video_plusInfo"> {mblog?.page_info?.play_count} </div>
+              <div className="card-video_during">{during_str}</div>
+            </div>
+          </div>
+        )
+      }
+
       mblogEle = (
         <div className="weibo-rp">
           <div className="weibo-text">
@@ -177,6 +197,8 @@ class Base {
               <ul className="m-auto-list">{mblogPictureList}</ul>
             </div>
           </div>
+          {/* 视频内容 */}
+          {videoEle}
           <div className="weibo-article-container">
             {/* 文章内容 */}
             {articleElement}
@@ -194,21 +216,23 @@ class Base {
     let articleElement = null
     if (articleRecord) {
       // 渲染文章元素
-      let isExistCoverImg = articleRecord && articleRecord.config && articleRecord.config.cover_img
+      let isExistCoverImg = articleRecord?.cover_img?.image?.url
       let coverImgEle = isExistCoverImg ? (
         <div className="main_toppic">
           <div className="picbox">
-            <img node-type="articleHeaderPic" src={articleRecord.config.cover_img} />
+            <img node-type="articleHeaderPic" src={articleRecord?.cover_img?.image?.url} />
           </div>
         </div>
       ) : null
       articleElement = (
         <div className="WB_artical">
+          <div className="article-split-line"></div>
           {coverImgEle}
           <div className="main_editor " node-type="articleContent">
             <div className="title" node-type="articleTitle">
               {articleRecord.title}
             </div>
+            <div className="art-line"></div>
             <div className="WB_editor_iframe_new" node-type="contentBody">
               {/* 正文 */}
               <div className="article-content" dangerouslySetInnerHTML={{ __html: articleRecord.content }} />
@@ -235,6 +259,24 @@ class Base {
       }
     }
 
+    let videoEle = null
+    if (mblog?.page_info?.type === 'video') {
+      let imgUrl = mblog?.page_info?.page_pic?.url || ''
+      let during_s = mblog?.page_info?.media_info?.duration || 0
+      let during_str = CommonUtil.seconds2DuringStr(during_s)
+      videoEle = (
+        <div className="weibo-video-container">
+          <div className="video-img-container">
+            <img src={imgUrl} className="video-img"></img>
+          </div>
+          <div className="video-info-container">
+            <div className="card-video_plusInfo"> {mblog?.page_info?.play_count} </div>
+            <div className="card-video_during">{during_str}</div>
+          </div>
+        </div>
+      )
+    }
+
     let mblogElement = (
       <div key={CommonUtil.getUuid()} className="mblog-container">
         <div className="card m-panel card9 weibo-member card-vip">
@@ -250,7 +292,9 @@ class Base {
                 <div className="m-box-col m-box-dir m-box-center">
                   <div className="m-text-box">
                     <a>
-                      <h3 className="m-text-cut">{mblog.user.screen_name}</h3>
+                      <h3 className="m-text-cut">
+                        {mblog.user.screen_name} <i className="m-icon m-icon-vipl7"></i>
+                      </h3>
                     </a>
                     <h4 className="m-text-cut">
                       <span className="time">
@@ -274,6 +318,8 @@ class Base {
                     <ul className="m-auto-list">{mblogPictureList}</ul>
                   </div>
                 </div>
+                {/* 视频内容 */}
+                {videoEle}
                 {/* 所发布文章内容 */}
                 <div className="weibo-article-container">{articleElement}</div>
                 {/* 所转发的微博 */}
@@ -305,6 +351,41 @@ class Base {
       </div>
     )
     return mblogElement
+  }
+
+  /**
+   * 生成页面底部的导航action
+   * @returns
+   */
+  static generateFooterGuideAction(
+    param: {
+      backUrl: string
+      nextUrl: string
+      indexUrl: string
+    } = {
+      backUrl: '#',
+      nextUrl: '#',
+      indexUrl: '#',
+    },
+  ) {
+    return (
+      <div key="footer-guide">
+        <div className="footer-container">
+          <div className={`action action-go-back ${param.backUrl === '#' ? 'action-disable' : ''}`}>
+            <a href={param.backUrl || '#'}>上一页</a>
+          </div>
+          <span className="gradient"></span>
+          <div className="action action-go-category">
+            <a href={param.indexUrl || '#'}>目录</a>
+          </div>
+          <span className="gradient"></span>
+          <div className={`action action-go-next ${param.nextUrl === '#' ? 'action-disable' : ''}`}>
+            <a href={param.nextUrl || '#'}>下一页</a>
+          </div>
+        </div>
+        <div className="footer-container-placeholder"></div>
+      </div>
+    )
   }
 
   static renderToString(contentElement: React.ReactElement<any>) {

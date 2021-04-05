@@ -107,6 +107,33 @@ class Common {
     }
     return config
   }
+
+
+  /**
+   * 将秒数转为可读的 时:分:秒 式时长
+   */
+  static seconds2DuringStr(during_s: number) {
+    during_s = parseInt(`${during_s}`)
+    if (Number.isNaN(during_s)) {
+      return '00:00'
+    }
+    const Const_Hour_During = 60 * 60;
+    const Const_Minute_During = 60;
+    let hour_count = ''
+    let minute_count = '00:'
+    let second_count = ''
+    // 计算小时时长
+    if (during_s > Const_Hour_During) {
+      hour_count = Math.floor(during_s / Const_Hour_During) + ':'
+      during_s = during_s % Const_Hour_During
+    }
+    if (during_s > Const_Minute_During) {
+      minute_count = `${Math.floor(during_s / Const_Minute_During)}`.padStart(2, '0') + ':'
+      during_s = during_s % Const_Minute_During
+    }
+    second_count = `${Math.floor(during_s)}`.padStart(2, '0')
+    return `${hour_count}${minute_count}${second_count}`
+  }
 }
 
 export default Common

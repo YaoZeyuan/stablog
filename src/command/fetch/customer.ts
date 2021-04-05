@@ -12,10 +12,29 @@ import MMblogUser from '~/src/model/mblog_user'
 import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
+import querystring from 'query-string'
+
+/**
+ * weibo.com的新Api对应的创建时间解析格式字符串
+ */
+const Const_Moment_Parse_Format_4_WeiboComApi = "ddd MMM DD HH:mm:ss Z YYYY"
+/**
+ * 重试时的等待时间
+ */
+const Const_Retry_Wait_Seconds = 30
+/**
+ * 正常执行抓取流程的等待时间
+ */
+const Const_Fetch_Wati_Seconds = 20
 
 /**
  * 解析微博文章id，方便构造api, 抓取文章内容
  * @param rawUrl
+ * 原始
+ * rawurl格式 => https://m.weibo.cn/feature/applink?scheme=sinaweibo%3A%2F%2Farticlebrowser%3Fobject_id%3D1022%253A2309404446645566701785%26url%3Dhttps%253A%252F%252Fcard.weibo.com%252Farticle%252Fm%252Fshow%252Fid%252F2309404446645566701785%253F_wb_client_%253D1%26extparam%3Dlmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
+ * 解码后=>  https://m.weibo.cn/feature/applink?scheme=sinaweibo://articlebrowser?object_id=1022:2309404446645566701785&url=https://card.weibo.com/article/m/show/id/2309404446645566701785?_wb_client_=1&extparam=lmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
+ * 2021年3月28日新增
+ * rawurl格式 => https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
  */
 function getArticleId(rawUrl = '') {
   if (!rawUrl) {
@@ -26,6 +45,13 @@ function getArticleId(rawUrl = '') {
   if (!decodeUrl) {
     return ''
   }
+  if (decodeUrl.includes("id=") && decodeUrl.includes("/ttarticle/p/show")) {
+    // 说明是新格式 https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
+    let rawQuery = querystring.parseUrl(decodeUrl).query
+    let articleId = rawQuery?.id || ''
+    return articleId
+  }
+
   let rawArticleUrl = decodeUrl.split('url=')[1]
   if (!rawArticleUrl) {
     return ''
@@ -137,10 +163,9 @@ class FetchCustomer extends Base {
           this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
           await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
-          // 微博的反爬虫措施太强, 只能用每5s抓一次的方式拿数据🤦‍♂️
-          let sleep_s = 20
-          this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${sleep_s}s, 避免被封`)
-          await Util.asyncSleep(sleep_s * 1000)
+          // 微博的反爬虫措施太强, 只能用每20s抓一次的方式拿数据🤦‍♂️
+          this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${Const_Fetch_Wati_Seconds}s, 避免被封`)
+          await Util.asyncSleep(Const_Fetch_Wati_Seconds * 1000)
         }
       }
       this.log(`用户${userInfo.screen_name}的微博数据抓取完毕`)
@@ -148,6 +173,13 @@ class FetchCustomer extends Base {
     this.log(`所有任务抓取完毕`)
   }
 
+  /**
+   * 
+   * @param author_uid 
+   * @param page 
+   * @param totalPage 
+   * @param newFormatRecordMap 
+   */
   async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
@@ -155,8 +187,24 @@ class FetchCustomer extends Base {
       // 避免crash导致整个进程退出
       return []
     })
-    if (_.isEmpty(rawMblogList)) {
-      this.log(`第${page}/${totalPage}页微博记录抓取失败`)
+    if (rawMblogList.length === 0) {
+      // 说明抓取失败, 等待30s后重试一次
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      // 更新st
+      let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+      this.requestConfig.st = newSt
+      // 带着新st重新抓取一次
+      rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+    }
+    if (rawMblogList.length === 0) {
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+    }
+    if (rawMblogList.length === 0) {
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取`)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
       return
     }
     let mblogList: Array<TypeWeibo.TypeMblog> = []
@@ -209,7 +257,7 @@ class FetchCustomer extends Base {
           mblog.retweeted_status.article = articleRecord
         }
       }
-      if (rawMblog.mblog.page_info && rawMblog.mblog.page_info.type === 'article') {
+      if (rawMblog?.mblog?.page_info?.type === 'article') {
         // 文章类型为微博文章
         let pageInfo = rawMblog.mblog.page_info
         let articleId = getArticleId(pageInfo.page_url)
@@ -231,13 +279,29 @@ class FetchCustomer extends Base {
       // 处理完毕, 将数据存入数据库中
       let id = mblog.id
       let author_uid = `${mblog.user.id}`
-      mblog.created_timestamp_at = this.parseMblogCreateTimestamp(mblog)
+      let createAt = 0
+      // 目前微博的created_at字段均为标准时区字符串格式
+      createAt = this.parseMblogCreateTimestamp(mblog)
+      mblog.created_timestamp_at = createAt
       let raw_json = JSON.stringify(mblog)
+      let is_retweet = mblog.retweeted_status ? 1 : 0
+      let is_article = mblog.article ? 1 : 0
+
+      // 这里可能会出报SQLITE_BUSY: database is locked 
       await MMblog.replaceInto({
         id,
         author_uid,
+        is_retweet,
+        is_article,
         raw_json,
         post_publish_at: mblog.created_timestamp_at,
+      }).catch((e: Error) => {
+        this.log("数据库插入出错 => ", {
+          name: e?.name,
+          message: e?.message,
+          stack: e?.stack
+        })
+        return
       })
     }
     this.log(`${target}成功存入数据库`)
@@ -253,7 +317,7 @@ class FetchCustomer extends Base {
       // Mon Sep 16 01:13:45 +0800 2019
       if (rawCreateAtStr.includes('+0800')) {
         // 'Sun Sep 15 00:35:14 +0800 2019' 时区模式
-        return moment(new Date(rawCreateAtStr)).unix()
+        return moment(rawCreateAtStr, Const_Moment_Parse_Format_4_WeiboComApi).unix()
       }
       // '12小时前' | '4分钟前' | '刚刚' | '1小时前' 模式
       // 不含-符号, 表示是最近一天内, 直接认为是当前时间, 不进行细分
