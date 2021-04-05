@@ -11,7 +11,7 @@
   "license": "MIT",
   "scripts": {
     "startgui": "node gui/script/dev-server.js",
-    "buildgui": "cd ./gui && npm run build",
+    "buildgui": "node ./script/build-gui.js",
     "start": "electron dist/index.js --debug",
     "prod": "electron dist/index.js",
     "ace": "node dist/ace.js",
