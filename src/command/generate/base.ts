@@ -230,7 +230,7 @@ class GenerateBase extends Base {
     this.log(`[第${index}张图片]-4-第${index}/${this.imgUriPool.size}张图片储存完毕`)
   }
 
-  copyImgToCache(imgCachePath: string) {
+  async asyncCopyImgToCache(imgCachePath: string) {
     let index = 0
     for (let src of this.imgUriPool) {
       index++
@@ -247,6 +247,10 @@ class GenerateBase extends Base {
       } else {
         this.log(`第${index}/${this.imgUriPool.size}张图片不存在, 自动跳过`)
         this.log(`src => ${src}`)
+      }
+      if (index % 100 === 0) {
+        // 每复制100张图片休眠0.1秒, 避免页面因快速复制卡死
+        await CommonUtil.asyncSleep(1000 * 0.1)
       }
     }
     this.log(`全部图片复制完毕`)
@@ -285,7 +289,7 @@ class GenerateBase extends Base {
     await this.downloadImg()
     this.log(`图片下载完毕`)
     this.log(`将图片从图片池复制到电子书文件夹中`)
-    this.copyImgToCache(this.htmlCacheImgPath)
+    await this.asyncCopyImgToCache(this.htmlCacheImgPath)
     this.log(`图片复制完毕`)
 
     this.log(`复制静态资源`)

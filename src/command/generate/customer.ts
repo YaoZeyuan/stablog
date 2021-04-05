@@ -746,6 +746,10 @@ class GenerateCustomer extends Base {
             // align: 'center',
           })
           currentPageNo = currentPageNo + 1
+          if (currentPageNo % 10 === 0) {
+            // 休眠0.1秒, 避免因频繁添加页面导致界面卡死
+            await CommonUtil.asyncSleep(1000 * 0.1)
+          }
         }
       }
     }
