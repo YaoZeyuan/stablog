@@ -274,10 +274,15 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   if ($$database.taskConfig.isSkipFetch) {
     needBackupWeiboPageCount = 0;
   }
+  if ($$database.taskConfig.isSkipGeneratePdf) {
+    needGenerateWeiboCount = 0;
+  }
   console.log('needBackupWeiboPageCount => ', needBackupWeiboPageCount);
   // 总需要等待的时长(秒)
   let needWaitSecond =
     needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2;
+  let 备份微博耗时_分钟 = Math.floor((needBackupWeiboPageCount * 30) / 60);
+  let 导出微博耗时_分钟 = Math.floor((needGenerateWeiboCount * 2) / 60);
   let needWaitMinute = Math.floor(needWaitSecond / 60);
   let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100;
 
@@ -413,14 +418,24 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               <Descriptions.Item
                 label={
                   <span>
-                    备份全部微博预计耗时&nbsp;
+                    预计耗时&nbsp;
                     <Tooltip title="计算公式:总耗时=(待抓取微博总数/10 * 30 + 微博总数 * 2)秒. 每10条微博一页, 抓取一页微博数据需要间隔30s. 抓取完成, 生成pdf时, 每条微博需要用2s将其渲染为图片. 故有此公式">
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </span>
                 }
               >
-                {needWaitMinute}分钟 / {needWaitHour}小时
+                预计累计耗时{needWaitMinute}分钟 / {needWaitHour}小时
+              </Descriptions.Item>
+              <Descriptions.Item label={<span>- 抓取耗时&nbsp;</span>}>
+                {$$database.taskConfig.isSkipFetch
+                  ? `已勾选跳过抓取流程选项, 不需要执行抓取, 耗时为0`
+                  : `预计共需备份${needBackupWeiboPageCount}张页面, 耗时${备份微博耗时_分钟}分钟`}
+              </Descriptions.Item>
+              <Descriptions.Item label={<span>- 输出pdf耗时&nbsp;</span>}>
+                {$$database.taskConfig.isSkipGeneratePdf
+                  ? '已勾选跳过pdf输出选项, 不需要渲染pdf, 耗时为0'
+                  : `预计共需渲染${needGenerateWeiboCount}条微博, 耗时${导出微博耗时_分钟}分钟`}
               </Descriptions.Item>
               <Descriptions.Item label="粉丝数">
                 {$$database.currentUserInfo.followers_count}
