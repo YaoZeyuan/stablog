@@ -202,7 +202,7 @@ export default function IndexPage() {
       filters: [
         {
           // name: `稳部落导出的用户_${config.screen_name}_微博记录`,
-          name: ``,
+          name: `稳部落数据导出`,
           extensions: ['json'],
         },
       ],
