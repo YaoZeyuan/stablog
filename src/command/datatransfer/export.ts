@@ -50,7 +50,8 @@ class DataTransferExport extends Base {
     async execute(args: any, options: any): Promise<any> {
         let { exportUri, uid, exportStartAt, exportEndAt } = args
 
-        this.log(`开始导出数据`)
+
+        this.log(`开始导出数据`, { exportUri, uid, exportStartAt, exportEndAt })
         let userInfo = await MMblogUser.asyncGetUserInfo(uid)
         let recordList = await MMblog.asyncGetMblogList(uid, exportStartAt, exportEndAt)
         this.log(`导出用户:${userInfo.screen_name}`)
@@ -73,7 +74,9 @@ class DataTransferExport extends Base {
             }
         }
         // 若目标文件不存在, 自动创建之
-        fs.outputJsonSync(exportUri, exportData)
+        fs.outputJsonSync(exportUri, exportData, {
+            "spaces": 2
+        })
         this.log(`导出完毕`)
 
     }

@@ -1,5 +1,5 @@
 import './index.less';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import TypeWeibo from '@/../../src/type/namespace/weibo';
 import { useState, useEffect } from 'react';
 import { enableMapSet } from 'immer';
@@ -8,6 +8,8 @@ import produce from 'immer';
 import { Table, Card, Select, Button } from 'antd';
 import Util from '@/library/util';
 import moment from 'moment';
+import path from 'path';
+
 let Option = Select.Option;
 let MUser = remote.getGlobal('mUser');
 let MBlog = remote.getGlobal('mBlog');
@@ -183,6 +185,42 @@ export default function IndexPage() {
     setSelectWeiboListPageNo(1);
     setIsLoading(false);
     await asyncFetchUserInfoList();
+  }
+
+  /**
+   * 导出数据
+   */
+  async function asyncDataTransferExport(config: {
+    screen_name: string;
+    exportUri: string;
+    uid: string;
+    exportStartAt: number;
+    exportEndAt: number;
+  }) {
+    let saveUri = await remote.dialog.showSaveDialogSync({
+      title: '文件保存地址',
+      filters: [
+        {
+          // name: `稳部落导出的用户_${config.screen_name}_微博记录`,
+          name: ``,
+          extensions: ['json'],
+        },
+      ],
+    });
+    if (!config.uid || !saveUri) {
+      // 没有uid, 无法导出
+      return;
+    }
+    let finalConfig = {
+      uid: config.uid,
+      exportStartAt: config.exportStartAt,
+      exportEndAt: config.exportEndAt,
+      exportUri: path.resolve(saveUri),
+    };
+
+    console.log('config => ', finalConfig);
+
+    ipcRenderer.sendSync('dataTransferExport', finalConfig);
   }
 
   useEffect(() => {
@@ -389,6 +427,55 @@ export default function IndexPage() {
     );
   }
 
+  let uid = selectUserId;
+  let exportUri = '';
+
+  let exportStartAt = moment('2009-01-01 00:00:00').unix();
+  let exportEndAt = moment().unix();
+  if ($$storageSelect.year) {
+    if ($$storageSelect.month) {
+      exportStartAt = moment(
+        `${$$storageSelect.year}-${$$storageSelect.month}`,
+        'YYYY年-MM月',
+      )
+        .startOf('month')
+        .unix();
+      exportEndAt = moment(
+        `${$$storageSelect.year}-${$$storageSelect.month}`,
+        'YYYY年-MM月',
+      )
+        .endOf('month')
+        .unix();
+    } else {
+      exportStartAt = moment($$storageSelect.year, 'YYYY年')
+        .startOf('year')
+        .unix();
+      exportEndAt = moment($$storageSelect.year, 'YYYY年').endOf('year').unix();
+    }
+  }
+
+  let exportTip = `导出微博记录`;
+  if (currentUserInfo?.screen_name) {
+    if ($$storageSelect.year) {
+      if ($$storageSelect.month) {
+        exportTip = `导出${currentUserInfo?.screen_name}在${$$storageSelect.year}-${$$storageSelect.month}的所有微博记录`;
+      } else {
+        exportTip = `导出${currentUserInfo?.screen_name}在${$$storageSelect.year}的所有微博记录`;
+      }
+    } else {
+      exportTip = `导出${currentUserInfo?.screen_name}的所有微博记录`;
+    }
+  }
+
+  // 生成导出配置
+  let exportConfig = {
+    screen_name: currentUserInfo?.screen_name || '',
+    exportUri,
+    uid,
+    exportStartAt: exportStartAt,
+    exportEndAt: exportEndAt,
+  };
+
   return (
     <div className="manager-container">
       <Card title="Card title">
@@ -446,6 +533,16 @@ export default function IndexPage() {
         &nbsp;
         <Button
           type="default"
+          disabled={selectUserId === ''}
+          onClick={() => {
+            asyncDataTransferExport(exportConfig);
+          }}
+        >
+          {exportTip}
+        </Button>
+        &nbsp;
+        <Button
+          type="default"
           onClick={() => {
             resetSelect();
           }}
@@ -461,6 +558,7 @@ export default function IndexPage() {
         >
           刷新数据
         </Button>
+        &nbsp;
         <Table
           pagination={{
             onChange: (page) => {

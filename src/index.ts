@@ -5,6 +5,8 @@ import ConfigHelperUtil from '~/src/library/util/config_helper'
 import PathConfig from '~/src/config/path'
 import Logger from '~/src/library/logger'
 import DispatchTaskCommand from '~/src/command/dispatch_task'
+import DataTransferExport from '~/src/command/datatransfer/export'
+import DataTransferImport from '~/src/command/datatransfer/import'
 import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
 import fs from 'fs'
@@ -317,6 +319,37 @@ ipcMain.on('startCustomerTask', async event => {
   // 输出打开文件夹
   shell.showItemInFolder(PathConfig.outputPath)
   isRunning = false
+})
+
+ipcMain.on('dataTransferExport', async (event, arg: {
+  exportUri: string,
+  uid: string,
+  exportStartAt: number,
+  exportEndAt: number
+}) => {
+  let {
+    exportUri,
+    uid,
+    exportStartAt,
+    exportEndAt
+  } = arg
+  Logger.log('开始导出', {
+    exportUri,
+    uid,
+    exportStartAt,
+    exportEndAt
+  })
+  event.returnValue = 'success'
+  let exportCommand = new DataTransferExport()
+  await exportCommand.handle({
+    exportUri,
+    uid,
+    exportStartAt,
+    exportEndAt
+  }, {})
+  Logger.log(`数据导出完毕, 打开导出目录 => `, PathConfig.outputPath)
+  // 输出打开文件夹
+  shell.showItemInFolder(exportUri)
 })
 
 
