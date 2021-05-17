@@ -99,7 +99,7 @@ function createWindow() {
     mainWindow.webContents.openDevTools()
   } else {
     // 线上地址
-    mainWindow.loadFile('./gui/dist/index.html')
+    mainWindow.loadFile('./client/dist/index.html')
   }
   // 通过Electron自身将html渲染为图片, 借此将代码体积由300mb压缩至90mb
   subWindow = new BrowserWindow({

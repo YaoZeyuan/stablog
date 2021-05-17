@@ -62,6 +62,7 @@ customer_task_config.json
 
 #   图形化界面
 gui/dist
+client/dist
 
 *.sqlite
 *.sqlite3

@@ -10,7 +10,7 @@
   "author": "姚泽源",
   "license": "MIT",
   "scripts": {
-    "startgui": "node gui/script/dev-server.js",
+    "startgui": "node client/script/dev-server.js",
     "buildgui": "node ./script/build-gui.js",
     "start": "electron dist/index.js --debug",
     "prod": "electron dist/index.js",
@@ -36,7 +36,7 @@
     },
     "files": [
       "dist/**/*",
-      "gui/dist/**/*",
+      "client/dist/**/*",
       "node_modules/**/*"
     ],
     "win": {
