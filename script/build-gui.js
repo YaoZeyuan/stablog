@@ -1,6 +1,6 @@
 let shelljs = require('shelljs')
 
-console.log('entry gui directory')
+console.log('entry client directory')
 shelljs.cd('./client')
 console.log('run `npm run build`')
 shelljs.exec('npm run build')
@@ -11,4 +11,4 @@ shelljs.rm('-rf', './dist/client')
 shelljs.mkdir('-p', './dist/client/dist')
 console.log('copy new static`')
 shelljs.cp('./client/dist/*', './dist/client/dist/')
-console.log('gui 构建完毕')
+console.log('client 构建完毕')
