@@ -23,6 +23,14 @@ type Type_Export = {
             info: TypeWeibo.TypeWeiboUserInfo,
             start_at: number,
             end_at: number,
+            /**
+            * 字符串格式的时间, 仅用于提示, 方便查看导出范围
+            */
+            start_at_str: string,
+            /**
+             * 字符串格式的时间, 仅用于提示, 方便查看导出范围
+             */
+            end_at_str: string,
             total_export_mblog_count: number,
             record_list: TypeWeibo.TypeMblog[]
         }
