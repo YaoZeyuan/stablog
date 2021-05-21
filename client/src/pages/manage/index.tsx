@@ -79,11 +79,9 @@ export default function IndexPage() {
   }
   async function asyncGetDistribute() {
     setIsLoading(true);
-    // console.log('start to load distributionMap');
     let distributionObj: BlogDistributionObj = await MBlog.asyncGetWeiboDistribution(
       selectUserId,
     );
-    // distributionObj.forEach((item) => console.log(item));
     setIsLoading(false);
     setBlogDistributionObj(distributionObj);
 
@@ -218,8 +216,6 @@ export default function IndexPage() {
       exportUri: path.resolve(saveUri),
     };
 
-    console.log('config => ', finalConfig);
-
     ipcRenderer.sendSync('dataTransferExport', finalConfig);
   }
 
@@ -282,14 +278,12 @@ export default function IndexPage() {
     </Select>
   );
 
-  // console.log('blogDistributionObj => ', blogDistributionObj);
 
   function getSummaryList() {
     if (Object.keys(blogDistributionObj).length === 0) {
       return [];
     }
     const { year, month } = $$storageSelect;
-    // console.log(`refresh data => ${year} ${month}`, $$storageSelect);
     let summaryList: BlogDistributionItem[] = [];
     if (year === '') {
       // 按年展示
@@ -333,11 +327,9 @@ export default function IndexPage() {
     return a.startAt - b.startAt;
   });
   let weiboStorageSummaryList = rawSummaryList;
-  // console.log('weiboStorageSummaryList => ', weiboStorageSummaryList);
 
   let blogListEle = null;
   if ($$storageSelect.blogList.length > 0) {
-    // console.log('$$storageSelect.blogList => ', $$storageSelect.blogList);
     blogListEle = (
       <Card
         title={`${$$userDatabase.get(selectUserId)?.screen_name} 在${
@@ -488,10 +480,13 @@ export default function IndexPage() {
             };
           }}
           rowSelection={{
+            checkStrictly: false,
             selectedRowKeys: [selectUserId],
             type: 'radio',
           }}
-          rowKey={(item) => item.id}
+          rowKey={(item) => {
+            return `${item.id}`;
+          }}
           columns={[
             {
               title: '已缓存账号',
@@ -599,8 +594,6 @@ export default function IndexPage() {
                     asyncHandleStorageSelectInTable(record.date, 'day');
                     break;
                 }
-
-                // console.log(`click ${index} => `, record);
               },
             };
           }}
