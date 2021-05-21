@@ -260,6 +260,7 @@ export default function IndexPage() {
     setIsLoading(true);
     await Util.asyncSleepMs(500);
     ipcRenderer.sendSync('dataTransferImport', finalConfig);
+    await asyncRefreshData();
     setIsLoading(false);
   }
 
@@ -560,6 +561,11 @@ export default function IndexPage() {
                   </div>
                 );
               },
+            },
+            {
+              title: '已保存微博条数',
+              dataIndex: 'mblog_save_count',
+              key: 'mblog_save_count',
             },
             {
               title: '个人简介',

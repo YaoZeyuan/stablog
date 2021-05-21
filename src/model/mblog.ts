@@ -65,6 +65,24 @@ export default class Mblog extends Base {
   // }
 
   /**
+   * 获取数据库中已缓存的记录列表
+   * @param uid 
+   * @returns 
+   */
+  static async asyncGetMblogSaveCount(uid: string) {
+    let resultList = <Array<any>>await this.db
+      .count('*')
+      .from(this.TABLE_NAME)
+      .where('author_uid', '=', uid)
+      .catch((e) => {
+        console.log("e =>", e)
+        return []
+      })
+    let total_count = resultList?.[0]?.['count(*)'] || 0
+    return total_count
+  }
+
+  /**
    * 从数据库中获取微博记录列表
    * @param id
    */
