@@ -6,6 +6,7 @@ import { enableMapSet } from 'immer';
 enableMapSet();
 import produce from 'immer';
 import { Table, Card, Select, Button } from 'antd';
+import { PlusCircleOutlined } from '@ant-design/icons';
 import Util from '@/library/util';
 import moment from 'moment';
 import path from 'path';
@@ -197,6 +198,10 @@ export default function IndexPage() {
   }) {
     let currentUserInfo = $$userDatabase.get(selectUserId);
 
+    let exportStartAtStr = moment.unix(exportStartAt).format('YYYY-MM');
+    let exportEndAtStr = moment.unix(exportEndAt).format('YYYY-MM');
+    let exportRangeStr = `从${exportStartAtStr}到${exportEndAtStr}`;
+
     let saveUri = await remote.dialog.showSaveDialogSync({
       title: '文件保存地址',
       filters: [
@@ -206,7 +211,9 @@ export default function IndexPage() {
           extensions: ['json'],
         },
       ],
-      defaultPath: `${currentUserInfo?.screen_name || ''}-稳部落数据导出记录`,
+      defaultPath: `${
+        currentUserInfo?.screen_name || ''
+      }-${exportRangeStr}-v1.0.0-稳部落数据导出记录`,
     });
     if (!config.uid || !saveUri) {
       // 没有uid, 无法导出
@@ -221,6 +228,38 @@ export default function IndexPage() {
     setIsLoading(true);
     await Util.asyncSleepMs(500);
     ipcRenderer.sendSync('dataTransferExport', finalConfig);
+    setIsLoading(false);
+  }
+
+  /**
+   * 导入数据
+   */
+  async function asyncDataTransferImport() {
+    let importUriList = await remote.dialog.showOpenDialogSync({
+      title: '选择导入文件',
+      filters: [
+        {
+          // name: `稳部落导出的用户_${config.screen_name}_微博记录`,
+          name: `稳部落数据导出`,
+          extensions: ['json'],
+        },
+      ],
+      defaultPath: `${
+        currentUserInfo?.screen_name || ''
+      }-v1.0.0-稳部落数据导出记录`,
+    });
+    let importUri = importUriList?.[0];
+    console.log('importUri => ', importUri);
+    if (!importUri) {
+      // 没有uid, 无法导出
+      return;
+    }
+    let finalConfig = {
+      importUri: importUri,
+    };
+    setIsLoading(true);
+    await Util.asyncSleepMs(500);
+    ipcRenderer.sendSync('dataTransferImport', finalConfig);
     setIsLoading(false);
   }
 
@@ -240,6 +279,7 @@ export default function IndexPage() {
     let record = $$userDatabase.get(key);
     userInfoList.push({
       ...record,
+      // @ts-ignore
       key: `${key}`,
     });
   }
@@ -474,7 +514,18 @@ export default function IndexPage() {
 
   return (
     <div className="manager-container">
-      <Card title="Card title">
+      <Card
+        title={
+          <Button
+            type="primary"
+            onClick={() => {
+              asyncDataTransferImport();
+            }}
+          >
+            <PlusCircleOutlined></PlusCircleOutlined>数据导入
+          </Button>
+        }
+      >
         <Table
           loading={isLoading}
           onRow={(record) => {

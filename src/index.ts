@@ -7,6 +7,7 @@ import Logger from '~/src/library/logger'
 import DispatchTaskCommand from '~/src/command/dispatch_task'
 import DataTransferExport from '~/src/command/datatransfer/export'
 import DataTransferImport from '~/src/command/datatransfer/import'
+import InitEnvCommand from '~/src/command/init_env'
 import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
 import fs from 'fs'
@@ -32,6 +33,10 @@ let isRunning = false
 let subWindow: InstanceType<typeof BrowserWindow> = null
 
 function createWindow() {
+  // 项目启动时先初始化运行环境
+  let initCommand = new InitEnvCommand()
+  initCommand.handle({}, {})
+
   if (process.platform === 'darwin') {
     const template = [
       {
@@ -349,6 +354,23 @@ ipcMain.on('dataTransferExport', async (event, arg: {
   Logger.log(`数据导出完毕, 打开导出目录 => `, PathConfig.outputPath)
   // 输出打开文件夹
   shell.showItemInFolder(exportUri)
+  event.returnValue = 'success'
+})
+
+ipcMain.on('dataTransferImport', async (event, arg: {
+  importUri: string,
+}) => {
+  let {
+    importUri,
+  } = arg
+  Logger.log('开始导入数据', {
+    importUri
+  })
+  let importCommand = new DataTransferImport()
+  await importCommand.handle({
+    importUri
+  }, {}).catch()
+  Logger.log(`数据导入完毕`)
   event.returnValue = 'success'
 })
 

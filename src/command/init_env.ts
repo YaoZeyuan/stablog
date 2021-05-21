@@ -25,25 +25,6 @@ class InitEnv extends Base {
   async execute(args: any, options: any) {
     let { rebase: isRebase } = options
 
-    this.log(`检查更新`)
-    let remoteVersionConfig: TypeConfig.Version = await http
-      .get(CommonConfig.checkUpgradeUri, {
-        params: {
-          now: new Date().toISOString,
-        },
-      })
-      .catch(e => {
-        return {}
-      })
-    // 已经通过Electron拿到了最新cookie并写入了配置文件中, 因此不需要再填写配置文件了
-    if (remoteVersionConfig.version > CommonConfig.version) {
-      this.log('有新版本')
-      this.log(`请到${remoteVersionConfig.downloadUrl}下载最新版: 稳部落`)
-      this.log(`更新日期:${remoteVersionConfig.releaseAt}`)
-      this.log(`更新说明:${remoteVersionConfig.releaseNote}`)
-      return
-    }
-
     this.log('初始化文件夹')
     for (let uri of PathConfig.allPathList) {
       shelljs.mkdir('-p', uri)
@@ -66,6 +47,26 @@ class InitEnv extends Base {
       }
     }
     this.log('数据库初始化完毕')
+
+    // 最后再检查更新
+    this.log(`检查更新`)
+    let remoteVersionConfig: TypeConfig.Version = await http
+      .get(CommonConfig.checkUpgradeUri, {
+        params: {
+          now: new Date().toISOString,
+        },
+      })
+      .catch(e => {
+        return {}
+      })
+    // 已经通过Electron拿到了最新cookie并写入了配置文件中, 因此不需要再填写配置文件了
+    if (remoteVersionConfig.version > CommonConfig.version) {
+      this.log('有新版本')
+      this.log(`请到${remoteVersionConfig.downloadUrl}下载最新版: 稳部落`)
+      this.log(`更新日期:${remoteVersionConfig.releaseAt}`)
+      this.log(`更新说明:${remoteVersionConfig.releaseNote}`)
+      return
+    }
   }
 }
 
