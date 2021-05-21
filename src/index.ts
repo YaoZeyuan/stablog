@@ -339,17 +339,17 @@ ipcMain.on('dataTransferExport', async (event, arg: {
     exportStartAt,
     exportEndAt
   })
-  event.returnValue = 'success'
   let exportCommand = new DataTransferExport()
   await exportCommand.handle({
     exportUri,
     uid,
     exportStartAt,
     exportEndAt
-  }, {})
+  }, {}).catch()
   Logger.log(`数据导出完毕, 打开导出目录 => `, PathConfig.outputPath)
   // 输出打开文件夹
   shell.showItemInFolder(exportUri)
+  event.returnValue = 'success'
 })
 
 

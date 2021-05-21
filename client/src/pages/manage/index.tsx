@@ -195,6 +195,8 @@ export default function IndexPage() {
     exportStartAt: number;
     exportEndAt: number;
   }) {
+    let currentUserInfo = $$userDatabase.get(selectUserId);
+
     let saveUri = await remote.dialog.showSaveDialogSync({
       title: '文件保存地址',
       filters: [
@@ -204,6 +206,7 @@ export default function IndexPage() {
           extensions: ['json'],
         },
       ],
+      defaultPath: `${currentUserInfo?.screen_name || ''}-稳部落数据导出记录`,
     });
     if (!config.uid || !saveUri) {
       // 没有uid, 无法导出
@@ -215,8 +218,10 @@ export default function IndexPage() {
       exportEndAt: config.exportEndAt,
       exportUri: path.resolve(saveUri),
     };
-
+    setIsLoading(true);
+    await Util.asyncSleepMs(500);
     ipcRenderer.sendSync('dataTransferExport', finalConfig);
+    setIsLoading(false);
   }
 
   useEffect(() => {
@@ -277,7 +282,6 @@ export default function IndexPage() {
       {monthOptionEleList}
     </Select>
   );
-
 
   function getSummaryList() {
     if (Object.keys(blogDistributionObj).length === 0) {
@@ -472,6 +476,7 @@ export default function IndexPage() {
     <div className="manager-container">
       <Card title="Card title">
         <Table
+          loading={isLoading}
           onRow={(record) => {
             return {
               onClick: () => {
