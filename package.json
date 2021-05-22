@@ -19,7 +19,7 @@
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "watch-less": "less-watch-compiler",
     "buildserver": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
-    "pack": "npm run buildserver && npm run buildgui && electron-builder --dir",
+    "debug-pack": "npm run buildserver && npm run buildgui && electron-builder --dir",
     "postinstall": "electron-builder install-app-deps",
     "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
   },
