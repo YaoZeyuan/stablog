@@ -21,7 +21,7 @@
     "buildserver": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
     "debug-pack": "npm run buildserver && npm run buildgui && electron-builder --dir",
     "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
   },
   "build": {
     "productName": "稳部落",
