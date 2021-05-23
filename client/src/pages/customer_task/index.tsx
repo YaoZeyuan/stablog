@@ -184,7 +184,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     let a = async () => {
       await asyncCheckIsLogin();
       // 同步用户信息
-      await asyncSyncUserInfo();
+      await asyncSyncUserInfo(false);
     };
     a();
   }, []);
@@ -209,7 +209,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     return isLogin;
   }
 
-  async function asyncSyncUserInfo() {
+  async function asyncSyncUserInfo(updatePageRange = false) {
     // 先检查是否登录
     let isLogin = await asyncCheckIsLogin();
     if (isLogin !== true) {
@@ -235,8 +235,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       produce($$database, (raw) => {
         raw.taskConfig.configList[0].uid = uid;
         raw.currentUserInfo = userInfo;
-        raw.taskConfig.fetchStartAtPageNo = 0;
-        raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000;
+        if (updatePageRange) {
+          // 当启动任务时, 不需要更新页面列表
+          raw.taskConfig.fetchStartAtPageNo = 0;
+          raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000;
+        }
         form.setFieldsValue({
           fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
           fetchStartAtPageNo: 0,
@@ -389,7 +392,13 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             <Form.Item name="rawInputText" className="flex-container-item-w100">
               <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
             </Form.Item>
-            <Button onClick={asyncSyncUserInfo}>同步用户信息</Button>
+            <Button
+              onClick={() => {
+                asyncSyncUserInfo(true);
+              }}
+            >
+              同步用户信息
+            </Button>
           </div>
         </Form.Item>
 
@@ -622,7 +631,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           <Button
             onClick={async () => {
               // 先同步信息(期间会检查登录状态)
-              let isSyncSuccess = await asyncSyncUserInfo();
+              let isSyncSuccess = await asyncSyncUserInfo(false);
               if (isSyncSuccess !== true) {
                 return false;
               }
