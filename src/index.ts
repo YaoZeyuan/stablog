@@ -5,6 +5,9 @@ import ConfigHelperUtil from '~/src/library/util/config_helper'
 import PathConfig from '~/src/config/path'
 import Logger from '~/src/library/logger'
 import DispatchTaskCommand from '~/src/command/dispatch_task'
+import DataTransferExport from '~/src/command/datatransfer/export'
+import DataTransferImport from '~/src/command/datatransfer/import'
+import InitEnvCommand from '~/src/command/init_env'
 import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
 import fs from 'fs'
@@ -30,6 +33,10 @@ let isRunning = false
 let subWindow: InstanceType<typeof BrowserWindow> = null
 
 function createWindow() {
+  // 项目启动时先初始化运行环境
+  let initCommand = new InitEnvCommand()
+  initCommand.handle({}, {})
+
   if (process.platform === 'darwin') {
     const template = [
       {
@@ -99,7 +106,7 @@ function createWindow() {
     mainWindow.webContents.openDevTools()
   } else {
     // 线上地址
-    mainWindow.loadFile('./gui/dist/index.html')
+    mainWindow.loadFile('./client/dist/index.html')
   }
   // 通过Electron自身将html渲染为图片, 借此将代码体积由300mb压缩至90mb
   subWindow = new BrowserWindow({
@@ -317,6 +324,54 @@ ipcMain.on('startCustomerTask', async event => {
   // 输出打开文件夹
   shell.showItemInFolder(PathConfig.outputPath)
   isRunning = false
+})
+
+ipcMain.on('dataTransferExport', async (event, arg: {
+  exportUri: string,
+  uid: string,
+  exportStartAt: number,
+  exportEndAt: number
+}) => {
+  let {
+    exportUri,
+    uid,
+    exportStartAt,
+    exportEndAt
+  } = arg
+  Logger.log('开始导出', {
+    exportUri,
+    uid,
+    exportStartAt,
+    exportEndAt
+  })
+  let exportCommand = new DataTransferExport()
+  await exportCommand.handle({
+    exportUri,
+    uid,
+    exportStartAt,
+    exportEndAt
+  }, {}).catch()
+  Logger.log(`数据导出完毕, 打开导出目录 => `, PathConfig.outputPath)
+  // 输出打开文件夹
+  shell.showItemInFolder(exportUri)
+  event.returnValue = 'success'
+})
+
+ipcMain.on('dataTransferImport', async (event, arg: {
+  importUri: string,
+}) => {
+  let {
+    importUri,
+  } = arg
+  Logger.log('开始导入数据', {
+    importUri
+  })
+  let importCommand = new DataTransferImport()
+  await importCommand.handle({
+    importUri
+  }, {}).catch()
+  Logger.log(`数据导入完毕`)
+  event.returnValue = 'success'
 })
 
 

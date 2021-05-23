@@ -47,9 +47,8 @@ export async function asyncGetUid(rawInputUrl: string) {
     }
     // 新浪会将url重定向到uid页面
     let response = await http.rawClient.get(
-        `https://m.weibo.cn/n/${account}`,
+        `https://m.weibo.cn/${account}?&jumpfrom=weibocom`,
     )
-    console.log("response => ", response)
     // 对于被封号用户, 会返回一个404, 这时候需要手工匹配html代码
     let uid = ''
     if (response.data.includes('用户不存在') && response.data.includes('出错了')) {

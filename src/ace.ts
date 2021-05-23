@@ -28,6 +28,8 @@ const registedCommandList = [
   // './command/generate/collection', //  按收藏夹生成电子书
   './command/fetch/customer', //  [抓取]执行自定义任务
   './command/generate/customer', //  [生成]执行自定义任务
+  './command/datatransfer/export', //  [数据转移]导出
+  './command/datatransfer/import', //  [数据转移]导入
 ]
 // register commands
 for (const command of registedCommandList) {

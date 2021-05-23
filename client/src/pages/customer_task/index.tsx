@@ -184,7 +184,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     let a = async () => {
       await asyncCheckIsLogin();
       // 同步用户信息
-      await asyncSyncUserInfo();
+      await asyncSyncUserInfo(false);
     };
     a();
   }, []);
@@ -209,7 +209,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     return isLogin;
   }
 
-  async function asyncSyncUserInfo() {
+  async function asyncSyncUserInfo(updatePageRange = false) {
     // 先检查是否登录
     let isLogin = await asyncCheckIsLogin();
     if (isLogin !== true) {
@@ -235,8 +235,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       produce($$database, (raw) => {
         raw.taskConfig.configList[0].uid = uid;
         raw.currentUserInfo = userInfo;
-        raw.taskConfig.fetchStartAtPageNo = 0;
-        raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000;
+        if (updatePageRange) {
+          // 当启动任务时, 不需要更新页面列表
+          raw.taskConfig.fetchStartAtPageNo = 0;
+          raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000;
+        }
         form.setFieldsValue({
           fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
           fetchStartAtPageNo: 0,
@@ -274,10 +277,15 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   if ($$database.taskConfig.isSkipFetch) {
     needBackupWeiboPageCount = 0;
   }
+  if ($$database.taskConfig.isSkipGeneratePdf) {
+    needGenerateWeiboCount = 0;
+  }
   console.log('needBackupWeiboPageCount => ', needBackupWeiboPageCount);
   // 总需要等待的时长(秒)
   let needWaitSecond =
     needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2;
+  let 备份微博耗时_分钟 = Math.floor((needBackupWeiboPageCount * 30) / 60);
+  let 导出微博耗时_分钟 = Math.floor((needGenerateWeiboCount * 2) / 60);
   let needWaitMinute = Math.floor(needWaitSecond / 60);
   let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100;
 
@@ -384,7 +392,13 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             <Form.Item name="rawInputText" className="flex-container-item-w100">
               <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
             </Form.Item>
-            <Button onClick={asyncSyncUserInfo}>同步用户信息</Button>
+            <Button
+              onClick={() => {
+                asyncSyncUserInfo(true);
+              }}
+            >
+              同步用户信息
+            </Button>
           </div>
         </Form.Item>
 
@@ -413,14 +427,24 @@ export default function IndexPage(props: { changeTabKey: Function }) {
               <Descriptions.Item
                 label={
                   <span>
-                    备份全部微博预计耗时&nbsp;
+                    预计耗时&nbsp;
                     <Tooltip title="计算公式:总耗时=(待抓取微博总数/10 * 30 + 微博总数 * 2)秒. 每10条微博一页, 抓取一页微博数据需要间隔30s. 抓取完成, 生成pdf时, 每条微博需要用2s将其渲染为图片. 故有此公式">
                       <QuestionCircleOutlined />
                     </Tooltip>
                   </span>
                 }
               >
-                {needWaitMinute}分钟 / {needWaitHour}小时
+                预计累计耗时{needWaitMinute}分钟 / {needWaitHour}小时
+              </Descriptions.Item>
+              <Descriptions.Item label={<span>- 抓取耗时&nbsp;</span>}>
+                {$$database.taskConfig.isSkipFetch
+                  ? `已勾选跳过抓取流程选项, 不需要执行抓取, 耗时为0`
+                  : `预计共需备份${needBackupWeiboPageCount}张页面, 耗时${备份微博耗时_分钟}分钟`}
+              </Descriptions.Item>
+              <Descriptions.Item label={<span>- 输出pdf耗时&nbsp;</span>}>
+                {$$database.taskConfig.isSkipGeneratePdf
+                  ? '已勾选跳过pdf输出选项, 不需要渲染pdf, 耗时为0'
+                  : `预计共需渲染${needGenerateWeiboCount}条微博, 耗时${导出微博耗时_分钟}分钟`}
               </Descriptions.Item>
               <Descriptions.Item label="粉丝数">
                 {$$database.currentUserInfo.followers_count}
@@ -430,35 +454,6 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         </Form.Item>
         <Divider>备份配置</Divider>
 
-        {/* <Form.Item
-          label={
-            <span>
-              备份范围&nbsp;
-              <Tooltip title="可通过配置备份页面范围, 实现断点续传/只备份指定范围内的微博">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-        >
-          <Form.Item name="fetchPageNoRange" noStyle>
-            <Slider
-              range
-              // marks={{
-              //   0: `第${$$database.taskConfig.fetchStartAtPageNo}页`,
-              //   100: `第${$$database.taskConfig.fetchEndAtPageNo}页`,
-              // }}
-              // tooltipVisible={true}
-              tipFormatter={(item: number) => `第${item}页`}
-              marks={{
-                0: 0,
-                [$$database?.currentUserInfo?.total_page_count || 1000]:
-                  $$database?.currentUserInfo?.total_page_count || 1000,
-              }}
-              min={0}
-              max={$$database?.currentUserInfo?.total_page_count || 1000}
-            />
-          </Form.Item>
-        </Form.Item> */}
         <Form.Item
           label={
             <span>
@@ -484,145 +479,159 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             <span>&nbsp;页&nbsp;</span>
           </div>
         </Form.Item>
-
-        <Divider>输出规则</Divider>
-
-        <Form.Item
-          label={
-            <span>
-              只导出原创微博&nbsp;
-              <Tooltip title="只导出原创微博, 跳过转发的微博">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isOnlyOriginal"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
-        <Form.Item
-          label={
-            <span>
-              只导出微博文章&nbsp;
-              <Tooltip title="只导出原创的微博文章">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isOnlyArticle"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
-        <Form.Item label="微博排序" name="postAtOrderBy">
-          <Radio.Group buttonStyle="solid">
-            <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>
-            <Radio.Button value={Order.由新到旧}>由新到旧</Radio.Button>
-          </Radio.Group>
-        </Form.Item>
-        <Form.Item label="图片配置" name="imageQuilty">
-          <Radio.Group buttonStyle="solid">
-            <Radio.Button value={ImageQuilty.无图}>无图</Radio.Button>
-            <Radio.Button value={ImageQuilty.默认}>有图</Radio.Button>
-          </Radio.Group>
-        </Form.Item>
-
-        <Form.Item label="时间范围">
-          <div className="flex-container">
-            <span>只输出从</span>
-            &nbsp;
-            <Form.Item name="outputTimeRange" noStyle>
-              <RangePicker picker="date" />
+        <Collapse>
+          <Collapse.Panel header="[高级选项]输出规则" key="output-config">
+            <Form.Item
+              label={
+                <span>
+                  只导出原创微博&nbsp;
+                  <Tooltip title="只导出原创微博, 跳过转发的微博">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="isOnlyOriginal"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
             </Form.Item>
-            &nbsp;
-            <span>间发布的微博</span>
-          </div>
-        </Form.Item>
-
-        <Form.Item label="电子书拆分规则">
-          <div className="flex-container">
-            <Form.Item name="volumeSplitBy" noStyle>
-              <Select labelInValue={false} style={{ width: 180 }}>
-                <Option value={Const_Volume_Split_By.不拆分}>不拆分</Option>
-                <Option value={Const_Volume_Split_By.年}>按年拆分</Option>
-                <Option value={Const_Volume_Split_By.月}>按月拆分</Option>
-                <Option value={Const_Volume_Split_By.微博条数}>
-                  按微博条数拆分
-                </Option>
-              </Select>
+            <Form.Item
+              label={
+                <span>
+                  只导出微博文章&nbsp;
+                  <Tooltip title="只导出原创的微博文章">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="isOnlyArticle"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
             </Form.Item>
-            {$$database.taskConfig.volumeSplitBy ===
-            Const_Volume_Split_By.微博条数 ? (
-              <span>, 每&nbsp;</span>
-            ) : null}
-            {$$database.taskConfig.volumeSplitBy ===
-            Const_Volume_Split_By.微博条数 ? (
-              <Form.Item name="volumeSplitCount" noStyle>
-                <InputNumber
-                  // placeholder="每n条微博拆分为一卷"
-                  min={1000}
-                  step={1000}
-                  style={{ width: 120 }}
-                ></InputNumber>
-              </Form.Item>
-            ) : null}
-            {$$database.taskConfig.volumeSplitBy ===
-            Const_Volume_Split_By.微博条数 ? (
-              <span>&nbsp;条微博一卷</span>
-            ) : null}
-          </div>
-        </Form.Item>
-        <Divider>开发人员选项</Divider>
+            <Form.Item label="微博排序" name="postAtOrderBy">
+              <Radio.Group buttonStyle="solid">
+                <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>
+                <Radio.Button value={Order.由新到旧}>由新到旧</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
+            <Form.Item label="图片配置" name="imageQuilty">
+              <Radio.Group buttonStyle="solid">
+                <Radio.Button value={ImageQuilty.无图}>无图</Radio.Button>
+                <Radio.Button value={ImageQuilty.默认}>有图</Radio.Button>
+              </Radio.Group>
+            </Form.Item>
 
-        <Form.Item
-          label={
-            <span>
-              跳过抓取&nbsp;
-              <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isSkipFetch"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
-        <Form.Item
-          label={
-            <span>
-              跳过输出pdf&nbsp;
-              <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isSkipGeneratePdf"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
-        <Form.Item
-          label={
-            <span>
-              生成pdf时重新渲染&nbsp;
-              <Tooltip title="生成pdf需要先将每条微博渲染为图片, 时间较慢(1s/条).因此启用了缓存.若微博之前被渲染过, 则会利用已经渲染好的图片, 以加快生成速度. 如果旧渲染图片有误, 可以直接删除缓存中的该张图片. 不建议勾选此项">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-          name="isRegenerateHtml2PdfImage"
-          valuePropName="checked"
-        >
-          <Switch></Switch>
-        </Form.Item>
+            <Form.Item label="时间范围">
+              <div className="flex-container">
+                <span>只输出从</span>
+                &nbsp;
+                <Form.Item name="outputTimeRange" noStyle>
+                  <RangePicker picker="date" />
+                </Form.Item>
+                &nbsp;
+                <span>间发布的微博</span>
+              </div>
+            </Form.Item>
 
-        <Form.Item label="操作">
+            <Form.Item label="电子书拆分规则">
+              <div className="flex-container">
+                <Form.Item name="volumeSplitBy" noStyle>
+                  <Select labelInValue={false} style={{ width: 180 }}>
+                    <Option value={Const_Volume_Split_By.不拆分}>不拆分</Option>
+                    <Option value={Const_Volume_Split_By.年}>按年拆分</Option>
+                    <Option value={Const_Volume_Split_By.月}>按月拆分</Option>
+                    <Option value={Const_Volume_Split_By.微博条数}>
+                      按微博条数拆分
+                    </Option>
+                  </Select>
+                </Form.Item>
+                {$$database.taskConfig.volumeSplitBy ===
+                Const_Volume_Split_By.微博条数 ? (
+                  <span>, 每&nbsp;</span>
+                ) : null}
+                {$$database.taskConfig.volumeSplitBy ===
+                Const_Volume_Split_By.微博条数 ? (
+                  <Form.Item name="volumeSplitCount" noStyle>
+                    <InputNumber
+                      // placeholder="每n条微博拆分为一卷"
+                      min={1000}
+                      step={1000}
+                      // 每本电子书最多只能有10000条微博
+                      max={10000}
+                      style={{ width: 120 }}
+                    ></InputNumber>
+                  </Form.Item>
+                ) : null}
+                {$$database.taskConfig.volumeSplitBy ===
+                Const_Volume_Split_By.微博条数 ? (
+                  <span>&nbsp;条微博一卷</span>
+                ) : null}
+              </div>
+            </Form.Item>
+          </Collapse.Panel>
+        </Collapse>
+
+        <Collapse>
+          <Collapse.Panel header="[高级选项]开发调试" key="develop-config">
+            <Form.Item
+              label={
+                <span>
+                  跳过抓取&nbsp;
+                  <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="isSkipFetch"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
+            </Form.Item>
+            <Form.Item
+              label={
+                <span>
+                  跳过输出pdf&nbsp;
+                  <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="isSkipGeneratePdf"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
+            </Form.Item>
+            <Form.Item
+              label={
+                <span>
+                  生成pdf时重新渲染&nbsp;
+                  <Tooltip title="生成pdf需要先将每条微博渲染为图片, 时间较慢(1s/条).因此启用了缓存.若微博之前被渲染过, 则会利用已经渲染好的图片, 以加快生成速度. 如果旧渲染图片有误, 可以直接删除缓存中的该张图片. 不建议勾选此项">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="isRegenerateHtml2PdfImage"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
+            </Form.Item>
+            <Collapse>
+              <Collapse.Panel header="最终生成配置内容" key="config-content">
+                <div>
+                  <pre>{JSON.stringify($$database.taskConfig, null, 4)}</pre>
+                </div>
+              </Collapse.Panel>
+            </Collapse>
+          </Collapse.Panel>
+        </Collapse>
+        <p>&nbsp;</p>
+
+        <Form.Item label={' '} colon={false}>
           <Button
             onClick={async () => {
               // 先同步信息(期间会检查登录状态)
-              let isSyncSuccess = await asyncSyncUserInfo();
+              let isSyncSuccess = await asyncSyncUserInfo(false);
               if (isSyncSuccess !== true) {
                 return false;
               }
@@ -658,13 +667,6 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           </Button>
         </Form.Item>
       </Form>
-      <Collapse>
-        <Collapse.Panel header="配置内容" key="config-content">
-          <div>
-            <pre>{JSON.stringify($$database.taskConfig, null, 4)}</pre>
-          </div>
-        </Collapse.Panel>
-      </Collapse>
     </div>
   );
 }

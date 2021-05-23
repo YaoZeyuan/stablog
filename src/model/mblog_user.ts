@@ -3,6 +3,7 @@ import TypeWeibo from '~/src/type/namespace/weibo'
 import _ from 'lodash'
 import moment from 'moment'
 import DATE_FORMAT from '~/src/constant/date_format'
+import Mblog from '~/src/model/mblog'
 
 type TypeMblogUserRecord = {
   author_uid: string
@@ -27,6 +28,9 @@ export default class MblogUser extends Base {
     let recordList = []
     for (let rawItem of rawRecordList) {
       let record = JSON.parse(rawItem.raw_json)
+      let author_uid = rawItem.author_uid
+      let mblog_save_count = await Mblog.asyncGetMblogSaveCount(author_uid)
+      record.mblog_save_count = mblog_save_count
       recordList.push(record)
     }
     return recordList

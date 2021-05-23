@@ -1,5 +1,6 @@
 import Base from '~/src/command/base'
 import MBlog from '~/src/model/mblog'
+import MblogUser from '~/src/model/mblog_user'
 import fs from 'fs'
 // import path from 'path'
 // import jsPDF from '~/src/library/pdf/jspdf.node.js'
@@ -36,6 +37,7 @@ class CommandDebug extends Base {
   }
 
   async execute() {
+    await MblogUser.asyncGetUserList()
     // let configUri = path.resolve("F:/www/share/github/stablog/缓存文件/pdf_html_config.json")
     // let content = fs.readFileSync(configUri).toString()
 

@@ -33,6 +33,11 @@ const Const_Render_Html_Timeout_Second = 20
  * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
  */
 const Const_Max_Webview_Render_Height_Px = 5000
+/**
+ * 单卷中最多只能有10000条微博
+ */
+const Const_Max_Mblog_In_Single_Book = 10000
+
 
 // 硬编码传入
 let globalSubWindow: InstanceType<typeof BrowserWindow> = null
@@ -270,60 +275,76 @@ class GenerateCustomer extends Base {
         weiboEpub.startDayAt = mblogListByDay.dayStartAt
         weiboEpub.bookIndex = bookIndex
       } else {
-        if (this.CUSTOMER_CONFIG_volumeSplitBy !== 'single') {
-          // 如果分卷依据不是single, 那么要先按照设定的分卷条件, 检查是否需要进行分卷
-          switch (this.CUSTOMER_CONFIG_volumeSplitBy) {
-            case 'year':
-              {
-                if (moment.unix(weiboEpub.startDayAt).format("YYYY") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY")) {
-                  // 发生换年, 需要进行分卷
-                  weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
-                  let buffer = _.cloneDeep(weiboEpub)
-                  rawWeiboEpubList.push(buffer)
-                  // 重新起一个
-                  bookCounter = bookCounter + 1
-                  bookIndex = bookIndex + 1
-                  weiboEpub = _.cloneDeep(weiboEpubTemplate)
-                  // 初始化新容器
-                  weiboEpub.startDayAt = mblogListByDay.dayStartAt
-                  weiboEpub.bookIndex = bookIndex
+        // 首先检测是否超过了单卷最大数量(超过10000条, 由于pdf生成库本身的限制, 会导致pdf生成速度巨慢)
+        if (weiboEpub.mblogInThisBookCount > Const_Max_Mblog_In_Single_Book) {
+          // 超出单卷最大微博数, 需要进行分卷
+          weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+          let buffer = _.cloneDeep(weiboEpub)
+          rawWeiboEpubList.push(buffer)
+          // 重新起一个
+          bookCounter = bookCounter + 1
+          bookIndex = bookIndex + 1
+          weiboEpub = _.cloneDeep(weiboEpubTemplate)
+          // 初始化新容器
+          weiboEpub.startDayAt = mblogListByDay.dayStartAt
+          weiboEpub.bookIndex = bookIndex
+        } else {
+          // 然后在考虑其他情况
+          if (this.CUSTOMER_CONFIG_volumeSplitBy !== 'single') {
+            // 如果分卷依据不是single, 那么要先按照设定的分卷条件, 检查是否需要进行分卷
+            switch (this.CUSTOMER_CONFIG_volumeSplitBy) {
+              case 'year':
+                {
+                  if (moment.unix(weiboEpub.startDayAt).format("YYYY") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY")) {
+                    // 发生换年, 需要进行分卷
+                    weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+                    let buffer = _.cloneDeep(weiboEpub)
+                    rawWeiboEpubList.push(buffer)
+                    // 重新起一个
+                    bookCounter = bookCounter + 1
+                    bookIndex = bookIndex + 1
+                    weiboEpub = _.cloneDeep(weiboEpubTemplate)
+                    // 初始化新容器
+                    weiboEpub.startDayAt = mblogListByDay.dayStartAt
+                    weiboEpub.bookIndex = bookIndex
+                  }
                 }
-              }
-              break;
-            case 'month':
-              {
-                if (moment.unix(weiboEpub.startDayAt).format("YYYY-MM") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY-MM")) {
-                  // 发生换月, 需要进行分卷
-                  weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
-                  let buffer = _.cloneDeep(weiboEpub)
-                  rawWeiboEpubList.push(buffer)
-                  // 重新起一个
-                  bookCounter = bookCounter + 1
-                  bookIndex = bookIndex + 1
-                  weiboEpub = _.cloneDeep(weiboEpubTemplate)
-                  // 初始化新容器
-                  weiboEpub.startDayAt = mblogListByDay.dayStartAt
-                  weiboEpub.bookIndex = bookIndex
+                break;
+              case 'month':
+                {
+                  if (moment.unix(weiboEpub.startDayAt).format("YYYY-MM") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY-MM")) {
+                    // 发生换月, 需要进行分卷
+                    weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+                    let buffer = _.cloneDeep(weiboEpub)
+                    rawWeiboEpubList.push(buffer)
+                    // 重新起一个
+                    bookCounter = bookCounter + 1
+                    bookIndex = bookIndex + 1
+                    weiboEpub = _.cloneDeep(weiboEpubTemplate)
+                    // 初始化新容器
+                    weiboEpub.startDayAt = mblogListByDay.dayStartAt
+                    weiboEpub.bookIndex = bookIndex
+                  }
                 }
-              }
-              break;
-            case 'count':
-            default:
-              {
-                if (weiboEpub.mblogInThisBookCount > this.CUSTOMER_CONFIG_volumeSplitCount) {
-                  // 超出单卷最大微博数, 需要进行分卷
-                  weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
-                  let buffer = _.cloneDeep(weiboEpub)
-                  rawWeiboEpubList.push(buffer)
-                  // 重新起一个
-                  bookCounter = bookCounter + 1
-                  bookIndex = bookIndex + 1
-                  weiboEpub = _.cloneDeep(weiboEpubTemplate)
-                  // 初始化新容器
-                  weiboEpub.startDayAt = mblogListByDay.dayStartAt
-                  weiboEpub.bookIndex = bookIndex
+                break;
+              case 'count':
+              default:
+                {
+                  if (weiboEpub.mblogInThisBookCount > this.CUSTOMER_CONFIG_volumeSplitCount) {
+                    // 超出单卷最大微博数, 需要进行分卷
+                    weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
+                    let buffer = _.cloneDeep(weiboEpub)
+                    rawWeiboEpubList.push(buffer)
+                    // 重新起一个
+                    bookCounter = bookCounter + 1
+                    bookIndex = bookIndex + 1
+                    weiboEpub = _.cloneDeep(weiboEpubTemplate)
+                    // 初始化新容器
+                    weiboEpub.startDayAt = mblogListByDay.dayStartAt
+                    weiboEpub.bookIndex = bookIndex
+                  }
                 }
-              }
+            }
           }
         }
         weiboEpub.weiboDayList.push(mblogListByDay)

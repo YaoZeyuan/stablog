@@ -1,13 +1,16 @@
 import './index.less';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import TypeWeibo from '@/../../src/type/namespace/weibo';
 import { useState, useEffect } from 'react';
 import { enableMapSet } from 'immer';
 enableMapSet();
 import produce from 'immer';
 import { Table, Card, Select, Button } from 'antd';
+import { PlusCircleOutlined } from '@ant-design/icons';
 import Util from '@/library/util';
 import moment from 'moment';
+import path from 'path';
+
 let Option = Select.Option;
 let MUser = remote.getGlobal('mUser');
 let MBlog = remote.getGlobal('mBlog');
@@ -77,11 +80,9 @@ export default function IndexPage() {
   }
   async function asyncGetDistribute() {
     setIsLoading(true);
-    // console.log('start to load distributionMap');
     let distributionObj: BlogDistributionObj = await MBlog.asyncGetWeiboDistribution(
       selectUserId,
     );
-    // distributionObj.forEach((item) => console.log(item));
     setIsLoading(false);
     setBlogDistributionObj(distributionObj);
 
@@ -185,6 +186,84 @@ export default function IndexPage() {
     await asyncFetchUserInfoList();
   }
 
+  /**
+   * 导出数据
+   */
+  async function asyncDataTransferExport(config: {
+    screen_name: string;
+    exportUri: string;
+    uid: string;
+    exportStartAt: number;
+    exportEndAt: number;
+  }) {
+    let currentUserInfo = $$userDatabase.get(selectUserId);
+
+    let exportStartAtStr = moment.unix(exportStartAt).format('YYYY-MM');
+    let exportEndAtStr = moment.unix(exportEndAt).format('YYYY-MM');
+    let exportRangeStr = `从${exportStartAtStr}到${exportEndAtStr}`;
+
+    let saveUri = await remote.dialog.showSaveDialogSync({
+      title: '文件保存地址',
+      filters: [
+        {
+          // name: `稳部落导出的用户_${config.screen_name}_微博记录`,
+          name: `稳部落数据导出`,
+          extensions: ['json'],
+        },
+      ],
+      defaultPath: `${
+        currentUserInfo?.screen_name || ''
+      }-${exportRangeStr}-v1.0.0-稳部落数据导出记录`,
+    });
+    if (!config.uid || !saveUri) {
+      // 没有uid, 无法导出
+      return;
+    }
+    let finalConfig = {
+      uid: config.uid,
+      exportStartAt: config.exportStartAt,
+      exportEndAt: config.exportEndAt,
+      exportUri: path.resolve(saveUri),
+    };
+    setIsLoading(true);
+    await Util.asyncSleepMs(500);
+    ipcRenderer.sendSync('dataTransferExport', finalConfig);
+    setIsLoading(false);
+  }
+
+  /**
+   * 导入数据
+   */
+  async function asyncDataTransferImport() {
+    let importUriList = await remote.dialog.showOpenDialogSync({
+      title: '选择导入文件',
+      filters: [
+        {
+          // name: `稳部落导出的用户_${config.screen_name}_微博记录`,
+          name: `稳部落数据导出`,
+          extensions: ['json'],
+        },
+      ],
+      defaultPath: `${
+        currentUserInfo?.screen_name || ''
+      }-v1.0.0-稳部落数据导出记录`,
+    });
+    let importUri = importUriList?.[0];
+    console.log('importUri => ', importUri);
+    if (!importUri) {
+      // 没有uid, 无法导出
+      return;
+    }
+    let finalConfig = {
+      importUri: importUri,
+    };
+    setIsLoading(true);
+    await Util.asyncSleepMs(500);
+    ipcRenderer.sendSync('dataTransferImport', finalConfig);
+    await asyncRefreshData();
+    setIsLoading(false);
+  }
+
   useEffect(() => {
     asyncFetchUserInfoList();
   }, []);
@@ -201,6 +280,7 @@ export default function IndexPage() {
     let record = $$userDatabase.get(key);
     userInfoList.push({
       ...record,
+      // @ts-ignore
       key: `${key}`,
     });
   }
@@ -244,14 +324,11 @@ export default function IndexPage() {
     </Select>
   );
 
-  // console.log('blogDistributionObj => ', blogDistributionObj);
-
   function getSummaryList() {
     if (Object.keys(blogDistributionObj).length === 0) {
       return [];
     }
     const { year, month } = $$storageSelect;
-    // console.log(`refresh data => ${year} ${month}`, $$storageSelect);
     let summaryList: BlogDistributionItem[] = [];
     if (year === '') {
       // 按年展示
@@ -295,11 +372,9 @@ export default function IndexPage() {
     return a.startAt - b.startAt;
   });
   let weiboStorageSummaryList = rawSummaryList;
-  // console.log('weiboStorageSummaryList => ', weiboStorageSummaryList);
 
   let blogListEle = null;
   if ($$storageSelect.blogList.length > 0) {
-    // console.log('$$storageSelect.blogList => ', $$storageSelect.blogList);
     blogListEle = (
       <Card
         title={`${$$userDatabase.get(selectUserId)?.screen_name} 在${
@@ -389,10 +464,71 @@ export default function IndexPage() {
     );
   }
 
+  let uid = selectUserId;
+  let exportUri = '';
+
+  let exportStartAt = moment('2009-01-01 00:00:00').unix();
+  let exportEndAt = moment().unix();
+  if ($$storageSelect.year) {
+    if ($$storageSelect.month) {
+      exportStartAt = moment(
+        `${$$storageSelect.year}-${$$storageSelect.month}`,
+        'YYYY年-MM月',
+      )
+        .startOf('month')
+        .unix();
+      exportEndAt = moment(
+        `${$$storageSelect.year}-${$$storageSelect.month}`,
+        'YYYY年-MM月',
+      )
+        .endOf('month')
+        .unix();
+    } else {
+      exportStartAt = moment($$storageSelect.year, 'YYYY年')
+        .startOf('year')
+        .unix();
+      exportEndAt = moment($$storageSelect.year, 'YYYY年').endOf('year').unix();
+    }
+  }
+
+  let exportTip = `导出微博记录`;
+  if (currentUserInfo?.screen_name) {
+    if ($$storageSelect.year) {
+      if ($$storageSelect.month) {
+        exportTip = `导出${currentUserInfo?.screen_name}在${$$storageSelect.year}-${$$storageSelect.month}的所有微博记录`;
+      } else {
+        exportTip = `导出${currentUserInfo?.screen_name}在${$$storageSelect.year}的所有微博记录`;
+      }
+    } else {
+      exportTip = `导出${currentUserInfo?.screen_name}的所有微博记录`;
+    }
+  }
+
+  // 生成导出配置
+  let exportConfig = {
+    screen_name: currentUserInfo?.screen_name || '',
+    exportUri,
+    uid,
+    exportStartAt: exportStartAt,
+    exportEndAt: exportEndAt,
+  };
+
   return (
     <div className="manager-container">
-      <Card title="Card title">
+      <Card
+        title={
+          <Button
+            type="primary"
+            onClick={() => {
+              asyncDataTransferImport();
+            }}
+          >
+            <PlusCircleOutlined></PlusCircleOutlined>数据导入
+          </Button>
+        }
+      >
         <Table
+          loading={isLoading}
           onRow={(record) => {
             return {
               onClick: () => {
@@ -401,10 +537,13 @@ export default function IndexPage() {
             };
           }}
           rowSelection={{
+            checkStrictly: false,
             selectedRowKeys: [selectUserId],
             type: 'radio',
           }}
-          rowKey={(item) => item.id}
+          rowKey={(item) => {
+            return `${item.id}`;
+          }}
           columns={[
             {
               title: '已缓存账号',
@@ -422,6 +561,11 @@ export default function IndexPage() {
                   </div>
                 );
               },
+            },
+            {
+              title: '已保存微博条数',
+              dataIndex: 'mblog_save_count',
+              key: 'mblog_save_count',
             },
             {
               title: '个人简介',
@@ -446,6 +590,16 @@ export default function IndexPage() {
         &nbsp;
         <Button
           type="default"
+          disabled={selectUserId === ''}
+          onClick={() => {
+            asyncDataTransferExport(exportConfig);
+          }}
+        >
+          {exportTip}
+        </Button>
+        &nbsp;
+        <Button
+          type="default"
           onClick={() => {
             resetSelect();
           }}
@@ -461,6 +615,7 @@ export default function IndexPage() {
         >
           刷新数据
         </Button>
+        &nbsp;
         <Table
           pagination={{
             onChange: (page) => {
@@ -501,8 +656,6 @@ export default function IndexPage() {
                     asyncHandleStorageSelectInTable(record.date, 'day');
                     break;
                 }
-
-                // console.log(`click ${index} => `, record);
               },
             };
           }}
