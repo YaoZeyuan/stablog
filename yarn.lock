@@ -4026,10 +4026,10 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-jspdf@^2.3.0:
-  version "2.3.0"
-  resolved "https://registry.npm.taobao.org/jspdf/download/jspdf-2.3.0.tgz#96d5f5e7b104b4d542e203a68299b40cc88434ff"
-  integrity sha1-ltX157EEtNVC4gOmgpm0DMiENP8=
+jspdf@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.nlark.com/jspdf/download/jspdf-2.3.1.tgz#313d117234b546469694a1fd81a1e02411647576"
+  integrity sha1-MT0RcjS1RkaWlKH9gaHgJBFkdXY=
   dependencies:
     atob "^2.1.2"
     btoa "^1.2.1"
