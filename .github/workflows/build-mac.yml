@@ -26,7 +26,7 @@ jobs:
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
       - run: cd ./client && yarn && cd ..
       - run: yarn
-      - run: yarn dist
+      - run: yarn build
         env:
           CI: true
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
