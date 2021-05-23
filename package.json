@@ -116,7 +116,7 @@
     "@types/sharp": "^0.27.3",
     "@types/shelljs": "^0.7.8",
     "babel-plugin-root-import": "^6.1.0",
-    "electron": "^6.0.12",
+    "electron": "^9.4.0",
     "electron-builder": "^21.2.0",
     "electron-rebuild": "^2.3.5",
     "less": "^4.1.1",
