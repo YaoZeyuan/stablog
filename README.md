@@ -26,7 +26,7 @@
 
 1.  点击`登录微博`, 登录.
     1.  由于微博网页本身问题, 输入账号/密码/验证码时略有卡顿, 请等待 10 秒后鼠标多点几下即可
-    2.  ![登录微博](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog/./doc/img/登录微博.png)
+    2.  ![登录微博](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/./doc/img/登录微博.png)
 2.  备份微博
     1.  回到`系统设置`页面, 将自己的微博主页地址贴进输入框
         1.  支持识别以下形式的 url
@@ -36,18 +36,18 @@
             4.  https://m.weibo.cn/u/1234567890
     2.  点击`同步用户信息`按钮, 可看到预估的备份时长
     3.  点击`开始备份`, 执行备份操作
-    4.  ![填写用户主页地址](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog/./doc/img/点击开始备份.png)
+    4.  ![填写用户主页地址](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/./doc/img/点击开始备份.png)
 3.  在`运行日志`中可见当前备份进度.
-    1.  ![查看运行日志](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog/./doc/img/查看运行日志.png)
+    1.  ![查看运行日志](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/./doc/img/查看运行日志.png)
 4.  备份完成后自动打开电子书所在目录
     1.  在`稳部落输出的电子书`目录下, 即为输出的电子书, 其中,
         1.  `html`目录下为网页文件输出地址, `index.html`为入口页.
         2.  `pdf`目录下为 pdf 输出位置
-        3.  ![电子书输出目录](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog/./doc/img/电子书输出目录.png)
+        3.  ![电子书输出目录](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/./doc/img/电子书输出目录.png)
     2.  pdf 电子书输出效果
-        1.  ![pdf电子书效果](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog/./doc/img/pdf电子书效果.png)
+        1.  ![pdf电子书效果](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/./doc/img/pdf电子书效果.png)
     3.  html 电子书输出效果
-        1.  ![html电子书效果](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog/./doc/img/html电子书效果.png)
+        1.  ![html电子书效果](https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/./doc/img/html电子书效果.png)
 5.  输出的 pdf 文件中, 按`年-月-日`生成目录, 支持在文件内搜索文本
 
 # 高级功能
