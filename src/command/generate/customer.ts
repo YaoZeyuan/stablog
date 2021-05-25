@@ -520,6 +520,10 @@ class GenerateCustomer extends Base {
   async html2Image(htmlUri: string, imageUri: string): Promise<boolean> {
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
+    if (htmlUri.startsWith("file://") === false && htmlUri.startsWith("http://") === false) {
+      // mac上载入文件时, 必须要有file://前缀
+      htmlUri = 'file://' + htmlUri
+    }
 
     return await new Promise((reslove, reject) => {
       let timmerId = setTimeout(() => {
@@ -616,7 +620,10 @@ class GenerateCustomer extends Base {
             imgContentList
           )
 
-          jpgContent = await mergeImg.toBuffer()
+          jpgContent = await mergeImg.toBuffer().catch(e => {
+            this.log("mergeImg error => ", e)
+            return new Buffer("")
+          })
 
         } else {
           // 小于最大宽度, 只要截屏一次就可以
@@ -627,19 +634,24 @@ class GenerateCustomer extends Base {
           jpgContent = await nativeImg.toJPEG(100);
         }
 
-        // this.log(`jpgContent 渲染完毕. length => ${jpgContent.length}`)
-        // 基于mozjpeg压缩图片
-        let out = mozjpeg.encode(jpgContent, {
-          //处理质量 百分比
-          quality: 80
-        });
+        // 长度为0说明渲染图片发生了错误, 略过即可
+        if (jpgContent.length !== 0) {
+          // this.log(`jpgContent 渲染完毕. length => ${jpgContent.length}`)
+          // 基于mozjpeg压缩图片
+          let out = mozjpeg.encode(jpgContent, {
+            //处理质量 百分比
+            quality: 80
+          });
 
-        jpgContent = out.data
-        // this.log(`jpgContent 压缩完毕. length => ${jpgContent.length}`)
-        fs.writeFileSync(
-          path.resolve(imageUri),
-          jpgContent,
-        );
+          jpgContent = out.data
+
+          // this.log(`jpgContent 压缩完毕. length => ${jpgContent.length}`)
+          fs.writeFileSync(
+            path.resolve(imageUri),
+            jpgContent,
+          );
+        }
+
         // this.log(`jpgContent 输出完毕. length => ${jpgContent.length}`)
 
         // this.log('generateImage complete');
