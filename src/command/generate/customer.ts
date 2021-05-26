@@ -39,8 +39,9 @@ const Const_Max_Webview_Render_Height_Px = 5000
 const Const_Max_Mblog_In_Single_Book = 10000
 /**
  * 在宽度为760的前提下, sharp最多支持的jpg高度(正常值为60000, 安全起见取50000)
+ * 超大图片在手机上也很难打开, 因此将分页高度改为25000, 这样每张图高30000px, 还算可以接受
  */
-const Const_Max_Jpge_Height_In_Sharp_Px = 50000
+const Const_Max_Jpge_Height_In_Sharp_Px = 25000
 
 
 // 硬编码传入
