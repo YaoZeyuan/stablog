@@ -26,9 +26,9 @@ import { BrowserWindow } from 'electron'
 import CommonUtil from '~/src/library/util/common'
 
 /**
- * 单张页面渲染时间不能超过20秒
+ * 单张页面渲染时间不能超过60秒
  */
-const Const_Render_Html_Timeout_Second = 20
+const Const_Render_Html_Timeout_Second = 60
 /**
  * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
  */
@@ -37,6 +37,10 @@ const Const_Max_Webview_Render_Height_Px = 5000
  * 单卷中最多只能有10000条微博
  */
 const Const_Max_Mblog_In_Single_Book = 10000
+/**
+ * 在宽度为760的前提下, sharp最多支持的jpg高度(正常值为60000, 安全起见取50000)
+ */
+const Const_Max_Jpge_Height_In_Sharp_Px = 50000
 
 
 // 硬编码传入
@@ -449,13 +453,13 @@ class GenerateCustomer extends Base {
         this.log(
           `将记录${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下第${weiboIndex}/${weiboDayRecord.weiboList.length}条微博渲染为图片`,
         )
-        let { htmlUri, imageUri, htmlContent } = await this.transWeiboRecord2Image(weiboRecord)
+        let { htmlUri, imageUriList, htmlContent } = await this.transWeiboRecord2Image(weiboRecord)
 
         let transConfigItem: TypeTransConfigItem = {
           dayIndex,
           weiboIndex,
           htmlUri,
-          imageUri,
+          imageUriList,
           htmlContent
         };
 
@@ -472,40 +476,59 @@ class GenerateCustomer extends Base {
     let baseFileTitle = `${moment.unix(weiboRecord.created_timestamp_at).format("YYYY-MM-DD HH：mm：ss")}_${weiboRecord.id}`
 
     let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
-    let imageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}.jpg`)
+    let imageUriList: string[] = []
+    let baseImageUri = path.resolve(this.html2ImageCache_ImagePath, `${baseFileTitle}_`)
     let content = WeiboView.render([weiboRecord])
     content = this.processContent(content)
 
     let transConfigItem = {
       htmlUri,
-      imageUri,
+      imageUriList,
       htmlContent: content
     }
-    // 若已生成过文件, 则不需要重新生成, 自动跳过即可
-    if (fs.existsSync(imageUri)) {
-      return transConfigItem
+    for (let i = 0; i < 10; i++) {
+      imageUriList.push(baseImageUri + `${i}.jpg`)
     }
+    for (let checkImgUri of imageUriList) {
+      // 若已生成过文件, 则不需要重新生成, 自动跳过即可
+      // 只要有一个文件生成, 就视为已生成
+      if (fs.existsSync(checkImgUri)) {
+        return transConfigItem
+      }
+    }
+
 
 
     fs.writeFileSync(htmlUri, content)
-    // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
-    let isRenderSuccess = await this.html2Image(htmlUri, imageUri)
-    if (isRenderSuccess === false) {
-      this.log(`${transConfigItem.htmlUri}第1次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
-      isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+    {
+      // 渲染图片, 重复尝试3次, 避免因为意外导致js执行超时
+      let { imageUriList, isRenderSuccess } = await this.html2Image(htmlUri, baseImageUri)
       if (isRenderSuccess === true) {
-        this.log(`${transConfigItem.htmlUri}渲染成功`)
+        transConfigItem.imageUriList = imageUriList
+        return transConfigItem
       }
     }
-    if (isRenderSuccess === false) {
-      this.log(`${transConfigItem.htmlUri}第2次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
-      isRenderSuccess = await this.html2Image(htmlUri, imageUri)
+
+    this.log(`${transConfigItem.htmlUri}第1次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+
+    {
+      let { imageUriList, isRenderSuccess } = await this.html2Image(htmlUri, baseImageUri)
       if (isRenderSuccess === true) {
         this.log(`${transConfigItem.htmlUri}渲染成功`)
-      } else {
-        this.log(`${transConfigItem.htmlUri}渲染失败`)
+        transConfigItem.imageUriList = imageUriList
+        return transConfigItem
       }
     }
+    this.log(`${transConfigItem.htmlUri}第2次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 进行第2次尝试`)
+    {
+      let { imageUriList, isRenderSuccess } = await this.html2Image(htmlUri, baseImageUri)
+      if (isRenderSuccess === true) {
+        this.log(`${transConfigItem.htmlUri}渲染成功`)
+        transConfigItem.imageUriList = imageUriList
+        return transConfigItem
+      }
+    }
+    this.log(`${transConfigItem.htmlUri}第3次渲染失败, 渲染时间超过${Const_Render_Html_Timeout_Second}s, 自动退出. 不再尝试`)
 
     // 每生成一张图片休眠1s, 避免界面卡死
     await CommonUtil.asyncSleep(1000 * 0.1)
@@ -517,7 +540,7 @@ class GenerateCustomer extends Base {
    * 将html渲染为图片, 成功返回true, 渲染失败或超时返回false
    * @param pageConfig 
    */
-  async html2Image(htmlUri: string, imageUri: string): Promise<boolean> {
+  async html2Image(htmlUri: string, baseImageUri: string): Promise<{ imageUriList: string[], isRenderSuccess: boolean }> {
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
     if (htmlUri.startsWith("file://") === false && htmlUri.startsWith("http://") === false) {
@@ -529,7 +552,7 @@ class GenerateCustomer extends Base {
       let timmerId = setTimeout(() => {
         // 增加20s超时退出限制
         globalSubWindow.reload()
-        reslove(false)
+        reslove({ imageUriList: [], isRenderSuccess: false })
       }, Const_Render_Html_Timeout_Second * 1000)
 
       let render = async () => {
@@ -546,25 +569,18 @@ class GenerateCustomer extends Base {
           `document.children[0].children[1].scrollHeight`,
         );
 
-        let jpgContent: Buffer
+        let imageUriList: string[] = []
         if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
           // html页面太大, 需要分页输出, 最后再合成一张图片返回
-          let imgContentList: any[] = []
+          let imgContentList: {
+            input: Buffer,
+            top: number,
+            left: 0,
+            // 本张图片高度
+            imgHeightPx: number,
+          }[] = []
           let remainHeight = scrollHeight
           await subWindow.setContentSize(Const_Default_Webview_Width, Const_Max_Webview_Render_Height_Px);
-          // console.log("remainHeight => ", remainHeight)
-          // console.log("Const_Max_Height_Px => ", Const_Max_Height_Px)
-
-          let mergeImg = sharp({
-            create: {
-              width: Const_Default_Webview_Width,
-              height: scrollHeight,
-              channels: 4,
-              background: {
-                r: 255, g: 255, b: 255, alpha: 1,
-              },
-            }
-          }).jpeg({ quality: 100 })
 
           while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
             let imgIndex = imgContentList.length;
@@ -585,6 +601,7 @@ class GenerateCustomer extends Base {
                 input: content,
                 top: Const_Max_Webview_Render_Height_Px * imgIndex,
                 left: 0,
+                imgHeightPx: Const_Max_Webview_Render_Height_Px,
               }
             )
           }
@@ -611,45 +628,118 @@ class GenerateCustomer extends Base {
                 input: content,
                 top: Const_Max_Webview_Render_Height_Px * imgIndex,
                 left: 0,
+                imgHeightPx: remainHeight,
               }
             )
           }
 
-          // 最后将imgContentList合并为一张图片
-          mergeImg.composite(
-            imgContentList
-          )
+          // 拿到所有分页图后, 将图片分组合并
+          let currentTotalHeight = 0;
+          let currentImgContentList: any[] = [];
+          let currentImgIndex = 0;
+          let currentHeightOffset = 0
+          // 先颠倒一下, 方便pop
+          imgContentList.reverse()
+          while (imgContentList.length > 0) {
+            let item = imgContentList.pop()
+            let rawTop = item!.top
+            let rawImgHeightPx = item!.imgHeightPx
+            // 高度差需要减去偏移量
+            item!.top = item!.top - currentHeightOffset
+            currentTotalHeight += item!.imgHeightPx
+            currentImgContentList.push(item)
 
-          jpgContent = await mergeImg.toBuffer().catch(e => {
-            this.log("mergeImg error => ", e)
-            return new Buffer("")
-          })
+            // 对元素分组处理
+            if (currentTotalHeight > Const_Max_Jpge_Height_In_Sharp_Px) {
+              // 保存偏移量, 下一组元素要统一减去上一组的偏移量
+              currentHeightOffset = rawTop + rawImgHeightPx
 
+              let imgUri = baseImageUri + `${currentImgIndex}.jpg`
+              let mergeImg = sharp({
+                create: {
+                  width: Const_Default_Webview_Width,
+                  height: currentTotalHeight,
+                  channels: 4,
+                  background: {
+                    r: 255, g: 255, b: 255, alpha: 1,
+                  },
+                }
+              }).jpeg()
+              mergeImg.composite(
+                currentImgContentList
+              )
+              let jpgContent = await mergeImg.toBuffer().catch(e => {
+                this.log("mergeImg error => ", e)
+                return new Buffer("")
+              })
+              let out = mozjpeg.encode(jpgContent, {
+                //处理质量 百分比
+                quality: 80
+              });
+              jpgContent = out.data
+              fs.writeFileSync(
+                path.resolve(imgUri),
+                jpgContent,
+              );
+              imageUriList.push(imgUri)
+              currentImgIndex = currentImgIndex + 1
+              currentTotalHeight = 0
+              currentImgContentList = []
+            }
+          }
+          // 处理剩余元素
+          if (currentImgContentList.length > 0) {
+            let imgUri = baseImageUri + `${currentImgIndex}.jpg`
+            let mergeImg = sharp({
+              create: {
+                width: Const_Default_Webview_Width,
+                height: currentTotalHeight,
+                channels: 4,
+                background: {
+                  r: 255, g: 255, b: 255, alpha: 1,
+                },
+              }
+            }).jpeg()
+            mergeImg.composite(
+              currentImgContentList
+            )
+            let jpgContent = await mergeImg.toBuffer().catch(e => {
+              this.log("mergeImg error => ", e)
+              return new Buffer("")
+            })
+            let out = mozjpeg.encode(jpgContent, {
+              //处理质量 百分比
+              quality: 80
+            });
+            jpgContent = out.data
+            fs.writeFileSync(
+              path.resolve(imgUri),
+              jpgContent,
+            );
+            imageUriList.push(imgUri)
+            currentImgIndex = currentImgIndex + 1
+            currentTotalHeight = 0
+            currentImgContentList = []
+          }
         } else {
           // 小于最大宽度, 只要截屏一次就可以
           await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
 
           // this.log("setContentSize with scrollHeight -> ", scrollHeight)
           let nativeImg = await webview.capturePage();
-          jpgContent = await nativeImg.toJPEG(100);
-        }
+          let jpgContent = await nativeImg.toJPEG(100);
 
-        // 长度为0说明渲染图片发生了错误, 略过即可
-        if (jpgContent.length !== 0) {
-          // this.log(`jpgContent 渲染完毕. length => ${jpgContent.length}`)
-          // 基于mozjpeg压缩图片
           let out = mozjpeg.encode(jpgContent, {
             //处理质量 百分比
             quality: 80
           });
-
           jpgContent = out.data
-
-          // this.log(`jpgContent 压缩完毕. length => ${jpgContent.length}`)
+          let imageUri = baseImageUri + '0.jpg'
           fs.writeFileSync(
             path.resolve(imageUri),
             jpgContent,
           );
+          imageUriList.push(imageUri)
         }
 
         // this.log(`jpgContent 输出完毕. length => ${jpgContent.length}`)
@@ -657,7 +747,7 @@ class GenerateCustomer extends Base {
         // this.log('generateImage complete');
         // 每张图片最大渲染时间不能超过10s
         clearTimeout(timmerId)
-        reslove(true)
+        reslove({ imageUriList, isRenderSuccess: true })
       }
 
       render()
@@ -750,38 +840,43 @@ class GenerateCustomer extends Base {
         this.log(
           `正在添加页面${weiboDayRecord.title}(第${dayIndex}/${weiboDayList.length}项)下,第${weiboIndex}/${weiboDayRecord.configList.length}条微博`,
         )
-        let imgUri = weiboRecord.imageUri
-        if (fs.existsSync(imgUri) === false) {
-          // 图片渲染失败
-          this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染失败, 自动跳过`)
-          continue
-        } else {
-          let imageBuffer = fs.readFileSync(imgUri)
-
-          let size = await imageSize.imageSize(imageBuffer)
-          let { width, height } = size
-          if (!width || width <= 0 || !height || height <= 0) {
-            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
+        for (let i = 0; i < weiboRecord.imageUriList.length; i++) {
+          let imgUri = weiboRecord.imageUriList[i];
+          if (fs.existsSync(imgUri) === false) {
+            // 图片渲染失败
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染失败, 自动跳过`)
             continue
-          }
+          } else {
+            let imageBuffer = fs.readFileSync(imgUri)
 
-          doc.addPage([width, height], width > height ? "landscape" : "portrait")
-          doc.addImage(
-            {
-              imageData: imageBuffer,
-              x: 0,
-              y: 0,
-              width: width,
-              height: height
-            })
-          doc.setFontSize(0.001)
-          doc.text(weiboRecord.htmlContent, 0, 0, {
-            // align: 'center',
-          })
-          currentPageNo = currentPageNo + 1
-          if (currentPageNo % 10 === 0) {
-            // 休眠0.1秒, 避免因频繁添加页面导致界面卡死
-            await CommonUtil.asyncSleep(1000 * 0.1)
+            let size = await imageSize.imageSize(imageBuffer)
+            let { width, height } = size
+            if (!width || width <= 0 || !height || height <= 0) {
+              this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
+              continue
+            }
+
+            doc.addPage([width, height], width > height ? "landscape" : "portrait")
+            doc.addImage(
+              {
+                imageData: imageBuffer,
+                x: 0,
+                y: 0,
+                width: width,
+                height: height
+              })
+            if (i === 0) {
+              // 只在第一页添加文字
+              doc.setFontSize(0.001)
+              doc.text(weiboRecord.htmlContent, 0, 0, {
+                // align: 'center',
+              })
+            }
+            currentPageNo = currentPageNo + 1
+            if (currentPageNo % 10 === 0) {
+              // 休眠0.1秒, 避免因频繁添加页面导致界面卡死
+              await CommonUtil.asyncSleep(1000 * 0.1)
+            }
           }
         }
       }
