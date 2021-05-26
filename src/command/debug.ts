@@ -2,12 +2,15 @@ import Base from '~/src/command/base'
 import MBlog from '~/src/model/mblog'
 import MblogUser from '~/src/model/mblog_user'
 import fs from 'fs'
+import path from 'path'
 // import path from 'path'
 // import jsPDF from '~/src/library/pdf/jspdf.node.js'
 // import { BrowserWindow } from 'electron'
 // import CommonUtil from '~/src/library/util/common'
 // import { TypeTransConfigPackageList } from './generate/trans_config'
-// import imageSize from 'image-size'
+import imageSize from 'image-size'
+import * as mozjpeg from "mozjpeg-js"
+import sharp from "sharp"
 
 // const outputUri = path.resolve('F:/www/share/github/stablog/缓存文件/pdf_debug_1.pdf')
 // /**
@@ -37,7 +40,91 @@ class CommandDebug extends Base {
   }
 
   async execute() {
-    await MblogUser.asyncGetUserList()
+    const Const_Max_Webview_Render_Height_Px = 5000
+    const Const_Default_Webview_Width = 760;
+
+
+    let inputList: any[] = []
+    let totalImgCount = 16;
+    let baseUri = path.resolve("F:/www/share/github/win_stablog/缓存文件/test_img/测试图片_2018-08-04 07：46：07_4269199607885116_")
+    for (let imgIndex = 0; imgIndex < totalImgCount; imgIndex++) {
+      let filename = `${baseUri}${imgIndex}.jpg`
+      let content = fs.readFileSync(filename)
+      inputList.push({
+        input: content,
+        top: Const_Max_Webview_Render_Height_Px * imgIndex,
+        left: 0,
+      })
+    }
+
+    let mergeImg = sharp({
+      create: {
+        width: Const_Default_Webview_Width,
+        height: Const_Max_Webview_Render_Height_Px * totalImgCount,
+        channels: 4,
+        background: {
+          r: 255, g: 255, b: 255, alpha: 1,
+        },
+      }
+    }).png({
+      // "force": false,
+    })
+    mergeImg.composite(
+      inputList
+    )
+
+    let pngContent = await mergeImg.toBuffer().catch(e => {
+      this.log("mergeImg error => ", e)
+      return new Buffer("")
+    })
+
+    let outputPngImage = baseUri + 'output_all_png.png'
+    fs.writeFileSync(outputPngImage, pngContent)
+    // let outputImage_v2 = baseUri + 'output_all_jpg.jpg'
+    // let a = await Jimp.read(pngContent)
+    // let raw_jpgContent = await a.writeAsync(outputImage_v2)
+    // fs.writeFileSync(outputImage_v2, raw_jpgContent)
+    // let outputImage_v3 = baseUri + 'output_all_tiny_jpg.jpg'
+    // let out = mozjpeg.encode(raw_jpgContent, {
+    //   //处理质量 百分比
+    //   quality: 80
+    // });
+    // let d = out.data
+    // fs.writeFileSync(outputImage_v3, d)
+
+
+    // await images(jpgContent).save(outputImage, "jpeg")
+
+
+    // let imgSize = imageSize.imageSize(jpgContent)
+    // console.log({
+    //   width: imgSize.width as number,
+    //   height: imgSize.height as number,
+    // })
+    // let result = await sharp({
+    //   create: {
+    //     width: 760,
+    //     height: 60000,
+    //     channels: 4,
+    //     background: {
+    //       r: 255, g: 255, b: 255, alpha: 1,
+    //     },
+    //   }
+    // })
+    //   .png({
+    //     "colors":
+    //     "compressionLevel": 9,
+    //   })
+    //   .toBuffer()
+    //   .catch(e => {
+    //     console.log(e)
+    //   })
+    fs.writeFileSync(`${baseUri}final.jpg`, pngContent)
+
+
+    // await MblogUser.asyncGetUserList()
+
+
     // let configUri = path.resolve("F:/www/share/github/stablog/缓存文件/pdf_html_config.json")
     // let content = fs.readFileSync(configUri).toString()
 
