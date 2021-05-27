@@ -42,6 +42,14 @@ const Const_Max_Mblog_In_Single_Book = 5000
  * 超大图片在手机上也很难打开, 因此将分页高度改为25000, 这样每张图高30000px, 还算可以接受
  */
 const Const_Max_Jpge_Height_In_Sharp_Px = 25000
+/**
+ * 屏幕分辨率是否正常
+ * 
+ * 高分屏下，截图截出来的实际像素和指定像素值不一致.
+ * 设定宽度为760，但实际截屏结果为1520，会大2倍
+ * 如果  Screen_Display_Rate 不一致， 需要提前对截图结果进行处理。 否则后续图片合并会失败
+ */
+let Is_Normal_Display_Rate = true
 
 
 // 硬编码传入
@@ -84,9 +92,27 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_isOnlyArticle: TaskConfig.Customer['isOnlyArticle'] = false
   CUSTOMER_CONFIG_isOnlyOriginal: TaskConfig.Customer['isOnlyOriginal'] = false
 
+  async detectIsNormalScreenRate() {
+    // 首先先计算屏幕缩放比
+    let webview = globalSubWindow.webContents;
+    await globalSubWindow.setContentSize(
+      Const_Default_Webview_Width,
+      Const_Default_Webview_Height,
+    );
+    // 利用百度首页. 测试分辨率是否正常
+    await webview.loadURL("https://m.baidu.com")
+    let nativeImg = await webview.capturePage();
+    let content = await nativeImg.toJPEG(100)
+    let realWidth = imageSize.imageSize(content).width || Const_Default_Webview_Width
+    Is_Normal_Display_Rate = realWidth / Const_Default_Webview_Width === 1
+  }
+
   async execute(args: any, options: any): Promise<any> {
     let { subWindow } = args
     globalSubWindow = subWindow
+
+    await this.detectIsNormalScreenRate()
+
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
     let fetchConfigJSON = fs.readFileSync(PathConfig.customerTaskConfigUri).toString()
     this.log('content =>', fetchConfigJSON)
@@ -607,6 +633,14 @@ class GenerateCustomer extends Base {
             await CommonUtil.asyncSleep(1000 * 0.2)
             let nativeImg = await webview.capturePage();
             let content = await nativeImg.toJPEG(100)
+
+
+            if (Is_Normal_Display_Rate === false) {
+              // 不等于1则需要缩放
+              content = await sharp(content).resize(Const_Default_Webview_Width).toBuffer()
+            }
+
+
             remainHeight = remainHeight - Const_Max_Webview_Render_Height_Px
 
             imgContentList.push(
@@ -636,6 +670,12 @@ class GenerateCustomer extends Base {
             let nativeImg = await webview.capturePage();
 
             let content = await nativeImg.toJPEG(100)
+
+            if (Is_Normal_Display_Rate === false) {
+              // 不等于1则需要缩放
+              content = await sharp(content).resize(Const_Default_Webview_Width).toBuffer()
+            }
+
             imgContentList.push(
               {
                 input: content,
@@ -741,6 +781,11 @@ class GenerateCustomer extends Base {
           // this.log("setContentSize with scrollHeight -> ", scrollHeight)
           let nativeImg = await webview.capturePage();
           let jpgContent = await nativeImg.toJPEG(100);
+
+          if (Is_Normal_Display_Rate === false) {
+            // 不等于1则需要缩放
+            jpgContent = await sharp(jpgContent).resize(Const_Default_Webview_Width).toBuffer()
+          }
 
           let out = mozjpeg.encode(jpgContent, {
             //处理质量 百分比
