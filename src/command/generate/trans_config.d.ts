@@ -10,9 +10,9 @@ export type TypeTransConfigItem = {
      */
     "htmlUri": string | "F:\\www\\share\\github\\stablog\\缓存文件\\html\\yaozeyuan93-微博整理(2011-07-07~2021-01-27)\\pdf\\content\\html\\14_2.html"
     /**
-     * 图片输出地址
+     * 图片输出地址(如果图片超出jpg允许的最大高度, 则转为列表)
      */
-    "imageUri": string | "F:\\www\\share\\github\\stablog\\缓存文件\\html\\yaozeyuan93-微博整理(2011-07-07~2021-01-27)\\pdf\\content\\html\\14_2.html"
+    "imageUriList": string[] | "F:\\www\\share\\github\\stablog\\缓存文件\\html\\yaozeyuan93-微博整理(2011-07-07~2021-01-27)\\pdf\\content\\html\\14_2.html"
 }
 
 export type TypeTransConfigPackage = {
