@@ -34,9 +34,9 @@ const Const_Render_Html_Timeout_Second = 60
  */
 const Const_Max_Webview_Render_Height_Px = 5000
 /**
- * 单卷中最多只能有10000条微博
+ * 单卷中最多只能有5000条微博
  */
-const Const_Max_Mblog_In_Single_Book = 10000
+const Const_Max_Mblog_In_Single_Book = 5000
 /**
  * 在宽度为760的前提下, sharp最多支持的jpg高度(正常值为60000, 安全起见取50000)
  * 超大图片在手机上也很难打开, 因此将分页高度改为25000, 这样每张图高30000px, 还算可以接受
@@ -426,6 +426,8 @@ class GenerateCustomer extends Base {
       this.log(`isSkipGeneratePdf为${this.CUSTOMER_CONFIG_isSkipGeneratePdf}, 自动跳过pdf输出阶段`)
     } else {
       let weiboDayConfigList = await this.transWeiboDayList2Image(weiboDayList)
+      // 保存配置,方便调试
+      fs.writeFileSync(path.resolve(this.html2ImageCache_ImagePath, `output.json`), JSON.stringify(weiboDayConfigList))
       await this.generatePdf(weiboDayConfigList)
     }
     // 输出完毕后, 将结果复制到dist文件夹中
@@ -487,16 +489,26 @@ class GenerateCustomer extends Base {
       imageUriList,
       htmlContent: content
     }
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 20; i++) {
       imageUriList.push(baseImageUri + `${i}.jpg`)
     }
+    let existUriList: string[] = []
     for (let checkImgUri of imageUriList) {
       // 若已生成过文件, 则不需要重新生成, 自动跳过即可
       // 只要有一个文件生成, 就视为已生成
       if (fs.existsSync(checkImgUri)) {
-        return transConfigItem
+        existUriList.push(checkImgUri)
+      } else {
+        // 到第一个不存在的图片自动停止
+        break;
       }
     }
+    if (existUriList.length > 0) {
+      // 只要有一张图片存在, 就视为渲染成功
+      transConfigItem.imageUriList = existUriList
+      return transConfigItem
+    }
+
 
 
 
@@ -844,7 +856,7 @@ class GenerateCustomer extends Base {
         for (let i = 0; i < weiboRecord.imageUriList.length; i++) {
           let imgUri = weiboRecord.imageUriList[i];
           if (fs.existsSync(imgUri) === false) {
-            // 图片渲染失败
+            // 图片本身不存在, 说明渲染失败
             this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染失败, 自动跳过`)
             continue
           } else {
