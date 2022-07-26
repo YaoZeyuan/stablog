@@ -7,8 +7,10 @@ import semver from 'semver';
 const electron = require('electron');
 const shell = electron.shell;
 const ipcRenderer = electron.ipcRenderer;
-const remote = electron.remote;
-let pathConfig = remote.getGlobal('pathConfig');
+
+let pathConfigStr = ipcRenderer.sendSync('getPathConfig')
+let pathConfig = JSON.parse(pathConfigStr)
+
 
 /**
  * 将用户输入的主页url转为uid

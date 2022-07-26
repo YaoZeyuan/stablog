@@ -6,11 +6,12 @@ import electron from 'electron';
 import util from '@/library/util';
 import { useEffect, useState } from 'react';
 import { Button, Switch } from 'antd';
-let remote = electron.remote;
+
 let shell = electron.shell;
 let ipcRenderer = electron.ipcRenderer;
 
-let pathConfig = remote.getGlobal('pathConfig');
+let pathConfigStr = ipcRenderer.sendSync('getPathConfig')
+let pathConfig = JSON.parse(pathConfigStr)
 const Const_Max_Log_Line = 100000;
 
 function clearLog() {

@@ -92,8 +92,6 @@ function createWindow() {
       nodeIntegrationInSubFrames: true,
 
       // contextIsolation: false,
-      // 启用remote模块支持
-      enableRemoteModule: true,
       // 启用webview标签
       webviewTag: true,
     },
@@ -392,6 +390,20 @@ ipcMain.on(
     event.returnValue = 'success'
   },
 )
+
+ipcMain.on('getPathConfig', (event) => {
+  // 获取pathConfig
+
+  let obj: any = {}
+  for (let key in PathConfig) {
+    // @ts-ignore
+    obj[key] = PathConfig[key]
+  }
+  let jsonStr = JSON.stringify(obj, null, 2)
+
+  event.returnValue = jsonStr
+  return
+})
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.

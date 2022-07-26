@@ -41,9 +41,9 @@ let TaskConfigType = TypeTaskConfig;
 const electron = require('electron');
 const shell = electron.shell;
 const ipcRenderer = electron.ipcRenderer;
-const remote = electron.remote;
 
-let pathConfig = remote.getGlobal('pathConfig');
+let pathConfigStr = ipcRenderer.sendSync('getPathConfig')
+let pathConfig = JSON.parse(pathConfigStr)
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
