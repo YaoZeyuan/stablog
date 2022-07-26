@@ -13,7 +13,7 @@
       "windows": {
         "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
       },
-      "args": [".", "--debug"]
+      "args": [".", "--stablog-debug"]
     },
     {
       "type": "node",

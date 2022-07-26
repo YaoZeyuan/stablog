@@ -1,5 +1,5 @@
 import './index.less';
-import { remote, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 import TypeWeibo from '@/../../src/type/namespace/weibo';
 import { useState, useEffect } from 'react';
 import { enableMapSet } from 'immer';
@@ -12,8 +12,6 @@ import moment from 'moment';
 import path from 'path';
 
 let Option = Select.Option;
-let MUser = remote.getGlobal('mUser');
-let MBlog = remote.getGlobal('mBlog');
 
 type BlogDistributionItem = {
   date: string;
@@ -69,7 +67,7 @@ export default function IndexPage() {
    * 获取用户信息列表
    */
   async function asyncFetchUserInfoList() {
-    let userInfoList: TypeWeibo.TypeWeiboUserInfo[] = await MUser.asyncGetUserList();
+    let userInfoList: TypeWeibo.TypeWeiboUserInfo[] = await ipcRenderer.sendSync('MUser_asyncGetUserList')
     for (let record of userInfoList) {
       set$$UserDatabase(($$oldDatabase) => {
         return produce($$oldDatabase, (raw) => {
@@ -80,9 +78,7 @@ export default function IndexPage() {
   }
   async function asyncGetDistribute() {
     setIsLoading(true);
-    let distributionObj: BlogDistributionObj = await MBlog.asyncGetWeiboDistribution(
-      selectUserId,
-    );
+    let distributionObj: BlogDistributionObj =  await ipcRenderer.sendSync('MBlog_asyncGetWeiboDistribution', [selectUserId]) 
     setIsLoading(false);
     setBlogDistributionObj(distributionObj);
 
@@ -97,11 +93,11 @@ export default function IndexPage() {
    * 获取当天微博数据列表
    */
   async function asyncGetBlogListInRange(startAt: number, endAt: number) {
-    let blogList = (await MBlog.asyncGetMblogList(
-      selectUserId,
-      startAt,
-      endAt,
-    )) as TypeWeibo.TypeMblog[];
+    let blogList = (
+      await ipcRenderer.sendSync('MBlog_asyncGetMblogList', [ selectUserId,
+        startAt,
+        endAt,]) 
+    ) as TypeWeibo.TypeMblog[];
     return blogList;
   }
 

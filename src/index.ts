@@ -16,7 +16,7 @@ import sharp from 'sharp'
 import path from 'path'
 
 let argv = process.argv
-let isDebug = argv.includes('--debug')
+let isDebug = argv.includes('--stablog-debug')
 let { app, BrowserWindow, ipcMain, session, shell } = Electron
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -94,6 +94,7 @@ function createWindow() {
       // contextIsolation: false,
       // 启用webview标签
       webviewTag: true,
+      contextIsolation: false,
     },
   })
 
@@ -402,6 +403,23 @@ ipcMain.on('getPathConfig', (event) => {
   let jsonStr = JSON.stringify(obj, null, 2)
 
   event.returnValue = jsonStr
+  return
+})
+ipcMain.on('MBlog_asyncGetWeiboDistribution', async (event, args) => {
+  // 获取pathConfig
+  let result = await MBlog.asyncGetWeiboDistribution(...args)
+  event.returnValue = result
+  return
+})
+ipcMain.on('MBlog_asyncGetMblogList', async (event, args) => {
+  // 获取pathConfig
+  let result = await MBlog.asyncGetMblogList(...args)
+  event.returnValue = result
+  return
+})
+ipcMain.on('MUser_asyncGetUserList', async (event) => {
+  let result = await MUser.asyncGetUserList()
+  event.returnValue = result
   return
 })
 
