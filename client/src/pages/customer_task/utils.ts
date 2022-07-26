@@ -131,7 +131,7 @@ export function startBackupTask() {
 }
 
 export async function asyncCheckNeedUpdate() {
-  let checkUpgradeUri = 'http://api.bookflaneur.cn/stablog/version';
+  let checkUpgradeUri = 'https://api.yaozeyuan.online/stablog/version';
   let remoteVersionConfig = await http
     .asyncGet(checkUpgradeUri, {
       params: {
