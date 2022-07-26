@@ -12,7 +12,7 @@
   "scripts": {
     "startgui": "node client/script/dev-server.js",
     "buildgui": "node ./script/build-gui.js",
-    "start": "electron dist/index.js --debug",
+    "start": "electron dist/index.js --stablog-debug",
     "prod": "electron dist/index.js",
     "build": "npm run buildserver && npm run buildgui && electron-builder",
     "ace": "node dist/ace.js",
@@ -116,7 +116,7 @@
     "@types/sharp": "^0.27.3",
     "@types/shelljs": "^0.7.8",
     "babel-plugin-root-import": "^6.1.0",
-    "electron": "14.0.0",
+    "electron": "^19.0.9",
     "electron-builder": "21.2.0",
     "electron-rebuild": "^3.2.7",
     "eslint": "^8.13.0",
