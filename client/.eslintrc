@@ -1,0 +1,49 @@
+// linter上手完全指南 =>
+// https://github.com/haixiangyan/linter-tutorial
+{
+  "env": {
+    "browser": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module",
+    "babelOptions": {
+      "presets": [
+        // issue: https://github.com/facebook/create-react-app/issues/12070
+        // 不在env中指定NODE_ENV=production eslint插件报错
+        // 指定之后eslint命令报错
+        // hack版兼容方案是手工指定要加载的babel配置
+        ["babel-preset-react-app", false],
+        "babel-preset-react-app/prod"
+      ]
+    }
+  },
+  "extends": [
+    "react-app",
+    // prettier
+    "prettier"
+  ],
+  "plugins": ["prettier"],
+  "rules": {
+    "prettier/prettier": "off",
+    "arrow-body-style": "off",
+    "prefer-arrow-callback": "off",
+    // 允许未使用变量存在
+    "@typescript-eslint/no-unused-vars": 0,
+    "no-unused-vars": 0,
+    // 允许导出匿名函数
+    "import/no-anonymous-default-export": 0,
+    // 允许不符合规范的a标签(以利用antd自带的样式)
+    "jsx-a11y/anchor-is-valid": 0,
+    // 允许不符合规范的a标签(以利用antd自带的样式)
+    "jsx-a11y/anchor-has-content": 0
+    // 当最后一个元素或属性与闭括号 ] 或 } 在 不同的行时，允许（但不要求）使用拖尾逗号；当在 同一行时，禁止使用拖尾逗号。
+    // "comma-dangle": ["error", ],
+    // "quotes": ["warn", "single"]
+    // semi: ["error", "never"]
+  }
+}

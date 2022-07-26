@@ -131,6 +131,50 @@ export type TypeUserInfoResponse = {
   }
 }
 
+export type Type_Profile_Info = {
+  ok: 1
+  data: {
+    user: {
+      id: 1221171697
+      screen_name: '兔主席'
+      profile_image_url: 'https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1658848615&ssig=ucJ%2FPNGgoj'
+      profile_url: 'https://m.weibo.cn/u/1221171697?uid=1221171697&luicode=20000174&yingyongbao=1&sourceType=weixin&launchid=10000360-weixinh5_9999_01'
+      statuses_count: 7993
+      verified: true
+      verified_type: 0
+      verified_type_ext: 0
+      verified_reason: '历史博主 头条文章作者'
+      close_blue_v: false
+      description: '大历史。大社会。 独立。理性。批判。建设。'
+      gender: 'm'
+      mbtype: 11
+      urank: 38
+      mbrank: 6
+      follow_me: false
+      following: true
+      follow_count: 475
+      followers_count: '178.2万'
+      followers_count_str: '178.2万'
+      cover_image_phone: 'https://tva1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg'
+      avatar_hd: 'https://ww3.sinaimg.cn/orj480/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg'
+      like: false
+      like_me: false
+    }
+    statuses: []
+    more: '/p/2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO'
+    fans: '/p/second?containerid=1005051221171697_-_FANS'
+    follow: '/p/second?containerid=1005051221171697_-_FOLLOWERS'
+    button: {
+      type: 'profile_follow'
+      name: '已关注'
+      sub_type: 1
+      params: {
+        uid: '1221171697'
+      }
+    }
+  }
+}
+
 export type TypeWeiboUserInfo = {
   id: 1245161127
   screen_name: 'eprom'
@@ -218,12 +262,12 @@ export type TypePageInfo = {
   type: TypePageType
   object_id: '1022:2309404414789865570479'
   // 视频中带的key
-  play_count: "36万次播放"
-  "media_info": {
-    "duration": 161.957,
-    "stream_url": "https://f.video.weibocdn.com/NMJVsI9olx07LzZ45oti01041200k0S70E010.mp4?label=mp4_ld&template=640x360.25.0&trans_finger=40a32e8439c5409a63ccf853562a60ef&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=9i8xY5%2Bsww&KID=unistore,video",
-    "stream_url_hd": "https://f.video.weibocdn.com/UmEGuRZXlx07LzZ4GhsA01041200uhlA0E010.mp4?label=mp4_hd&template=852x480.25.0&trans_finger=62b30a3f061b162e421008955c73f536&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=iHKgDfh3oq&KID=unistore,video"
-  },
+  play_count: '36万次播放'
+  media_info: {
+    duration: 161.957
+    stream_url: 'https://f.video.weibocdn.com/NMJVsI9olx07LzZ45oti01041200k0S70E010.mp4?label=mp4_ld&template=640x360.25.0&trans_finger=40a32e8439c5409a63ccf853562a60ef&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=9i8xY5%2Bsww&KID=unistore,video'
+    stream_url_hd: 'https://f.video.weibocdn.com/UmEGuRZXlx07LzZ4GhsA01041200uhlA0E010.mp4?label=mp4_hd&template=852x480.25.0&trans_finger=62b30a3f061b162e421008955c73f536&ori=0&ps=1CwnkDw1GXwCQx&Expires=1617380389&ssig=iHKgDfh3oq&KID=unistore,video'
+  }
 }
 
 /**
@@ -362,105 +406,105 @@ export type TypeLongTextWeiboResponse = {
 }
 
 export type TypeWeiboArticleRecord = {
-  "object_id": "1022:2309404619352241471539",
-  "vuid": 0,
-  "uid": 1221171697,
-  "cover_img": {
-    "image": {
-      "url": "https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg",
-      "height": 450,
-      "width": 800
-    },
-    "full_image": {
-      "url": "https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg",
-      "height": 562,
-      "width": 1000
+  object_id: '1022:2309404619352241471539'
+  vuid: 0
+  uid: 1221171697
+  cover_img: {
+    image: {
+      url: 'https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg'
+      height: 450
+      width: 800
     }
-  },
-  "target_url": "https://card.weibo.com/article/m/show/id/2309404619352241471539",
-  "title": "理解西方人对“种族灭绝”的近代历史心结",
-  "create_at": "03-27 13:27",
-  "read_count": "40万+",
-  "summary": "",
-  "writer": [],
-  "ourl": "",
-  "url": "https://weibo.com/ttarticle/p/show?id=2309404619352241471539",
-  "is_pay": 0,
-  "is_reward": 0,
-  "is_vclub": 0,
-  "is_original": 0,
-  "pay_status": 0,
-  "follow_to_read": 1,
-  "userinfo": {
-    "uid": 1221171697,
-    "id": 1221171697,
-    "screen_name": "兔主席",
-    "description": "大历史。大社会。 独立。理性。批判。建设。",
-    "followers_count": 1762801,
-    "friends_count": 465,
-    "verified": true,
-    "verified_type": 0,
-    "verified_type_ext": 0,
-    "verified_reason": "知名历史博主 头条文章作者",
-    "avatar_large": "https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=rphdPBquHf",
-    "profile_image_url": "https://tva3.sinaimg.cn/crop.0.0.180.180.50/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=eXClERRC%2FH",
-    "cover_image": "",
-    "cover_image_phone": "https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg",
-    "following": false,
-    "mbtype": 11,
-    "mbrank": 6,
-    "url": "https://weibo.com/u/1221171697",
-    "target_url": "https://m.weibo.cn/profile/1221171697",
-    "scheme_url": "sinaweibo://userinfo?uid=1221171697",
-    "is_vclub": 0,
-    "is_vclub_gold": 0
-  },
-  "content": "文本内容",
-  "is_import": 0,
-  "is_repost_to_share": 0,
-  "reward_data": {
-    "seller": 1221171697,
-    "bid": 1000207805,
-    "oid": "1022:2309404619352241471539",
-    "access_type": "mobileLayer",
-    "share": 1,
-    "sign": "6233ad671c5222c7f2aee451af28a202"
-  },
-  "copyright": 0,
-  "mid": 4619352240819112,
-  "is_word": 1,
-  "article_browser": 1,
-  "scheme_url": "sinaweibo://articlebrowser?object_id=1022:2309404619352241471539&url=https%3A%2F%2Fcard.weibo.com%2Farticle%2Fm%2Fshow%2Fid%2F2309404619352241471539",
-  "article_recommend": [],
-  "article_recommend_info": {
-    "type": 1
-  },
-  "ignore_read_count": 0,
-  "is_new_style": 1,
-  "card_list": [],
-  "object_info": [],
-  "extra": null,
-  "article_type": "v3_h5",
-  "history": "",
-  "origin_oid": "",
-  "update_at": "",
-  "show_edit": 0,
-  "pay_info": [],
-  "pay_info_ext": [],
-  "pay_edit_tips": "",
-  "pay_data": {
-    "version": "531294344d21a6d3",
-    "ua": "h5",
-    "vuid": 1221171697,
-    "body_btn": [],
-    "footer_btn": []
-  },
-  "is_checking": null,
-  "real_oid": null,
-  "hide_share_button": 0,
-  "hide_repost_button": 0,
-  "article_fingerprinting": "f8a66a53c0cf5b726a6703d83df4fdd9",
-  "is_follow": 0
+    full_image: {
+      url: 'https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg'
+      height: 562
+      width: 1000
+    }
+  }
+  target_url: 'https://card.weibo.com/article/m/show/id/2309404619352241471539'
+  title: '理解西方人对“种族灭绝”的近代历史心结'
+  create_at: '03-27 13:27'
+  read_count: '40万+'
+  summary: ''
+  writer: []
+  ourl: ''
+  url: 'https://weibo.com/ttarticle/p/show?id=2309404619352241471539'
+  is_pay: 0
+  is_reward: 0
+  is_vclub: 0
+  is_original: 0
+  pay_status: 0
+  follow_to_read: 1
+  userinfo: {
+    uid: 1221171697
+    id: 1221171697
+    screen_name: '兔主席'
+    description: '大历史。大社会。 独立。理性。批判。建设。'
+    followers_count: 1762801
+    friends_count: 465
+    verified: true
+    verified_type: 0
+    verified_type_ext: 0
+    verified_reason: '知名历史博主 头条文章作者'
+    avatar_large: 'https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=rphdPBquHf'
+    profile_image_url: 'https://tva3.sinaimg.cn/crop.0.0.180.180.50/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=eXClERRC%2FH'
+    cover_image: ''
+    cover_image_phone: 'https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg'
+    following: false
+    mbtype: 11
+    mbrank: 6
+    url: 'https://weibo.com/u/1221171697'
+    target_url: 'https://m.weibo.cn/profile/1221171697'
+    scheme_url: 'sinaweibo://userinfo?uid=1221171697'
+    is_vclub: 0
+    is_vclub_gold: 0
+  }
+  content: '文本内容'
+  is_import: 0
+  is_repost_to_share: 0
+  reward_data: {
+    seller: 1221171697
+    bid: 1000207805
+    oid: '1022:2309404619352241471539'
+    access_type: 'mobileLayer'
+    share: 1
+    sign: '6233ad671c5222c7f2aee451af28a202'
+  }
+  copyright: 0
+  mid: 4619352240819112
+  is_word: 1
+  article_browser: 1
+  scheme_url: 'sinaweibo://articlebrowser?object_id=1022:2309404619352241471539&url=https%3A%2F%2Fcard.weibo.com%2Farticle%2Fm%2Fshow%2Fid%2F2309404619352241471539'
+  article_recommend: []
+  article_recommend_info: {
+    type: 1
+  }
+  ignore_read_count: 0
+  is_new_style: 1
+  card_list: []
+  object_info: []
+  extra: null
+  article_type: 'v3_h5'
+  history: ''
+  origin_oid: ''
+  update_at: ''
+  show_edit: 0
+  pay_info: []
+  pay_info_ext: []
+  pay_edit_tips: ''
+  pay_data: {
+    version: '531294344d21a6d3'
+    ua: 'h5'
+    vuid: 1221171697
+    body_btn: []
+    footer_btn: []
+  }
+  is_checking: null
+  real_oid: null
+  hide_share_button: 0
+  hide_repost_button: 0
+  article_fingerprinting: 'f8a66a53c0cf5b726a6703d83df4fdd9'
+  is_follow: 0
 }
 
 /**

@@ -25,8 +25,8 @@ let mainWindow: Electron.BrowserWindow
 // 关闭https证书校验
 app.commandLine.appendSwitch('ignore-certificate-errors', 'true')
 // 解除node.js内存限制
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
-app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=8192');
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192')
+app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=8192')
 
 let isRunning = false
 // subWindow需要放在外边, 以便在全局中传递
@@ -116,12 +116,13 @@ function createWindow() {
     // 配置最大高度, 该值默认值为屏幕高度, 如果大于该高度, 会出现滚动条
     maxHeight: 10000,
     // 负责渲染的子窗口不需要显示出来, 避免被用户误关闭
-    show: false
+    show: false,
   })
 
   async function debugCaputure() {
-    let targetSource = "file:///F:/www/share/github/stablog/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/%E5%85%94%E4%B8%BB%E5%B8%AD-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86(2021-03-08~2021-03-27)/html_to_pdf/2021%EF%BC%8D03%EF%BC%8D27%2013%EF%BC%9A27%EF%BC%9A40_4619352240819112.html"
-    let demoUri = path.resolve(__dirname, "../demo.jpg")
+    let targetSource =
+      'file:///F:/www/share/github/stablog/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/%E5%85%94%E4%B8%BB%E5%B8%AD-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86(2021-03-08~2021-03-27)/html_to_pdf/2021%EF%BC%8D03%EF%BC%8D27%2013%EF%BC%9A27%EF%BC%9A40_4619352240819112.html'
+    let demoUri = path.resolve(__dirname, '../demo.jpg')
 
     const Const_Max_Webview_Render_Height_Px = 5000
     const Const_Default_Webview_Width = 760
@@ -130,24 +131,19 @@ function createWindow() {
     let webview = subWindow.webContents
     let globalSubWindow = subWindow
 
-    await webview.loadURL(targetSource);
+    await webview.loadURL(targetSource)
     // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
-    await globalSubWindow.setContentSize(
-      Const_Default_Webview_Width,
-      Const_Default_Webview_Height,
-    );
+    await globalSubWindow.setContentSize(Const_Default_Webview_Width, Const_Default_Webview_Height)
     // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
     // this.log("resize page, executeJavaScript ")
-    let scrollHeight = await webview.executeJavaScript(
-      `document.children[0].children[1].scrollHeight`,
-    );
+    let scrollHeight = await webview.executeJavaScript(`document.children[0].children[1].scrollHeight`)
 
     let jpgContent: Buffer
     if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
       // html页面太大, 需要分页输出, 最后再合成一张图片返回
       let imgContentList: any[] = []
       let remainHeight = scrollHeight
-      await subWindow.setContentSize(Const_Default_Webview_Width, Const_Max_Webview_Render_Height_Px);
+      await subWindow.setContentSize(Const_Default_Webview_Width, Const_Max_Webview_Render_Height_Px)
       // console.log("remainHeight => ", remainHeight)
       // console.log("Const_Max_Height_Px => ", Const_Max_Height_Px)
 
@@ -157,77 +153,73 @@ function createWindow() {
           height: scrollHeight,
           channels: 4,
           background: {
-            r: 255, g: 255, b: 255, alpha: 1,
+            r: 255,
+            g: 255,
+            b: 255,
+            alpha: 1,
           },
-        }
+        },
       }).jpeg({ quality: 100 })
 
       while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
-        let imgIndex = imgContentList.length;
+        let imgIndex = imgContentList.length
         let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgIndex
         // 先移动到offset高度
         let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
-        await webview.executeJavaScript(command);
+        await webview.executeJavaScript(command)
 
         // 然后对界面截屏
         // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
         await CommonUtil.asyncSleep(1000 * 0.5)
-        let nativeImg = await webview.capturePage();
+        let nativeImg = await webview.capturePage()
         let content = await nativeImg.toJPEG(100)
         remainHeight = remainHeight - Const_Max_Webview_Render_Height_Px
 
-        imgContentList.push(
-          {
-            input: content,
-            top: Const_Max_Webview_Render_Height_Px * imgIndex,
-            left: 0,
-          }
-        )
+        imgContentList.push({
+          input: content,
+          top: Const_Max_Webview_Render_Height_Px * imgIndex,
+          left: 0,
+        })
       }
       if (remainHeight > 0) {
         // 最后捕捉剩余高度页面
 
         // 首先调整页面高度
-        await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight);
+        await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight)
         // 然后走流程, 捕捉界面
         let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgContentList.length
-        let imgIndex = imgContentList.length;
+        let imgIndex = imgContentList.length
 
         // 先移动到offset高度
         let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
-        await webview.executeJavaScript(command);
+        await webview.executeJavaScript(command)
         // 然后对界面截屏
         // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
         await CommonUtil.asyncSleep(1000 * 0.5)
-        let nativeImg = await webview.capturePage();
+        let nativeImg = await webview.capturePage()
 
         let content = await nativeImg.toJPEG(100)
-        imgContentList.push(
-          {
-            input: content,
-            top: Const_Max_Webview_Render_Height_Px * imgIndex,
-            left: 0,
-          }
-        )
+        imgContentList.push({
+          input: content,
+          top: Const_Max_Webview_Render_Height_Px * imgIndex,
+          left: 0,
+        })
       }
 
       // 最后将imgContentList合并为一张图片
-      mergeImg.composite(
-        imgContentList
-      )
+      mergeImg.composite(imgContentList)
 
       jpgContent = await mergeImg.toBuffer()
-
     } else {
       // 小于最大宽度, 只要截屏一次就可以
-      await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight);
+      await subWindow.setContentSize(Const_Default_Webview_Width, scrollHeight)
 
       // this.log("setContentSize with scrollHeight -> ", scrollHeight)
-      let nativeImg = await webview.capturePage();
-      jpgContent = await nativeImg.toJPEG(100);
+      let nativeImg = await webview.capturePage()
+      jpgContent = await nativeImg.toJPEG(100)
     }
 
-    console.log("demoUri => ", demoUri)
+    console.log('demoUri => ', demoUri)
     fs.writeFileSync(demoUri, jpgContent)
   }
 
@@ -283,13 +275,22 @@ app.on('activate', function () {
   }
 })
 
-ipcMain.on('openOutputDir', async event => {
+ipcMain.on('openOutputDir', async (event) => {
   shell.showItemInFolder(PathConfig.outputPath)
   event.returnValue = true
   return
 })
 
-ipcMain.on('startCustomerTask', async event => {
+ipcMain.on('resetSession', async (event) => {
+  Logger.log('注销登录')
+  await session.defaultSession?.clearCache()
+  await session.defaultSession?.clearStorageData()
+  await session.defaultSession?.clearHostResolverCache()
+  event.returnValue = true
+  return
+})
+
+ipcMain.on('startCustomerTask', async (event) => {
   if (isRunning) {
     event.returnValue = '目前尚有任务执行, 请稍后'
     return
@@ -299,7 +300,7 @@ ipcMain.on('startCustomerTask', async event => {
   let cookieContent = ''
   await new Promise((resolve, reject) => {
     // 获取页面cookie
-    session.defaultSession.cookies.get({}, (error, cookieList) => {
+    session.defaultSession?.cookies.get({}, (error, cookieList) => {
       for (let cookie of cookieList) {
         cookieContent = `${cookie.name}=${cookie.value};${cookieContent}`
       }
@@ -317,64 +318,80 @@ ipcMain.on('startCustomerTask', async event => {
   Logger.log(`开始执行任务`)
   event.returnValue = 'success'
   let dispatchTaskCommand = new DispatchTaskCommand()
-  await dispatchTaskCommand.handle({
-    subWindow
-  }, {})
+  await dispatchTaskCommand.handle(
+    {
+      subWindow,
+    },
+    {},
+  )
   Logger.log(`所有任务执行完毕, 打开电子书文件夹 => `, PathConfig.outputPath)
   // 输出打开文件夹
   shell.showItemInFolder(PathConfig.outputPath)
   isRunning = false
 })
 
-ipcMain.on('dataTransferExport', async (event, arg: {
-  exportUri: string,
-  uid: string,
-  exportStartAt: number,
-  exportEndAt: number
-}) => {
-  let {
-    exportUri,
-    uid,
-    exportStartAt,
-    exportEndAt
-  } = arg
-  Logger.log('开始导出', {
-    exportUri,
-    uid,
-    exportStartAt,
-    exportEndAt
-  })
-  let exportCommand = new DataTransferExport()
-  await exportCommand.handle({
-    exportUri,
-    uid,
-    exportStartAt,
-    exportEndAt
-  }, {}).catch()
-  Logger.log(`数据导出完毕, 打开导出目录 => `, PathConfig.outputPath)
-  // 输出打开文件夹
-  shell.showItemInFolder(exportUri)
-  event.returnValue = 'success'
-})
+ipcMain.on(
+  'dataTransferExport',
+  async (
+    event,
+    arg: {
+      exportUri: string
+      uid: string
+      exportStartAt: number
+      exportEndAt: number
+    },
+  ) => {
+    let { exportUri, uid, exportStartAt, exportEndAt } = arg
+    Logger.log('开始导出', {
+      exportUri,
+      uid,
+      exportStartAt,
+      exportEndAt,
+    })
+    let exportCommand = new DataTransferExport()
+    await exportCommand
+      .handle(
+        {
+          exportUri,
+          uid,
+          exportStartAt,
+          exportEndAt,
+        },
+        {},
+      )
+      .catch()
+    Logger.log(`数据导出完毕, 打开导出目录 => `, PathConfig.outputPath)
+    // 输出打开文件夹
+    shell.showItemInFolder(exportUri)
+    event.returnValue = 'success'
+  },
+)
 
-ipcMain.on('dataTransferImport', async (event, arg: {
-  importUri: string,
-}) => {
-  let {
-    importUri,
-  } = arg
-  Logger.log('开始导入数据', {
-    importUri
-  })
-  let importCommand = new DataTransferImport()
-  await importCommand.handle({
-    importUri
-  }, {}).catch()
-  Logger.log(`数据导入完毕`)
-  event.returnValue = 'success'
-})
-
-
+ipcMain.on(
+  'dataTransferImport',
+  async (
+    event,
+    arg: {
+      importUri: string
+    },
+  ) => {
+    let { importUri } = arg
+    Logger.log('开始导入数据', {
+      importUri,
+    })
+    let importCommand = new DataTransferImport()
+    await importCommand
+      .handle(
+        {
+          importUri,
+        },
+        {},
+      )
+      .catch()
+    Logger.log(`数据导入完毕`)
+    event.returnValue = 'success'
+  },
+)
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
