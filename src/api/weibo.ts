@@ -32,7 +32,7 @@ export default class Weibo extends Base {
       let rawStStartStr = jsonStr.split(`st:`)[1]
       let rawStStr = rawStStartStr.split(`,`)[0]
       st = rawStStr.replace(/"|'| /g, '')
-    } catch (e) { }
+    } catch (e) {}
     return st
   }
   static async asyncStep2FetchApiConfig(st: string) {
@@ -80,7 +80,7 @@ export default class Weibo extends Base {
           'X-XSRF-TOKEN': st,
         },
       })
-      .catch(e => {
+      .catch((e) => {
         return undefined
       })
     if (_.isEmpty(weiboResponse?.data?.cards)) {
@@ -88,7 +88,7 @@ export default class Weibo extends Base {
     }
     const rawRecordList = weiboResponse?.data?.cards || []
     // 需要按cardType进行过滤, 只要id为9的(微博卡片)
-    let recordList = rawRecordList.filter(item => {
+    let recordList = rawRecordList.filter((item) => {
       return item.card_type === 9
     })
     return recordList
@@ -117,7 +117,7 @@ export default class Weibo extends Base {
     }
     const rawRecordList = weiboResponse.data.cards
     // 需要按cardType进行过滤, 只要id为9的(微博卡片)
-    let recordList = rawRecordList.filter(item => {
+    let recordList = rawRecordList.filter((item) => {
       return item.card_type === 9
     })
     return recordList
@@ -126,20 +126,21 @@ export default class Weibo extends Base {
    * 获取用户微博总数
    * 微博列表中用户信息的total可能不准, 因此使用cardlistInfo中的字段
    */
-  static async asyncGetWeiboCount(author_uid: string): Promise<number> {
-    let page = 1
-    let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
-    const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&page=${page}`
+  static async asyncGetWeiboCount({ author_uid, st }: { author_uid: string; st: string }): Promise<number> {
+    const baseUrl = `https://m.weibo.cn/profile/info`
     const config = {
-      // containerid: containerId,
-      // page_type: '03',
-      // page: page,
+      uid: author_uid,
     }
-    const weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
+    const rawResponse = <TypeWeibo.Type_Profile_Info>await Base.http.get(baseUrl, {
       params: config,
+      headers: {
+        'x-requested-with': 'XMLHttpRequest',
+        'x-xsrf-token': st,
+        referer: `https://m.weibo.cn/profile/${author_uid}`,
+      },
     })
-    let totalCount = weiboResponse.data.cardlistInfo.total
-    return totalCount
+    const responseData = rawResponse.data
+    return responseData.user.statuses_count
   }
 
   /**

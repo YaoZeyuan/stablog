@@ -17,7 +17,7 @@ import querystring from 'query-string'
 /**
  * weibo.com的新Api对应的创建时间解析格式字符串
  */
-const Const_Moment_Parse_Format_4_WeiboComApi = "ddd MMM DD HH:mm:ss Z YYYY"
+const Const_Moment_Parse_Format_4_WeiboComApi = 'ddd MMM DD HH:mm:ss Z YYYY'
 /**
  * 重试时的等待时间
  */
@@ -45,7 +45,7 @@ function getArticleId(rawUrl = '') {
   if (!decodeUrl) {
     return ''
   }
-  if (decodeUrl.includes("id=") && decodeUrl.includes("/ttarticle/p/show")) {
+  if (decodeUrl.includes('id=') && decodeUrl.includes('/ttarticle/p/show')) {
     // 说明是新格式 https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
     let rawQuery = querystring.parseUrl(decodeUrl).query
     let articleId = rawQuery?.id || ''
@@ -106,6 +106,14 @@ class FetchCustomer extends Base {
       this.log(`待抓取用户uid => ${uid}`)
       this.log(`备注信息 => ${comment}`)
       // 开工
+
+      // 需要先拿到st信息
+      // 为抓取微博自定义一套流程
+      // 获取st
+      this.requestConfig.st = await ApiWeibo.asyncStep1FetchPageConfigSt()
+      // 拿着st, 获取api config中的st
+      this.requestConfig.st = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+
       this.log(`抓取用户${uid}信息`)
       let response = await ApiWeibo.asyncGetUserInfoResponseData(uid)
       if (_.isEmpty(response)) {
@@ -126,7 +134,7 @@ class FetchCustomer extends Base {
         continue
       }
       this.log(`开始抓取用户${userInfo.screen_name}微博记录`)
-      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid).catch(e => {
+      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid).catch((e) => {
         // 避免crash导致整个进程退出
         return []
       })
@@ -143,16 +151,14 @@ class FetchCustomer extends Base {
         raw_json: JSON.stringify(mblogUserInfo),
       })
       // 用户总微博数
-      let totalMblogCount = await ApiWeibo.asyncGetWeiboCount(uid)
+      let totalMblogCount = await ApiWeibo.asyncGetWeiboCount({
+        author_uid: uid,
+        st: this.requestConfig.st,
+      })
       let totalPageCount = Math.ceil(totalMblogCount / 10)
       this.log(`用户${userInfo.screen_name}共发布了${totalMblogCount}条微博, 正式开始抓取`)
       let maxFetchPageNo = this.fetchEndAtPageNo <= totalPageCount ? this.fetchEndAtPageNo : totalPageCount
       this.log(`本次抓取的页码范围为:${this.fetchStartAtPageNo}~${maxFetchPageNo}`)
-      // 为抓取微博自定义一套流程
-      // 获取st
-      this.requestConfig.st = await ApiWeibo.asyncStep1FetchPageConfigSt()
-      // 拿着st, 获取api config中的st
-      this.requestConfig.st = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
 
       for (let page = 1; page <= totalPageCount; page++) {
         if (page < this.fetchStartAtPageNo) {
@@ -174,16 +180,16 @@ class FetchCustomer extends Base {
   }
 
   /**
-   * 
-   * @param author_uid 
-   * @param page 
-   * @param totalPage 
-   * @param newFormatRecordMap 
+   *
+   * @param author_uid
+   * @param page
+   * @param totalPage
+   * @param newFormatRecordMap
    */
   async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
-    let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page).catch(e => {
+    let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page).catch((e) => {
       // 避免crash导致整个进程退出
       return []
     })
@@ -221,7 +227,7 @@ class FetchCustomer extends Base {
       if (rawMblog.mblog.isLongText === true) {
         // 长微博需要调取api重新获得微博内容
         let bid = rawMblog.mblog.bid
-        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid).catch(e => {
+        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid).catch((e) => {
           // 避免crash导致整个进程退出
           return {}
         })
@@ -246,7 +252,7 @@ class FetchCustomer extends Base {
           // 转发的是微博文章
           let pageInfo = rawMblog.mblog.retweeted_status.page_info
           let articleId = getArticleId(pageInfo.page_url)
-          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(e => {
+          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch((e) => {
             // 避免crash导致整个进程退出
             return {}
           })
@@ -261,7 +267,7 @@ class FetchCustomer extends Base {
         // 文章类型为微博文章
         let pageInfo = rawMblog.mblog.page_info
         let articleId = getArticleId(pageInfo.page_url)
-        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(e => {
+        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch((e) => {
           // 避免crash导致整个进程退出
           return {}
         })
@@ -287,7 +293,7 @@ class FetchCustomer extends Base {
       let is_retweet = mblog.retweeted_status ? 1 : 0
       let is_article = mblog.article ? 1 : 0
 
-      // 这里可能会出报SQLITE_BUSY: database is locked 
+      // 这里可能会出报SQLITE_BUSY: database is locked
       await MMblog.replaceInto({
         id,
         author_uid,
@@ -296,10 +302,10 @@ class FetchCustomer extends Base {
         raw_json,
         post_publish_at: mblog.created_timestamp_at,
       }).catch((e: Error) => {
-        this.log("数据库插入出错 => ", {
+        this.log('数据库插入出错 => ', {
           name: e?.name,
           message: e?.message,
-          stack: e?.stack
+          stack: e?.stack,
         })
         return
       })
