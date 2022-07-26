@@ -23,7 +23,7 @@
     }
   },
   "extends": [
-    "react-app",
+    // "react-app",
     // prettier
     "prettier"
   ],

@@ -121,7 +121,6 @@
     "electron-rebuild": "^3.2.7",
     "eslint": "^8.13.0",
     "eslint-config-prettier": "^8.5.0",
-    "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-prettier": "^4.0.0",
     "less": "^4.1.1",
     "less-watch-compiler": "^1.14.6",
