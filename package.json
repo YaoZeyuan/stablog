@@ -125,7 +125,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "less": "^4.1.1",
     "less-watch-compiler": "^1.14.6",
-    "node-gyp": "^7.1.2",
+    "node-gyp": "^9.1.0",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4",
     "watch": "^1.0.2"
