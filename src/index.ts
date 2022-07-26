@@ -88,13 +88,10 @@ function createWindow() {
       allowRunningInsecureContent: true,
       // 启用node支持
       nodeIntegration: true,
-      nodeIntegrationInWorker: true,
-      nodeIntegrationInSubFrames: true,
-
-      // contextIsolation: false,
+      // Electron12后, 启用node支持时还需要关闭上下文隔离
+      contextIsolation: false,
       // 启用webview标签
       webviewTag: true,
-      contextIsolation: false,
     },
   })
 
