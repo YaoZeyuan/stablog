@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [14.x]
 
     steps:
       - uses: actions/checkout@v2
@@ -25,7 +25,7 @@ jobs:
       - name: Show version number
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
       # 先执行electron的构建, 节约调试时间
-      - run: yarn
+      - run: npm install
       # sharp需要单独安装
       - run: npm install --platform=win32 --arch=x64 sharp
       # - run: npm rebuild --platform=win32 --arch=ia32 sharp

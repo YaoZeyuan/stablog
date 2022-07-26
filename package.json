@@ -75,7 +75,7 @@
     "image-size": "^0.8.3",
     "json5": "^2.1.0",
     "jspdf": "^2.3.0",
-    "knex": "^0.20.1",
+    "knex": "^2.2.0",
     "lodash": "^4.17.5",
     "md5": "^2.2.1",
     "moment": "^2.24.0",
@@ -87,7 +87,7 @@
     "request-promise": "^4.2.6",
     "sharp": "^0.28.3",
     "shelljs": "^0.8.1",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.10"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.6",
