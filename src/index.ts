@@ -294,16 +294,11 @@ ipcMain.on('startCustomerTask', async (event) => {
   isRunning = true
   Logger.log('开始工作')
   let cookieContent = ''
-  await new Promise((resolve, reject) => {
-    // 获取页面cookie
-    session.defaultSession?.cookies.get({}, (error, cookieList) => {
-      for (let cookie of cookieList) {
-        cookieContent = `${cookie.name}=${cookie.value};${cookieContent}`
-      }
-      // 顺利获取cookie列表
-      resolve()
-    })
-  })
+  // 获取页面cookie
+  let cookieList = await session.defaultSession.cookies.get({})
+  for (let cookie of cookieList) {
+    cookieContent = `${cookie.name}=${cookie.value};${cookieContent}`
+  }
   // 将cookie更新到本地配置中
   let config = CommonUtil.getConfig()
   _.set(config, ['request', 'cookie'], cookieContent)
