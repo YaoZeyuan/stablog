@@ -1023,7 +1023,7 @@
     ajv "^6.1.0"
     ajv-keywords "^3.1.0"
 
-"@electron/get@^1.0.1":
+"@electron/get@^1.13.0":
   version "1.14.1"
   resolved "https://registry.npmmirror.com/@electron/get/-/get-1.14.1.tgz#16ba75f02dffb74c23965e72d617adc721d27f40"
   integrity sha512-BrZYyL/6m0ZXz/lDxy/nlVhQz+WF+iPS6qXolEU8atw7h6v1aYkjwJZ63m+bJMBTxDE66X+r2tPS4a/8C82sZw==
@@ -3080,12 +3080,12 @@ electron-to-chromium@^1.4.188:
   resolved "https://registry.npmmirror.com/electron-to-chromium/-/electron-to-chromium-1.4.200.tgz#6e4c5266106688965b4ea7caa11f0dd315586854"
   integrity sha512-nPyI7oHc8T64oSqRXrAt99gNMpk0SAgPHw/o+hkNKyb5+bcdnFtZcSO9FUJES5cVkVZvo8u4qiZ1gQILl8UXsA==
 
-electron@14.0.0:
-  version "14.0.0"
-  resolved "https://registry.npmmirror.com/electron/-/electron-14.0.0.tgz#a096484bfbf71d87fc0fa85a943a7869d6b9bf94"
-  integrity sha512-O6EI7L1BPIrTpEIFefjjmdbmSn9LtE4mmrv4dfpV4Mqaa8uKuNYQogwZPEvSwaBexb69eb1LQ25n+f+kBcjiRQ==
+electron@15.5.5:
+  version "15.5.5"
+  resolved "https://registry.npmmirror.com/electron/-/electron-15.5.5.tgz#796b7822bfb2b045b504e40657674f2869361681"
+  integrity sha512-cGS1ueek14WLvLJlJbId3fmqJLvkr7VuBI0hHt6gpKaj8m2iv/NMteRg0deLgwlxjEF6ZGGNerUJW6a96rNq/Q==
   dependencies:
-    "@electron/get" "^1.0.1"
+    "@electron/get" "^1.13.0"
     "@types/node" "^14.6.2"
     extract-zip "^1.0.3"
 
