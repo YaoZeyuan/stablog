@@ -24,6 +24,8 @@ jobs:
         id: package-version
       - name: Show version number
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
+      # mac上需要预先安装vips库
+      - run: brew install vips
       # 先执行electron的构建, 节约调试时间
       - run: npm install
       # sharp需要支持多平台
