@@ -665,6 +665,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           >
             检查更新
           </Button>
+          <Button onClick={TaskUtils.resetSession}>退出当前登录账号</Button>
         </Form.Item>
       </Form>
     </div>
