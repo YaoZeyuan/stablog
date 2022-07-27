@@ -11,4 +11,6 @@ shelljs.rm('-rf', './dist/client')
 shelljs.mkdir('-p', './dist/client/dist')
 console.log('copy new static`')
 shelljs.cp('./client/dist/*', './dist/client/dist/')
+// 删除没有被使用到的client文件夹, 可以节约2mb的体积
+shelljs.rm("-rf", './client')
 console.log('client 构建完毕')
