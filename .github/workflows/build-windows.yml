@@ -27,7 +27,7 @@ jobs:
       # 先执行electron的构建, 节约调试时间
       - run: npm install
       # sharp需要单独安装
-      # - run: npm install --platform=win32 --arch=x64 sharp
+      - run: npm install --platform=win32 --arch=x64 sharp
       # - run: npm rebuild --platform=win32 --arch=ia32 sharp
       # - run: npm rebuild --platform=win32 --arch=arm sharp
       # - run: npm rebuild --platform=win32 --arch=arm64 sharp
