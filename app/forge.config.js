@@ -15,10 +15,10 @@ module.exports = {
     icon: iconUri,
     out: 'release',
     // 需要在打包结果中忽略的列表
-    ignore: [
-      // 部分路径默认忽略, 参考 => https://electron.github.io/electron-packager/main/interfaces/electronpackager.options.html#ignore
-      'node_modules/.bin',
-    ],
+    // ignore: [
+    //   // 部分路径默认忽略, 参考 => https://electron.github.io/electron-packager/main/interfaces/electronpackager.options.html#ignore
+    //   'node_modules/.bin',
+    // ],
   },
   makers: [
     {
