@@ -1,5 +1,5 @@
 let path = require('path')
-let rootPath = path.resolve(__dirname, "..")
+let rootPath = path.resolve(__dirname, '..')
 let iconUri = path.resolve(rootPath, './src/public/image/icon.ico')
 let icnsUri = path.resolve(rootPath, './src/public/image/icon.icns')
 let installGifUri = path.resolve(rootPath, './src/public/image/install.gif')
@@ -9,7 +9,7 @@ module.exports = {
   packagerConfig: {
     // 配置说明: https://electron.github.io/electron-packager/main/interfaces/electronpackager.options.html#out
     name: '稳部落',
-    appBundleId:"stablog"
+    appBundleId: 'stablog',
     // 不使用asar
     asar: false,
     icon: iconUri,
@@ -35,8 +35,8 @@ module.exports = {
       config: {
         name: 'stablog-稳部落',
         format: 'ULFO',
-        icon:iconUri
-      }
-    }
+        icon: iconUri,
+      },
+    },
   ],
 }

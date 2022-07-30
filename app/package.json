@@ -10,17 +10,7 @@
   "author": "姚泽源",
   "license": "MIT",
   "scripts": {
-    "start": "electron dist/index.js --stablog-debug",
-    "prod": "electron dist/index.js",
-    "build": "node script/build.js",
-    "ace": "node dist/ace.js",
-    "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
-    "watch-less": "less-watch-compiler",
-    "buildserver": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
-    "tsc": "tsc",
-    "lint": "tsc && NODE_ENV=production eslint src",
-    "eslint": "eslint src",
-    "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\""
+    "make": "electron-forge make"
   },
   "config": {
     "forge": "./forge.config.js"
