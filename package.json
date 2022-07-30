@@ -14,54 +14,22 @@
     "buildgui": "node ./script/build-gui.js",
     "start": "electron dist/index.js --stablog-debug",
     "prod": "electron dist/index.js",
-    "build": "npm run buildserver && npm run buildgui && electron-builder",
+    "build": "npm run buildserver && npm run buildgui && electron-forge make",
     "ace": "node dist/ace.js",
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "watch-less": "less-watch-compiler",
     "buildserver": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
-    "debug-pack": "npm run buildserver && npm run buildgui && electron-builder --dir",
-    "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "debug-pack": "npm run buildserver && npm run buildgui && electron-forge package",
     "tsc": "tsc",
     "lint": "tsc && NODE_ENV=production eslint src",
     "eslint": "eslint src",
-    "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\""
+    "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
   },
-  "build": {
-    "productName": "稳部落",
-    "appId": "stablog",
-    "copyright": "@姚泽源",
-    "npmRebuild": true,
-    "buildDependenciesFromSource": true,
-    "asar": false,
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**/*",
-      "client/dist/**/*",
-      "node_modules/**/*"
-    ],
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "src/public/icon/icon.png"
-    },
-    "mac": {
-      "category": "stablog.app.category.type",
-      "target": "dmg",
-      "icon": "src/public/icon/icon.png"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+  "config": {
+    "forge": "./forge.config.js"
   },
   "dependencies": {
     "@adonisjs/ace": "^5.0.8",
@@ -116,9 +84,6 @@
     "@types/sharp": "^0.27.3",
     "@types/shelljs": "^0.7.8",
     "babel-plugin-root-import": "^6.1.0",
-    "electron": "^18.3.5",
-    "electron-builder": "21.2.0",
-    "electron-rebuild": "^3.2.7",
     "eslint": "^8.13.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-react-app": "^7.0.1",
@@ -128,6 +93,12 @@
     "node-gyp": "^9.1.0",
     "prettier": "^2.7.1",
     "typescript": "^4.7.4",
-    "watch": "^1.0.2"
+    "watch": "^1.0.2",
+    "@electron-forge/cli": "^6.0.0-beta.65",
+    "@electron-forge/maker-deb": "^6.0.0-beta.65",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.65",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
+    "@electron-forge/maker-zip": "^6.0.0-beta.65",
+    "electron": "19.0.10"
   }
 }
