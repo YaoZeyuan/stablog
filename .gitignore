@@ -66,3 +66,6 @@ client/dist
 
 *.sqlite
 *.sqlite3
+
+#   构建结果
+out
