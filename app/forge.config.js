@@ -1,8 +1,8 @@
 let path = require('path')
-let currentPath = path.resolve(__dirname)
-let iconUri = path.resolve(currentPath, './src/public/image/icon.ico')
-let icnsUri = path.resolve(currentPath, './src/public/image/icon.icns')
-let installGifUri = path.resolve(currentPath, './src/public/image/install.gif')
+let rootPath = path.resolve(__dirname, "..")
+let iconUri = path.resolve(rootPath, './src/public/image/icon.ico')
+let icnsUri = path.resolve(rootPath, './src/public/image/icon.icns')
+let installGifUri = path.resolve(rootPath, './src/public/image/install.gif')
 
 // forge打包配置
 module.exports = {
@@ -31,12 +31,12 @@ module.exports = {
       },
     },
     {
-      name: '@electron-forge/maker-deb',
-      config: {},
-    },
-    {
-      name: '@electron-forge/maker-rpm',
-      config: {},
-    },
+      name: '@electron-forge/maker-dmg',
+      config: {
+        name: 'stablog-稳部落',
+        format: 'ULFO',
+        icon:iconUri
+      }
+    }
   ],
 }
