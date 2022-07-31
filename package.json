@@ -10,22 +10,24 @@
   "author": "姚泽源",
   "license": "MIT",
   "scripts": {
-    "startgui": "node client/script/dev-server.js",
-    "buildgui": "node ./script/build-gui.js",
     "start": "electron dist/index.js --stablog-debug",
     "prod": "electron dist/index.js",
-    "build": "npm run buildserver && npm run buildgui && electron-builder",
     "ace": "node dist/ace.js",
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "watch-less": "less-watch-compiler",
-    "buildserver": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
-    "debug-pack": "npm run buildserver && npm run buildgui && electron-builder --dir",
-    "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "build": "npm run build-dist && electron-builder",
+    "debug-build": "npm run build-dist && electron-builder --dir",
+    "build-dist": "node script/build.js",
+    "build-server": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
     "tsc": "tsc",
     "lint": "tsc && NODE_ENV=production eslint src",
     "eslint": "eslint src",
-    "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\""
+    "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
+  },
+  "config": {
+    "forge": "./forge.config.js"
   },
   "build": {
     "productName": "稳部落",
@@ -51,12 +53,12 @@
           ]
         }
       ],
-      "icon": "src/public/icon/icon.png"
+      "icon": "src/public/image/icon.png"
     },
     "mac": {
       "category": "stablog.app.category.type",
       "target": "dmg",
-      "icon": "src/public/icon/icon.png"
+      "icon": "src/public/image/icon.png"
     },
     "nsis": {
       "oneClick": false,
@@ -116,9 +118,9 @@
     "@types/sharp": "^0.27.3",
     "@types/shelljs": "^0.7.8",
     "babel-plugin-root-import": "^6.1.0",
-    "electron": "^18.3.5",
-    "electron-builder": "21.2.0",
-    "electron-rebuild": "^3.2.7",
+    "electron": "19.0.10",
+    "electron-builder": "^23.1.0",
+    "electron-rebuild": "^3.2.8",
     "eslint": "^8.13.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-config-react-app": "^7.0.1",
