@@ -8,11 +8,11 @@
         }
       }
     ],
-    [
-      "@babel/preset-react",
-    ],
+    ["@babel/preset-react"],
     "@babel/typescript"
   ],
+  // 不考虑文件体积, 全部编译
+  "compact": false,
   "plugins": [
     "@babel/proposal-class-properties",
     "@babel/proposal-object-rest-spread",
