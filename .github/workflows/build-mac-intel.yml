@@ -25,14 +25,14 @@ jobs:
       - name: Show version number
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
       # mac上需要预先安装vips库
-      # - run: brew install vips
+      - run: brew install vips
       # 根据https://github.com/lovell/sharp/issues/2029 的说法, 需要卸载本机的vips以保证和sharp的版本一致
-      - run: brew uninstall vips
+      # - run: brew uninstall vips
       # 先执行electron的构建, 节约调试时间
       # - run: yarn
-      - run: npm install
       # - run: npm install --platform=darwin --arch=arm64 sharp
       - run: npm install --platform=darwin --arch=x64 sharp
+      - run: npm install
       - run: cd ./client && yarn && cd ..
       - run: yarn build
         env:
