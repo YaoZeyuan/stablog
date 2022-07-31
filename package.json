@@ -33,7 +33,7 @@
     "productName": "稳部落",
     "appId": "stablog",
     "copyright": "@姚泽源",
-    "npmRebuild": true,
+    "npmRebuild": false,
     "buildDependenciesFromSource": true,
     "asar": false,
     "directories": {
