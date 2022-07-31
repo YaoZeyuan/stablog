@@ -12,16 +12,19 @@
   "scripts": {
     "start": "electron dist/index.js --stablog-debug",
     "prod": "electron dist/index.js",
-    "build": "node script/build.js",
     "ace": "node dist/ace.js",
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "watch-less": "less-watch-compiler",
-    "build-dist": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
+    "build": "npm run build-dist && electron-builder",
+    "debug-build": "npm run build-dist && electron-builder --dir",
+    "build-dist": "node script/build.js",
+    "build-server": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
     "tsc": "tsc",
     "lint": "tsc && NODE_ENV=production eslint src",
     "eslint": "eslint src",
     "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
-    "electron-builder": "electron-builder"
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
   },
   "config": {
     "forge": "./forge.config.js"
@@ -50,12 +53,12 @@
           ]
         }
       ],
-      "icon": "src/public/icon/icon.png"
+      "icon": "src/public/image/icon.png"
     },
     "mac": {
       "category": "stablog.app.category.type",
       "target": "dmg",
-      "icon": "src/public/icon/icon.png"
+      "icon": "src/public/image/icon.png"
     },
     "nsis": {
       "oneClick": false,
