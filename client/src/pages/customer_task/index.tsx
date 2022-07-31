@@ -666,6 +666,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             检查更新
           </Button>
           <Button onClick={TaskUtils.resetSession}>退出当前登录账号</Button>
+          <Button onClick={TaskUtils.debugOpenDevTools}>打开调试面板</Button>
         </Form.Item>
       </Form>
     </div>

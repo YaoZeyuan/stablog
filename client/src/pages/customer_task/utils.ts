@@ -115,6 +115,11 @@ export async function resetSession() {
   window.location.reload();
 }
 
+export async function debugOpenDevTools() {
+  // 打开调试界面
+  await ipcRenderer.sendSync('debug_openDevTools');
+}
+
 export async function asyncCheckIsLogin() {
   // 已登录则返回用户信息 =>
   // {"preferQuickapp":0,"data":{"login":true,"st":"ae34d2","uid":"1728335761"},"ok":1}
