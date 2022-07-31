@@ -1,4 +1,4 @@
-name: CI-Mac-Intel
+name: CI-Mac-Total
 
 on:
   push:
@@ -26,13 +26,14 @@ jobs:
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
       # mac上需要预先安装vips库
       # - run: brew install vips
+      # - run: brew install vips
       # 根据https://github.com/lovell/sharp/issues/2029 的说法, 需要卸载本机的vips以保证和sharp的版本一致
       # - run: brew uninstall vips
       # 先执行electron的构建, 节约调试时间
       # - run: yarn
-      # - run: npm install --platform=darwin --arch=arm64 sharp
       - run: npm install
-      - run: npm install --platform=darwin --arch=x64 sharp
+      - run: npm rebuild --platform=darwin --arch=arm64 sharp
+      - run: npm rebuild --platform=darwin --arch=x64 sharp
       - run: cd ./client && yarn && cd ..
       - run: yarn build
         env:
@@ -55,5 +56,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           asset_path: ./release/稳部落-${{ steps.package-version.outputs.version }}.dmg
-          asset_name: stablog-mac-intel-${{ steps.package-version.outputs.version }}.dmg
+          asset_name: stablog-mac-total-${{ steps.package-version.outputs.version }}.dmg
           asset_content_type: application/zip

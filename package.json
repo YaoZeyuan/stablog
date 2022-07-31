@@ -1,6 +1,6 @@
 {
   "name": "stablog",
-  "version": "3.3.5",
+  "version": "3.3.6",
   "description": "稳部落. 专业备份微blog, 老铁, 稳!",
   "repository": {
     "type": "git",
@@ -15,7 +15,7 @@
     "ace": "node dist/ace.js",
     "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
     "watch-less": "less-watch-compiler",
-    "build": "npm run build-dist && electron-builder",
+    "build": "npm run rebuild-sqlite3 && npm run build-dist && electron-builder",
     "debug-build": "npm run build-dist && electron-builder --dir",
     "build-dist": "node script/build.js",
     "build-server": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
@@ -23,7 +23,7 @@
     "lint": "tsc && NODE_ENV=production eslint src",
     "eslint": "eslint src",
     "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
-    "postinstall": "electron-builder install-app-deps",
+    "--postinstall": "electron-builder install-app-deps",
     "rebuild-sqlite3": "electron-rebuild -f -w sqlite3"
   },
   "config": {

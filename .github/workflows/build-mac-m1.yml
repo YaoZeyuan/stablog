@@ -31,8 +31,8 @@ jobs:
       # - run: brew uninstall vips
       # 先执行electron的构建, 节约调试时间
       # - run: yarn
-      - run: npm install --platform=darwin --arch=arm64 sharp
       - run: npm install
+      - run: npm install --platform=darwin --arch=arm64 sharp
       # - run: npm install --platform=darwin --arch=x64 sharp
       - run: cd ./client && yarn && cd ..
       - run: yarn build
