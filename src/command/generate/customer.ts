@@ -820,9 +820,9 @@ class GenerateCustomer extends Base {
       format: [Const_Default_Webview_Width, 500],
       orientation: "landscape"
     })
-    let fontUri = path.resolve(__dirname, '../../public/font/alibaba_PuHuiTi_Regular.ttf')
+    let fontUri = path.resolve(__dirname, '../../public/font/fangzheng_shusong.ttf')
     let fontContent = fs.readFileSync(fontUri)
-    let fontName = "alibaba_PuHuiTi_Regular"
+    let fontName = "fangzheng_shusong"
 
     doc.addFileToVFS(`${fontName}.ttf`, fontContent.toString("base64"))
     doc.addFont(`${fontName}.ttf`, fontName, "normal")
