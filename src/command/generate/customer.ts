@@ -820,11 +820,14 @@ class GenerateCustomer extends Base {
       format: [Const_Default_Webview_Width, 500],
       orientation: "landscape"
     })
-    let fontUri = path.resolve(__dirname, '../../public/font/mi_sans_normal_thin.ttf')
+    // let fontUri = path.resolve(__dirname, '../../public/font/mi_sans_normal_thin.ttf')
+    // // 瘦身后的字体, 只支持以下文字
+    // // !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~第卷微博整理该文件由稳部落自动生成项目主页
+    // let fontName = "mi_sans_normal_thin" 
+    // 恢复使用方正书宋字体
+    let fontUri = path.resolve(__dirname, '../../public/font/fangzheng_shusong_normal.ttf')
+    let fontName = "fangzheng_shusong_normal" 
     let fontContent = fs.readFileSync(fontUri)
-    // 瘦身后的字体, 只支持以下文字
-    // !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~第卷微博整理该文件由稳部落自动生成项目主页
-    let fontName = "mi_sans_normal_thin" 
 
     doc.addFileToVFS(`${fontName}.ttf`, fontContent.toString("base64"))
     doc.addFont(`${fontName}.ttf`, fontName, "normal")
@@ -869,7 +872,7 @@ class GenerateCustomer extends Base {
       })
     }
     addLine("")
-    addLine("")// 原为accountName, 为节约文件体积, 不再展示
+    addLine(accountName)
     addLine(`微博整理${columnStr}`)
     addLine(timeRangeStr)
     addLine("")
