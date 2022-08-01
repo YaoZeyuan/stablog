@@ -17,8 +17,6 @@ export default class Base extends Component {
       detail: {
         windows: { version: 1.1, url: 'http://stablog.bookflaneur.cn/%E7%A8%B3%E9%83%A8%E8%90%BD%20Setup%201.1.0.exe' },
         mac: { version: 1.1, url: 'http://stablog.bookflaneur.cn/%E7%A8%B3%E9%83%A8%E8%90%BD-1.1.0.dmg' },
-        'mac-intel': { version: 1.1, url: 'http://stablog.bookflaneur.cn/%E7%A8%B3%E9%83%A8%E8%90%BD-1.1.0.dmg' },
-        'mac-m1': { version: 1.1, url: 'http://stablog.bookflaneur.cn/%E7%A8%B3%E9%83%A8%E8%90%BD-1.1.0.dmg' },
       },
     },
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
@@ -90,13 +88,9 @@ export default class Base extends Component {
                   <img className="download-button-icon" src={svg_logo_window} />
                   Windows版({config.detail.windows.version})
                 </a>
-                <a className="download-button" target="_blank" href={config.detail?.['mac-intel']?.url}>
+                <a className="download-button" target="_blank" href={config.detail?.['mac']?.url}>
                   <img className="download-button-icon" src={svg_logo_mac} />
-                  Mac-intel版({config.detail?.['mac-intel'].version})
-                </a>
-                <a className="download-button" target="_blank" href={config.detail?.['mac-m1']?.url}>
-                  <img className="download-button-icon" src={svg_logo_mac} />
-                  Mac-m1版({config.detail?.['mac-m1']?.version})
+                  Mac版({config.detail?.['mac'].version})
                 </a>
               </div>
             </div>
