@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/css/main.2a5f8ca2.chunk.css",
-    "main.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/main.3e5b9bab.chunk.js",
-    "main.js.map": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/main.3e5b9bab.chunk.js.map",
+    "main.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/main.84c63a3f.chunk.js",
+    "main.js.map": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/main.84c63a3f.chunk.js.map",
     "runtime-main.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/runtime-main.f199307f.js",
     "runtime-main.js.map": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/runtime-main.f199307f.js.map",
-    "static/js/2.d8adce49.chunk.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/2.d8adce49.chunk.js",
-    "static/js/2.d8adce49.chunk.js.map": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/2.d8adce49.chunk.js.map",
+    "static/js/2.72054a5c.chunk.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/2.72054a5c.chunk.js",
+    "static/js/2.72054a5c.chunk.js.map": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/js/2.72054a5c.chunk.js.map",
     "index.html": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/index.html",
-    "precache-manifest.f05febe231027fbdad7d3a06bf50a071.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/precache-manifest.f05febe231027fbdad7d3a06bf50a071.js",
+    "precache-manifest.a5d3b5d4c9e0dce73618321ed8438904.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/precache-manifest.a5d3b5d4c9e0dce73618321ed8438904.js",
     "service-worker.js": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/service-worker.js",
     "static/css/main.2a5f8ca2.chunk.css.map": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/css/main.2a5f8ca2.chunk.css.map",
     "static/media/mac.svg": "https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages/static/media/mac.7ca102d4.svg",
@@ -17,8 +17,8 @@
   },
   "entrypoints": [
     "static/js/runtime-main.f199307f.js",
-    "static/js/2.d8adce49.chunk.js",
+    "static/js/2.72054a5c.chunk.js",
     "static/css/main.2a5f8ca2.chunk.css",
-    "static/js/main.3e5b9bab.chunk.js"
+    "static/js/main.84c63a3f.chunk.js"
   ]
 }
