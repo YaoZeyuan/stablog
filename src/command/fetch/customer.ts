@@ -13,6 +13,9 @@ import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
 import querystring from 'query-string'
+// dayjs需要安装插件后, 才能支持识别复杂文本串
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+dayjs.extend(customParseFormat)
 
 /**
  * weibo.com的新Api对应的创建时间解析格式字符串
