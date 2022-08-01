@@ -18,7 +18,7 @@
     "build": "npm run rebuild-sqlite3 && npm run build-dist && electron-builder",
     "debug-build": "npm run build-dist && electron-builder --dir",
     "build-dist": "node script/build.js",
-    "build-server": "babel src --copy-files -d dist --verbose  --source-maps --extensions \".ts,.tsx,.js,.jsx\" ",
+    "build-server": "babel src --copy-files -d dist --verbose --extensions \".ts,.tsx,.js,.jsx\" ",
     "tsc": "tsc",
     "lint": "tsc && NODE_ENV=production eslint src",
     "eslint": "eslint src",
