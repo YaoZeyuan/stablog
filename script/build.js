@@ -16,12 +16,12 @@ const Const_NodeModules_JsPdf_Dist_Path = path.resolve(Const_NodeModules_Path, '
 
 function getAllJsMapUri(basePath) {
   let pathUri = path.resolve(basePath)
-  let filenameList = fs.readdirSync(pathUri)
   let jsMapUriSet = new Set()
   let currentDirList = [pathUri]
   let nextDirList = []
   while (currentDirList.length > 0) {
     for (currentPath of currentDirList) {
+      let filenameList = fs.readdirSync(currentPath)
       for (let filename of filenameList) {
         let uri = path.resolve(currentPath, filename)
         let fsStat = fs.statSync(uri)
