@@ -68,14 +68,18 @@ shelljs.mkdir('-p', './dist/client/dist')
 console.log('move resource')
 shelljs.cp('-rf', './client/dist/*', './dist/client/dist/')
 
-// 减少体积, 删除构建文件
-shelljs.rm('-rf', Const_NodeModules_Sqlite3_Cache_Path)
-// 递归删除所有.js.map文件
-console.log('remove all js.map')
-let allJsMapUriList = getAllJsMapUri(Const_NodeModules_Path)
-console.log(`all js.map count => ${allJsMapUriList.length}`)
-for (let uri of allJsMapUriList) {
-  shelljs.rm('-rf', uri)
+if (process.env['CI_ENV']) {
+  console.log(`env.CI_ENV is exist => ${process.env['CI_ENV']}`)
+  console.log(`auto clear js.map and sqlite3`)
+  // 减少体积, 删除构建文件
+  shelljs.rm('-rf', Const_NodeModules_Sqlite3_Cache_Path)
+  // 递归删除所有.js.map文件
+  console.log('remove all js.map')
+  let allJsMapUriList = getAllJsMapUri(Const_NodeModules_Path)
+  console.log(`all js.map count => ${allJsMapUriList.length}`)
+  for (let uri of allJsMapUriList) {
+    shelljs.rm('-rf', uri)
+  }
 }
 
 // 将dist目录迁移到app目录中, 只发布需要的部分

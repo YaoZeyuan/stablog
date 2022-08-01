@@ -35,6 +35,7 @@ jobs:
       - run: yarn build
         env:
           CI: true
+          CI_ENV: "Github Action"
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
       - name: Create Release
         id: create_release
