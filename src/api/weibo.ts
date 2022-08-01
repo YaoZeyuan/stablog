@@ -2,7 +2,7 @@ import _ from 'lodash'
 import Base from '~/src/api/base'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
-import moment from 'moment'
+import dayjs from 'dayjs'
 
 /**
  * 用户信息部分容器 id
@@ -163,7 +163,7 @@ export default class Weibo extends Base {
    * 获取微博文章, 获取不到返回空对象
    */
   static async asyncGetWeiboArticle(articleId: string) {
-    let apiUrl = `https://card.weibo.com/article/m/aj/detail?id=${articleId}&_t=${moment().unix()}`
+    let apiUrl = `https://card.weibo.com/article/m/aj/detail?id=${articleId}&_t=${dayjs().unix()}`
     let articleUrl = `https://card.weibo.com/article/m/show/id/${articleId}`
 
     let response = await Base.http.get(apiUrl, {

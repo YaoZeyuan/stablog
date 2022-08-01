@@ -70,6 +70,7 @@
     "axios": "^0.18.1",
     "axios-cookiejar-support": "^0.5.0",
     "cross-env": "^5.2.0",
+    "dayjs": "^1.11.4",
     "decode-html": "^2.0.0",
     "dotenv": "^4.0.0",
     "fs-extra": "^10.0.0",
