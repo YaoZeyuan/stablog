@@ -1,7 +1,6 @@
 import Base from '~/src/model/base'
 import TypeWeibo from '~/src/type/namespace/weibo'
 import _ from 'lodash'
-import moment from 'moment'
 import DATE_FORMAT from '~/src/constant/date_format'
 import Mblog from '~/src/model/mblog'
 

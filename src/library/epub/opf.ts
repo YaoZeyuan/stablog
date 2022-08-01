@@ -1,4 +1,4 @@
-import moment from 'moment'
+import dayjs from 'dayjs'
 class OPF {
   index = 0 // 生成id
 
@@ -7,13 +7,13 @@ class OPF {
   identifier = 'helloworld'
   language = 'zh-cn'
 
-  publishTime = moment().format('YYYY-MM-DDTHH:mm:ss') + 'Z'
+  publishTime = dayjs().format('YYYY-MM-DDTHH:mm:ss') + 'Z'
   publisher = 'zhihuhelp'
 
   manifestItemList: Array<string> = []
   spineItemList: Array<string> = []
 
-  get content () {
+  get content() {
     return `<?xml version='1.0' encoding='utf-8'?>
 <package xmlns="http://www.idpf.org/2007/opf"
          version="3.0"
@@ -43,51 +43,54 @@ class OPF {
     </spine>
 </package>
     `
-
   }
 
-  get manifestItemListString () {
+  get manifestItemListString() {
     return this.manifestItemList.join('\n')
   }
 
-  get spineItemListString () {
+  get spineItemListString() {
     return this.spineItemList.join('\n')
   }
 
-  constructor () {
+  constructor() {
     this.manifestItemList = []
     this.spineItemList = []
 
-        // 初始化基础元素
+    // 初始化基础元素
     this.manifestItemList.push(`<item id="toc" properties="nav" href="toc.xhtml" media-type="application/xhtml+xml"/>`)
   }
 
-  addIndexHtml (filename: string) {
+  addIndexHtml(filename: string) {
     this.index = this.index + 1
-    this.manifestItemList.unshift(` <item href="html/${filename}" id="index_${this.index}" media-type="application/xhtml+xml" />`)
+    this.manifestItemList.unshift(
+      ` <item href="html/${filename}" id="index_${this.index}" media-type="application/xhtml+xml" />`,
+    )
     this.spineItemList.unshift(` <itemref idref="index_${this.index}"  linear="no"/>`)
   }
 
-  addHtml (filename: string) {
+  addHtml(filename: string) {
     this.index = this.index + 1
-    this.manifestItemList.push(` <item href="html/${filename}" id="index_${this.index}" media-type="application/xhtml+xml" />`)
+    this.manifestItemList.push(
+      ` <item href="html/${filename}" id="index_${this.index}" media-type="application/xhtml+xml" />`,
+    )
     this.spineItemList.push(` <itemref idref="index_${this.index}" />`)
   }
 
-  addCss (filename: string) {
+  addCss(filename: string) {
     this.index = this.index + 1
     this.manifestItemList.push(` <item href="css/${filename}" id="index_${this.index}" media-type="text/css" />`)
   }
 
-  addCoverImage (filename: string) {
+  addCoverImage(filename: string) {
     this.index = this.index + 1
-        // metadata中已经将封面图id写死为了cover-image, 这里直接加上就行
+    // metadata中已经将封面图id写死为了cover-image, 这里直接加上就行
     this.manifestItemList.push(` <item href="image/${filename}" id="cover-image" media-type="text/jpeg" />`)
   }
 
-  addImage (filename: string) {
+  addImage(filename: string) {
     this.index = this.index + 1
-        // 图片类型统一写成 media-type="text/jpeg", 应该没事
+    // 图片类型统一写成 media-type="text/jpeg", 应该没事
     this.manifestItemList.push(` <item href="image/${filename}" id="index_${this.index}" media-type="text/jpeg" />`)
   }
 }

@@ -4,7 +4,7 @@ import PathConfig from '~/src/config/path'
 import fs from 'fs'
 import _ from 'lodash'
 import json5 from 'json5'
-import moment from 'moment'
+import dayjs from 'dayjs'
 
 import ApiWeibo from '~/src/api/weibo'
 import MMblog from '~/src/model/mblog'
@@ -17,7 +17,7 @@ import querystring from 'query-string'
 /**
  * weibo.com的新Api对应的创建时间解析格式字符串
  */
-const Const_Moment_Parse_Format_4_WeiboComApi = 'ddd MMM DD HH:mm:ss Z YYYY'
+const Const_DayJs_Parse_Format_4_WeiboComApi = 'MMM DD HH:mm:ss Z YYYY'
 /**
  * 重试时的等待时间
  */
@@ -322,19 +322,21 @@ class FetchCustomer extends Base {
     if (rawCreateAtStr.includes('-') === false) {
       // Mon Sep 16 01:13:45 +0800 2019
       if (rawCreateAtStr.includes('+0800')) {
+        // 去除一开始的'Sun '符号, 这个dayjs无法解析
+        rawCreateAtStr = rawCreateAtStr.slice(4)
         // 'Sun Sep 15 00:35:14 +0800 2019' 时区模式
-        return moment(rawCreateAtStr, Const_Moment_Parse_Format_4_WeiboComApi).unix()
+        return dayjs(rawCreateAtStr, Const_DayJs_Parse_Format_4_WeiboComApi).unix()
       }
       // '12小时前' | '4分钟前' | '刚刚' | '1小时前' 模式
       // 不含-符号, 表示是最近一天内, 直接认为是当前时间, 不进行细分
-      return moment().unix()
+      return dayjs().unix()
     }
     if (rawCreateAtStr.length === '08-07'.length) {
       // 月日模式, 表示当前年份,手工补上年份
-      return moment(`${moment().format('YYYY')}-${rawCreateAtStr}`).unix()
+      return dayjs(`${dayjs().format('YYYY')}-${rawCreateAtStr}`).unix()
     }
     // 否则, 为'2012-01-02'  模式, 直接解析即可
-    return moment(rawCreateAtStr).unix()
+    return dayjs(rawCreateAtStr).unix()
   }
 }
 

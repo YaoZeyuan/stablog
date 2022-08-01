@@ -1,7 +1,7 @@
 import Base from '~/src/model/base'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import _ from 'lodash'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import DATE_FORMAT from '~/src/constant/date_format'
 
 type TypeMblogRecord = {
@@ -167,13 +167,13 @@ export default class Mblog extends Base {
 
     for (let item of postPublishAtList) {
       let publishAt = item.post_publish_at
-      let YYYY = moment.unix(publishAt).format('YYYY')
-      let MM = moment.unix(publishAt).format('MM')
-      let DD = moment.unix(publishAt).format('DD')
+      let YYYY = dayjs.unix(publishAt).format('YYYY')
+      let MM = dayjs.unix(publishAt).format('MM')
+      let DD = dayjs.unix(publishAt).format('DD')
 
       if (distributionObj[YYYY] === undefined) {
         distributionObj[YYYY] = {
-          "publish_start_at": moment.unix(publishAt).startOf("year").unix(),
+          "publish_start_at": dayjs.unix(publishAt).startOf("year").unix(),
           datbase: {}
         }
       }
@@ -183,7 +183,7 @@ export default class Mblog extends Base {
       // let yearMap = distributionMap.get(YYYY)!
       if (yearDatabase[MM] === undefined) {
         yearDatabase[MM] = {
-          "publish_start_at": moment.unix(publishAt).startOf("month").unix(),
+          "publish_start_at": dayjs.unix(publishAt).startOf("month").unix(),
           database: {},
         }
       }
@@ -191,7 +191,7 @@ export default class Mblog extends Base {
 
       if (monthDatabase[DD] === undefined) {
         monthDatabase[DD] = {
-          "publish_start_at": moment.unix(publishAt).startOf("day").unix(),
+          "publish_start_at": dayjs.unix(publishAt).startOf("day").unix(),
           database: [],
         }
       }
@@ -220,7 +220,7 @@ export default class Mblog extends Base {
             date: `${day}日`,
             key: `${year}-${month}-${day}`,
             type: 'day',
-            startAt: moment(`${year}-${month}-${day}`, 'YYYY-MM-DD')
+            startAt: dayjs(`${year}-${month}-${day}`, 'YYYY-MM-DD')
               .startOf('day')
               .unix(),
             count: dayCounter,
@@ -232,7 +232,7 @@ export default class Mblog extends Base {
           date: `${month}月`,
           key: `${year}-${month}`,
           type: 'month',
-          startAt: moment(`${year}-${month}-01`, 'YYYY-MM-DD')
+          startAt: dayjs(`${year}-${month}-01`, 'YYYY-MM-DD')
             .startOf('day')
             .unix(),
           count: monthCounter,
@@ -243,7 +243,7 @@ export default class Mblog extends Base {
         date: `${year}年`,
         key: `${year}`,
         type: 'year',
-        startAt: moment(`${year}-01-01`, 'YYYY-MM-DD')
+        startAt: dayjs(`${year}-01-01`, 'YYYY-MM-DD')
           .startOf('day')
           .unix(),
         count: yearCounter,

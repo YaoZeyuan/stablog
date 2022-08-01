@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDomServer from 'react-dom/server'
 import TypeWeibo, { TypeWeiboListByDay } from '~/src/type/namespace/weibo'
 import CommonUtil from '~/src/library/util/common'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import _ from 'lodash'
 import DATE_FORMAT from '~/src/constant/date_format'
 import Logger from '~/src/library/logger'
@@ -22,14 +22,14 @@ class CommentCompontent extends React.Component<
         <div className="info-flex-line">
           <span className="float-left">赞同:{this.props.agreeCount}</span>
           <span className="float-right">
-            创建时间:{moment.unix(this.props.createAt).format(DATE_FORMAT.DATABASE_BY_DAY)}
+            创建时间:{dayjs.unix(this.props.createAt).format(DATE_FORMAT.DATABASE_BY_DAY)}
           </span>
         </div>
         <div className="clear-float" />
         <div className="info-flex-line">
           <span className="float-left">评论:{this.props.commentCount}</span>
           <span className="float-right">
-            最后更新:{moment.unix(this.props.updateAt).format(DATE_FORMAT.DATABASE_BY_DAY)}
+            最后更新:{dayjs.unix(this.props.updateAt).format(DATE_FORMAT.DATABASE_BY_DAY)}
           </span>
         </div>
       </div>
@@ -298,7 +298,7 @@ class Base {
                     </a>
                     <h4 className="m-text-cut">
                       <span className="time">
-                        {moment.unix(mblog.created_timestamp_at as number).format(DATE_FORMAT.DISPLAY_BY_DAY)}
+                        {dayjs.unix(mblog.created_timestamp_at as number).format(DATE_FORMAT.DISPLAY_BY_DAY)}
                       </span>
                     </h4>
                   </div>

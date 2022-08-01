@@ -1,4 +1,4 @@
-import moment from 'moment'
+import dayjs from 'dayjs'
 import _ from 'lodash'
 import DATE_FORMAT from '~/src/constant/date_format'
 import PathConfig from '~/src/config/path'
@@ -6,7 +6,7 @@ import fs from 'fs'
 
 class Logger {
   private static formatArgument (...arg: Array<any>) {
-    const triggerAt = moment().format(DATE_FORMAT.DISPLAY_BY_MILLSECOND)
+    const triggerAt = dayjs().format(DATE_FORMAT.DISPLAY_BY_MILLSECOND)
     let stringLogItemList = []
     for (let logItem of [...arg]) {
       if (_.isString(logItem)) {

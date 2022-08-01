@@ -1,8 +1,7 @@
 import React from 'react'
 import ReactDomServer from 'react-dom/server'
 import TypeWeibo from '~/src/type/namespace/weibo'
-import TypeAuthor from '~/src/type/namespace/author'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import DATE_FORMAT from '~/src/constant/date_format'
 import logger from '~/src/library/logger'
 import Base from '~/src/view/base'
@@ -35,7 +34,7 @@ export default class Weibo extends Base {
     // 同一列表内所有item都在同一天, 所以随便取一个就行
     let baseWeiboRecord: TypeWeibo.TypeMblog = _.get(mblogList, [0])
     let created_timestamp_at = baseWeiboRecord.created_timestamp_at as number
-    let title = moment.unix(created_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
+    let title = dayjs.unix(created_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
     let mblogElementList = this.generateSingleItemElement(mblogList)
 
     if (renderGuideLineConfig.renderGuideLine) {
@@ -44,12 +43,12 @@ export default class Weibo extends Base {
       let beforeUrl = '#'
       if (beforeRecord !== undefined) {
         let beforeCreated_timestamp_at = beforeRecord.dayStartAt
-        let title = moment.unix(beforeCreated_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
+        let title = dayjs.unix(beforeCreated_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
         beforeUrl = `./${title}.html`
       }
       if (nextRecord !== undefined) {
         let nextCreated_timestamp_at = nextRecord.dayStartAt
-        let title = moment.unix(nextCreated_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
+        let title = dayjs.unix(nextCreated_timestamp_at).format(DATE_FORMAT.DATABASE_BY_DAY)
         nextUrl = `./${title}.html`
       }
 

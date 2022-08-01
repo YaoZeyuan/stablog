@@ -15,7 +15,7 @@ import BaseView from '~/src/view/base'
 import fs from 'fs'
 import path from 'path'
 import StringUtil from '~/src/library/util/string'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import * as mozjpeg from "mozjpeg-js"
 import sharp from "sharp"
 
@@ -83,7 +83,7 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_pdfQuilty: TaskConfig.Customer['pdfQuilty'] = 70
   CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
   CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] =
-    moment()
+    dayjs()
       .add(1, 'year')
       .unix() * 1000
   CUSTOMER_CONFIG_isSkipGeneratePdf: TaskConfig.Customer['isSkipGeneratePdf'] = false
@@ -195,14 +195,14 @@ class GenerateCustomer extends Base {
         bookCounter++
         let booktitle = ''
         if (weiboEpubList.length <= 1) {
-          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-(${moment
+          booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-(${dayjs
             .unix(resourcePackage.startDayAt)
-            .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+            .format(DATE_FORMAT.DISPLAY_BY_DAY)}~${dayjs
               .unix(resourcePackage.endDayAt)
               .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         } else {
           booktitle = `${resourcePackage.userInfo.screen_name}-微博整理-第${resourcePackage.bookIndex}/${resourcePackage.totalBookCount
-            }卷-(${moment.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${moment
+            }卷-(${dayjs.unix(resourcePackage.startDayAt).format(DATE_FORMAT.DISPLAY_BY_DAY)}~${dayjs
               .unix(resourcePackage.endDayAt)
               .format(DATE_FORMAT.DISPLAY_BY_DAY)})`
         }
@@ -231,13 +231,13 @@ class GenerateCustomer extends Base {
       let splitByStr = ''
       let mblogCreateAtTimestamp = <number>mblog.created_timestamp_at
       // 按日期分页
-      splitByStr = moment.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)
+      splitByStr = dayjs.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)
       let record = mblogListByMergeBy.get(splitByStr)
       if (record === undefined) {
         let a: TypeWeiboListByDay = {
           title:
-            `${moment.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)}`,
-          dayStartAt: moment
+            `${dayjs.unix(mblogCreateAtTimestamp).format(this.CONST_CONFIG_DATE_FORMAT)}`,
+          dayStartAt: dayjs
             .unix(mblogCreateAtTimestamp)
             .startOf(DATE_FORMAT.UNIT.DAY)
             .unix(),
@@ -255,7 +255,7 @@ class GenerateCustomer extends Base {
         }
         if (mblogCreateAtTimestamp < record.postStartAt) {
           record.postStartAt = mblogCreateAtTimestamp
-          record.dayStartAt = moment
+          record.dayStartAt = dayjs
             .unix(mblogCreateAtTimestamp)
             .startOf(DATE_FORMAT.UNIT.DAY)
             .unix()
@@ -292,7 +292,7 @@ class GenerateCustomer extends Base {
       totalMblogCount: mblogList.length,
     }
     let weiboEpub = _.cloneDeep(weiboEpubTemplate)
-    let bufEndDayAt = moment().unix()
+    let bufEndDayAt = dayjs().unix()
 
     // 将按时间顺序排列的日级别微博记录, 处理为电子书数据包
     for (let mblogListByDay of mblogListByDayList_OrderByPostStartAt) {
@@ -326,7 +326,7 @@ class GenerateCustomer extends Base {
             switch (this.CUSTOMER_CONFIG_volumeSplitBy) {
               case 'year':
                 {
-                  if (moment.unix(weiboEpub.startDayAt).format("YYYY") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY")) {
+                  if (dayjs.unix(weiboEpub.startDayAt).format("YYYY") !== dayjs.unix(mblogListByDay.dayStartAt).format("YYYY")) {
                     // 发生换年, 需要进行分卷
                     weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
                     let buffer = _.cloneDeep(weiboEpub)
@@ -343,7 +343,7 @@ class GenerateCustomer extends Base {
                 break;
               case 'month':
                 {
-                  if (moment.unix(weiboEpub.startDayAt).format("YYYY-MM") !== moment.unix(mblogListByDay.dayStartAt).format("YYYY-MM")) {
+                  if (dayjs.unix(weiboEpub.startDayAt).format("YYYY-MM") !== dayjs.unix(mblogListByDay.dayStartAt).format("YYYY-MM")) {
                     // 发生换月, 需要进行分卷
                     weiboEpub.endDayAt = weiboEpub.weiboDayList[weiboEpub.weiboDayList.length - 1].postEndAt
                     let buffer = _.cloneDeep(weiboEpub)
@@ -502,7 +502,7 @@ class GenerateCustomer extends Base {
 
   async transWeiboRecord2Image(weiboRecord: TypeMblog) {
     // 以微博创建时间和微博id作为唯一key
-    let baseFileTitle = `${moment.unix(weiboRecord.created_timestamp_at).format("YYYY-MM-DD HH：mm：ss")}_${weiboRecord.id}`
+    let baseFileTitle = `${dayjs.unix(weiboRecord.created_timestamp_at).format("YYYY-MM-DD HH：mm：ss")}_${weiboRecord.id}`
 
     let htmlUri = path.resolve(this.html2ImageCache_HtmlPath, `${baseFileTitle}.html`)
     let imageUriList: string[] = []

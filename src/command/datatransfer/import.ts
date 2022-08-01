@@ -7,7 +7,7 @@ import MMblogUser from '~/src/model/mblog_user'
 import _ from 'lodash'
 import CommonUtil from '~/src/library/util/common'
 import fs from 'fs-extra'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import DATE_FORMAT from '~/src/constant/date_format'
 
 type Type_Export = {
@@ -66,8 +66,8 @@ class DataTransferImport extends Base {
         for (let db of Object.values(content.export_data)) {
             let userInfo = db.info
             let record_list = db.record_list
-            let startStr = moment.unix(db.start_at).format(DATE_FORMAT.DISPLAY_BY_SECOND)
-            let endStr = moment.unix(db.end_at).format(DATE_FORMAT.DISPLAY_BY_SECOND)
+            let startStr = dayjs.unix(db.start_at).format(DATE_FORMAT.DISPLAY_BY_SECOND)
+            let endStr = dayjs.unix(db.end_at).format(DATE_FORMAT.DISPLAY_BY_SECOND)
             this.log(`开始导入用户${userInfo.screen_name}从${startStr}到${endStr}的数据记录`)
             // 导入用户信息
             await MMblogUser.replaceInto({

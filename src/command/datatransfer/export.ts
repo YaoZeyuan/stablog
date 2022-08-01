@@ -7,7 +7,7 @@ import MMblogUser from '~/src/model/mblog_user'
 import _ from 'lodash'
 import CommonUtil from '~/src/library/util/common'
 import fs from 'fs-extra'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import DATE_FORMAT from '~/src/constant/date_format'
 
 type Type_Export = {
@@ -63,8 +63,8 @@ class DataTransferExport extends Base {
         let userInfo = await MMblogUser.asyncGetUserInfo(uid)
         let recordList = await MMblog.asyncGetMblogList(uid, exportStartAt, exportEndAt)
         this.log(`导出用户:${userInfo.screen_name}`)
-        let startAtStr = moment.unix(exportStartAt).format(DATE_FORMAT.DISPLAY_BY_SECOND)
-        let endAtStr = moment.unix(exportEndAt).format(DATE_FORMAT.DISPLAY_BY_SECOND)
+        let startAtStr = dayjs.unix(exportStartAt).format(DATE_FORMAT.DISPLAY_BY_SECOND)
+        let endAtStr = dayjs.unix(exportEndAt).format(DATE_FORMAT.DISPLAY_BY_SECOND)
         this.log(`导出时间范围:${startAtStr}~${endAtStr}`)
         this.log(`导出记录数:${recordList.length}条`)
         this.log(`导出文件地址:${exportUri}`)
@@ -76,8 +76,8 @@ class DataTransferExport extends Base {
                     info: userInfo,
                     start_at: exportStartAt,
                     end_at: exportEndAt,
-                    start_at_str: moment.unix(exportStartAt).format(DATE_FORMAT.DISPLAY_BY_SECOND),
-                    end_at_str: moment.unix(exportEndAt).format(DATE_FORMAT.DISPLAY_BY_SECOND),
+                    start_at_str: dayjs.unix(exportStartAt).format(DATE_FORMAT.DISPLAY_BY_SECOND),
+                    end_at_str: dayjs.unix(exportEndAt).format(DATE_FORMAT.DISPLAY_BY_SECOND),
                     total_export_mblog_count: recordList.length,
                     record_list: recordList
                 }
