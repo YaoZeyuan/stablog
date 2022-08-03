@@ -11,7 +11,8 @@ const Const_Client_Path = path.resolve(Const_Root_Path, 'client')
 const Const_Client_Dist_Path = path.resolve(Const_Client_Path, 'dist')
 // sqlite3的构建文件, 没有实际用处, 17mb
 const Const_NodeModules_Path = path.resolve(Const_Root_Path, 'node_modules')
-const Const_NodeModules_Sqlite3_Cache_Path = path.resolve(Const_NodeModules_Path, 'sqlite3/build')
+const Const_NodeModules_Sqlite3_Cache_build_Path = path.resolve(Const_NodeModules_Path, 'sqlite3/build')
+const Const_NodeModules_Sqlite3_Cache_deps_Path = path.resolve(Const_NodeModules_Path, 'sqlite3/deps')
 const Const_NodeModules_JsPdf_Dist_Path = path.resolve(Const_NodeModules_Path, 'jspdf/dist')
 
 function getAllJsMapUri(basePath) {
@@ -72,10 +73,11 @@ if (process.env['CI_ENV']) {
   console.log(`env.CI_ENV is exist => ${process.env['CI_ENV']}`)
   console.log(`auto clear js.map and sqlite3`)
   // 减少体积, 删除构建文件
-  shelljs.rm('-rf', Const_NodeModules_Sqlite3_Cache_Path)
+  shelljs.rm('-rf', Const_NodeModules_Sqlite3_Cache_build_Path)
+  shelljs.rm('-rf', Const_NodeModules_Sqlite3_Cache_deps_Path)
   // 递归删除所有.js.map文件
   console.log('remove all js.map')
-  let allJsMapUriList = getAllJsMapUri(Const_NodeModules_Path)
+  let allJsMapUriList = getAllJsMapUri(Const_Root_Path)
   console.log(`all js.map count => ${allJsMapUriList.length}`)
   for (let uri of allJsMapUriList) {
     shelljs.rm('-rf', uri)
