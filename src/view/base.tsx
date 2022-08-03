@@ -150,7 +150,7 @@ class Base {
       }
       // 正常微博
       let mblogPictureList = []
-      if (mblog.pics) {
+      if (mblog?.pics?.length > 0) {
         // 是否有图片
         let picIndex = 0
         for (let picture of mblog.pics) {
@@ -244,7 +244,7 @@ class Base {
     }
     // 正常微博
     let mblogPictureList = []
-    if (mblog.pics) {
+    if (mblog?.pics?.length > 0) {
       // 是否有图片
       let picIndex = 0
       for (let picture of mblog.pics) {
