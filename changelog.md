@@ -2,6 +2,7 @@
 
 1.  解决 github 上 无法打包 mac 版代码的问题, 优化最终产物包代码体积(移除了 moment 和 sourcemap)
 2.  添加`打开调试面板按钮`, 如果点击获取验证码后没反应, 可以使用调试面板上的`检查元素`按键, 一点就可以输入验证码了
+3.  fix issue https://github.com/YaoZeyuan/stablog/issues/115 , 规避 mblog.pic 不能被枚举的问题
 
 # 3.3.0
 
