@@ -13,11 +13,7 @@
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "build": "cross-env PUBLIC_URL=https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages react-app-rewired build && cp -rf build/* ../",
-    "deploy": "git add ../* && git commit -m 'feat: 发布新代码' && git push",
-    "publish": "npm run build && npm run deploy",
-    "test": "react-app-rewired test",
-    "eject": "react-app-rewired eject"
+    "build": "cross-env PUBLIC_URL=https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@gh-pages react-app-rewired build"
   },
   "eslintConfig": {
     "extends": "react-app"
