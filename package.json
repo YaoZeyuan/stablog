@@ -15,9 +15,6 @@
     "start": "react-app-rewired start",
     "build": "cross-env PUBLIC_URL=https://www.yaozeyuan.online/stablog react-app-rewired build"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
   "browserslist": {
     "production": [
       ">0.2%",
