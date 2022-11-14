@@ -11,8 +11,8 @@
     "react-transition-group": "^4.3.0"
   },
   "scripts": {
-    "start": "vite",
-    "build": "vite build"
+    "start": " vite",
+    "build": "cross-env ASSET_URL='https://www.yaozeyuan.online/stablog' vite build"
   },
   "browserslist": {
     "production": [
