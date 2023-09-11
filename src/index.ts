@@ -26,6 +26,7 @@ let mainWindow: Electron.BrowserWindow
 app.commandLine.appendSwitch('ignore-certificate-errors', 'true')
 // 解除node.js内存限制
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192')
+// 解除node.js内存限制
 app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=8192')
 
 let isRunning = false
