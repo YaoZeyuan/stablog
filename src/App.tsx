@@ -92,7 +92,7 @@ export default class Base extends Component {
             <div className="desc"></div>
             <div className="version">---最新版本：v{`${config.version}`.padEnd(3, '.0')}---</div>
             <div className="logo">
-              <img src="https://tva1.sinaimg.cn/large/007Yq4pTly1h4rkzfkfx5j3074074ab5.jpg" alt="logo" />
+              <img src="https://mirror-4-web.bookflaneur.cn/https://tva1.sinaimg.cn/large/007Yq4pTly1h4rkzfkfx5j3074074ab5.jpg" alt="logo" />
             </div>
             <div className="download-container">
               <div className="download-tip">下载</div>
