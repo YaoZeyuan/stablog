@@ -1,12 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const ASSET_URL = process.env.ASSET_URL || '.'
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: ASSET_URL,
+  experimental: {
+    renderBuiltUrl(filename: string, { hostType }: { hostType: 'js' | 'css' | 'html' }) {
+      return `https://www.yaozeyuan.online/stablog/${filename}`
+    }
+  },
   server: {
     host: 'localhost',
   },

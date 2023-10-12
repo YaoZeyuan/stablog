@@ -92,7 +92,10 @@ export default class Base extends Component {
             <div className="desc"></div>
             <div className="version">---最新版本：v{`${config.version}`.padEnd(3, '.0')}---</div>
             <div className="logo">
-              <img src="https://mirror-4-web.bookflaneur.cn/https://tva1.sinaimg.cn/large/007Yq4pTly1h4rkzfkfx5j3074074ab5.jpg" alt="logo" />
+              <img
+                src="https://mirror-4-web.bookflaneur.cn/https://tva1.sinaimg.cn/large/007Yq4pTly1h4rkzfkfx5j3074074ab5.jpg"
+                alt="logo"
+              />
             </div>
             <div className="download-container">
               <div className="download-tip">下载</div>
@@ -129,7 +132,7 @@ export default class Base extends Component {
           <img
             width="149px"
             height="149px"
-            src="https://github.blog/wp-content/uploads/2008/12/forkme_right_green_007200.png?resize=149%2C149"
+            src="https://cdn.jsdelivr.net/gh/YaoZeyuan/blog@master/source/static/img/fork_me_on_github_right_green.png"
             alt="Fork me on GitHub"
           />
         </a>
