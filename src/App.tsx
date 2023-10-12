@@ -117,9 +117,6 @@ export default class Base extends Component {
             <a className="tip" href="https://github.com/YaoZeyuan/stablog" target="_blank">
               使用指南
             </a>
-            <p className="tip" onClick={this.toggleThankList}>
-              致谢列表
-            </p>
             <a className="tip" href="https://github.com/YaoZeyuan/stablog/issues" target="_blank">
               功能建议
             </a>
