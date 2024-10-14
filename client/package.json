@@ -2,6 +2,7 @@
   "private": true,
   "scripts": {
     "start": "max  dev",
+    "dev": "npm run start",
     "build": "max  build",
     "debug-build": "cross-env COMPRESS=none max  build ",
     "postinstall": "max setup",
