@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
+    "@umijs/plugin-electron": "^0.2.0",
     "@umijs/test": "^3.3.7",
     "cross-env": "^7.0.3",
     "lint-staged": "^10.0.7",

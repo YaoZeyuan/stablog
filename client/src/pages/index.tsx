@@ -1,19 +1,19 @@
-import { Tabs } from 'antd';
-import './index.less';
-import CustomerTask from './customer_task';
-import DataManage from './manage';
-import Helper from './helper';
-import Log from './log';
-import Login from './login';
-import { useState } from 'react';
+import { Tabs } from 'antd'
+import './index.less'
+// import CustomerTask from './customer_task'
+// import DataManage from './manage'
+import Helper from './helper'
+// import Log from './log'
+import Login from './login'
+import { useState } from 'react'
 
-const { TabPane } = Tabs;
+const { TabPane } = Tabs
 
 export default function IndexPage() {
-  let [currentTabKey, setCurrentTabKey] = useState<string>('customer_task');
+  let [currentTabKey, setCurrentTabKey] = useState<string>('customer_task')
 
   function changeTabKey(tab: string) {
-    setCurrentTabKey(tab);
+    setCurrentTabKey(tab)
   }
 
   return (
@@ -22,17 +22,17 @@ export default function IndexPage() {
         activeKey={currentTabKey}
         centered
         onTabClick={(key: string) => {
-          setCurrentTabKey(key);
+          setCurrentTabKey(key)
         }}
       >
         <TabPane tab="系统设置" key="customer_task">
-          <CustomerTask changeTabKey={changeTabKey}></CustomerTask>
+          {/* <CustomerTask changeTabKey={changeTabKey}></CustomerTask> */}
         </TabPane>
         <TabPane tab="管理数据" key="manage">
-          <DataManage></DataManage>
+          {/* <DataManage></DataManage> */}
         </TabPane>
         <TabPane tab="运行日志" key="log">
-          <Log></Log>
+          {/* <Log></Log> */}
         </TabPane>
         <TabPane tab="登录微博" key="login">
           <Login></Login>
@@ -42,5 +42,5 @@ export default function IndexPage() {
         </TabPane>
       </Tabs>
     </div>
-  );
+  )
 }
