@@ -1,4 +1,4 @@
-import { defineConfig } from 'umi';
+import { defineConfig, utils } from 'umi';
 import path from 'path'
 
 export default defineConfig({
@@ -7,7 +7,7 @@ export default defineConfig({
     type: "hash"
   },
   base: "./",
-  publicPath: "./",
+  publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
   hash: true,
   chainWebpack(memo, { env, webpack, createCSSRule }) {
     // 设置 alias
@@ -22,9 +22,15 @@ export default defineConfig({
     baseNavigator: true,
     baseSeparator: '-',
   },
-  nodeModulesTransform: {
-    type: 'none',
+  antd: {},
+  layout: {
+    // https://umijs.org/docs/max/layout-menu#构建时配置
+    title: 'UmiJS',
+    locale: true,
   },
+  // nodeModulesTransform: {
+  //   type: 'none',
+  // },
   routes: [
     { path: '/', component: '@/pages/index' },
     { path: '/customer_task', component: '@/pages/customer_task/index' },
@@ -33,5 +39,5 @@ export default defineConfig({
     { path: '/login', component: '@/pages/login/index' },
     { path: '/manage', component: '@/pages/manage/index' },
   ],
-  fastRefresh: {},
+  fastRefresh: true,
 });
