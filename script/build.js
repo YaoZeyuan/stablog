@@ -1,7 +1,7 @@
 let shelljs = require('shelljs')
-let path = require('path')
-let fs = require('fs')
-let sys = require('sys')
+let path = require('node:path')
+let fs = require('node:fs')
+let sys = require('node:sys')
 
 const Const_Root_Path = path.resolve(__dirname, '..')
 // const Const_App_Path = path.resolve(Const_Root_Path, 'app')
