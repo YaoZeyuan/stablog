@@ -1,11 +1,11 @@
 import './index.less'
 import _ from 'lodash'
 import path from 'path'
-import electron from 'electron'
 import util from '@/library/util'
 import { useEffect, useState } from 'react'
 import { Button, Switch } from 'antd'
 
+const electron = require('electron')
 let shell = electron.shell
 let ipcRenderer = electron.ipcRenderer
 
