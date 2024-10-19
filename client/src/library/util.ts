@@ -1,12 +1,18 @@
-import fs from 'fs'
+const electron = require('electron');
+const ipcRenderer = electron.ipcRenderer;
+
 class Util {
   static getFileContent(uri: string) {
-    if (fs.existsSync(uri)) {
-      let contentBuffer = fs.readFileSync(uri)
-      return contentBuffer.toString()
-    } else {
-      return ''
-    }
+    return ipcRenderer.sendSync('getFileContent', {
+      uri
+    })
+  }
+
+  static writeFileContent(uri: string, content: string) {
+    return ipcRenderer.sendSync('writeFileContent', {
+      uri,
+      content
+    })
   }
 
   /**

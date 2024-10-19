@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import produce from 'immer';
+import React, { useEffect, useState } from 'react'
+import produce from 'immer'
 import {
   Form,
   Input,
@@ -16,95 +16,90 @@ import {
   Modal,
   Tooltip,
   Collapse,
-} from 'antd';
-import {
-  QuestionOutlined,
-  QuestionCircleOutlined,
-  InfoCircleOutlined,
-} from '@ant-design/icons';
-import './index.less';
+} from 'antd'
+import { QuestionOutlined, QuestionCircleOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import './index.less'
 
-import _ from 'lodash';
-import moment from 'moment';
-import fs from 'fs';
-import http from '@/library/http';
-import util from '@/library/util';
-import querystring from 'query-string';
-import packageConfig from '@/../../package.json';
-import { TypeTaskConfig } from './task_type';
-import * as TaskUtils from './utils';
+import _ from 'lodash'
+import moment from 'moment'
+import http from '@/library/http'
+import util from '@/library/util'
+import querystring from 'query-string'
+import packageConfig from '@/../../package.json'
+import { TypeTaskConfig } from './task_type'
+import * as TaskUtils from './utils'
 
-let currentVersion = parseFloat(packageConfig.version);
+let currentVersion = parseFloat(packageConfig.version)
 
-let TaskConfigType = TypeTaskConfig;
+let TaskConfigType = TypeTaskConfig
 
-const electron = require('electron');
-const shell = electron.shell;
-const ipcRenderer = electron.ipcRenderer;
+const electron = require('electron')
+const shell = electron.shell
+const ipcRenderer = electron.ipcRenderer
 
 let pathConfigStr = ipcRenderer.sendSync('getPathConfig')
 let pathConfig = JSON.parse(pathConfigStr)
 
-const { RangePicker } = DatePicker;
-const { Option } = Select;
+const { RangePicker } = DatePicker
+const { Option } = Select
 
 type TypeState = {
-  isLogin: boolean;
-  showLoginModel: boolean;
-  showUpgradeInfo: boolean;
+  isLogin: boolean
+  showLoginModel: boolean
+  showUpgradeInfo: boolean
   remoteVersionConfig: {
-    version: number;
-    downloadUrl: string;
-    releaseAt: string;
-    releaseNote: string;
-  };
-};
+    version: number
+    downloadUrl: string
+    releaseAt: string
+    releaseNote: string
+  }
+}
 
 type TypeDatabase = {
-  taskConfig: TypeTaskConfig.Customer;
+  taskConfig: TypeTaskConfig.Customer
   currentUserInfo: {
-    screen_name: string;
-    statuses_count: number;
-    total_page_count: number;
-    followers_count: number;
-  };
-};
+    screen_name: string
+    statuses_count: number
+    total_page_count: number
+    followers_count: number
+  }
+}
 
 const Order: {
-  由旧到新: 'asc';
-  由新到旧: 'desc';
+  由旧到新: 'asc'
+  由新到旧: 'desc'
 } = {
   由旧到新: 'asc',
   由新到旧: 'desc',
-};
+}
 const ImageQuilty = {
   无图: 'none',
   默认: 'default',
-};
+}
 const PdfQuilty: { [key: string]: 50 | 60 | 70 | 90 | 100 } = {
   '50': 50,
   '60': 60,
   '70': 70,
   '90': 90,
   '100': 100,
-};
+}
 
 const Translate_Image_Quilty = {
   [TaskConfigType.CONST_Image_Quilty_默认]: '默认',
   [TaskConfigType.CONST_Image_Quilty_无图]: '无图',
-};
+}
 
 const defaultConfigItem = {
   uid: '',
   rawInputText: '',
   comment: '',
-};
+}
 const Const_Volume_Split_By: { [key: string]: string } = {
   ['不拆分']: 'single',
   ['年']: 'year',
   ['月']: 'month',
   ['微博条数']: 'count',
-};
+}
 
 let taskConfig: TypeTaskConfig.Customer = {
   configList: [_.clone(defaultConfigItem)],
@@ -125,25 +120,25 @@ let taskConfig: TypeTaskConfig.Customer = {
   isRegenerateHtml2PdfImage: false,
   isOnlyOriginal: false,
   isOnlyArticle: false,
-};
+}
 if (taskConfig.configList.length === 0) {
   // 如果没有数据, 就要手工补上一个, 确保数据完整
-  taskConfig.configList.push(_.clone(defaultConfigItem));
+  taskConfig.configList.push(_.clone(defaultConfigItem))
 }
 
 // 基于配置文件作为初始值
-let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri);
+let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri)
 try {
-  taskConfig = JSON.parse(jsonContent);
+  taskConfig = JSON.parse(jsonContent)
 } catch (e) {}
 // 输出时间始终重置为次日
-taskConfig.outputEndAtMs = moment().add(1, 'day').unix() * 1000;
+taskConfig.outputEndAtMs = moment().add(1, 'day').unix() * 1000
 if (taskConfig.configList.length === 0) {
-  taskConfig.configList.push(_.clone(defaultConfigItem));
+  taskConfig.configList.push(_.clone(defaultConfigItem))
 }
 
 export default function IndexPage(props: { changeTabKey: Function }) {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm()
   const [$$status, set$$Status] = useState<TypeState>(
     produce(
       {
@@ -159,7 +154,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       },
       (e) => e,
     ),
-  );
+  )
   const [$$database, set$$Database] = useState<TypeDatabase>(
     produce(
       {
@@ -173,121 +168,112 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       },
       (e) => e,
     ),
-  );
+  )
   // 每次database更新后, 重写 taskConfig 配置
   useEffect(() => {
-    TaskUtils.saveConfig($$database.taskConfig);
-  }, [$$database]);
+    TaskUtils.saveConfig($$database.taskConfig)
+  }, [$$database])
 
   // 初始化时检查是否已登录
   useEffect(() => {
     let a = async () => {
-      await asyncCheckIsLogin();
+      await asyncCheckIsLogin()
       // 同步用户信息
-      await asyncSyncUserInfo(false);
-    };
-    a();
-  }, []);
+      await asyncSyncUserInfo(false)
+    }
+    a()
+  }, [])
 
   async function asyncCheckIsLogin() {
-    let isLogin = await TaskUtils.asyncCheckIsLogin();
+    let isLogin = await TaskUtils.asyncCheckIsLogin()
     if (isLogin !== true) {
       set$$Status(
         produce($$status, (raw) => {
-          raw.isLogin = false;
-          raw.showLoginModel = true;
+          raw.isLogin = false
+          raw.showLoginModel = true
         }),
-      );
+      )
     } else {
       set$$Status(
         produce($$status, (raw) => {
-          raw.isLogin = true;
-          raw.showLoginModel = false;
+          raw.isLogin = true
+          raw.showLoginModel = false
         }),
-      );
+      )
     }
-    return isLogin;
+    return isLogin
   }
 
   async function asyncSyncUserInfo(updatePageRange = false) {
     // 先检查是否登录
-    let isLogin = await asyncCheckIsLogin();
+    let isLogin = await asyncCheckIsLogin()
     if (isLogin !== true) {
-      return false;
+      return false
     }
     // 获取uid
     // let uid = $$database.taskConfig.configList[0].uid;
-    let uid = await TaskUtils.asyncGetUid(
-      $$database.taskConfig.configList[0].rawInputText,
-    );
-    console.log('uid =>', uid);
+    let uid = await TaskUtils.asyncGetUid($$database.taskConfig.configList[0].rawInputText)
+    console.log('uid =>', uid)
     if (uid === '') {
-      return;
+      return
     }
     // 然后更新用户信息
-    let userInfo = await TaskUtils.asyncGetUserInfo(uid);
+    let userInfo = await TaskUtils.asyncGetUserInfo(uid)
     if (userInfo.screen_name === '') {
       // 说明请求失败
-      return;
+      return
     }
 
     set$$Database(
       produce($$database, (raw) => {
-        raw.taskConfig.configList[0].uid = uid;
-        raw.currentUserInfo = userInfo;
+        raw.taskConfig.configList[0].uid = uid
+        raw.currentUserInfo = userInfo
         if (updatePageRange) {
           // 当启动任务时, 不需要更新页面列表
-          raw.taskConfig.fetchStartAtPageNo = 0;
-          raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000;
+          raw.taskConfig.fetchStartAtPageNo = 0
+          raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000
         }
         form.setFieldsValue({
           fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
           fetchStartAtPageNo: 0,
           fetchPageNoRange: [0, raw.taskConfig.fetchEndAtPageNo],
-        });
+        })
       }),
-    );
-    return true;
+    )
+    return true
   }
 
   let initValue = {
     ...$$database.taskConfig,
     rawInputText: $$database.taskConfig.configList[0].rawInputText,
-    fetchPageNoRange: [
-      $$database.taskConfig.fetchStartAtPageNo,
-      $$database.taskConfig.fetchEndAtPageNo,
-    ],
+    fetchPageNoRange: [$$database.taskConfig.fetchStartAtPageNo, $$database.taskConfig.fetchEndAtPageNo],
     outputTimeRange: [
       moment.unix($$database.taskConfig.outputStartAtMs / 1000),
       moment.unix($$database.taskConfig.outputEndAtMs / 1000),
     ],
-  };
+  }
 
-  console.log('initValue =>', initValue);
+  console.log('initValue =>', initValue)
 
   // 总需要生成的微博数量
-  let needGenerateWeiboCount = $$database?.currentUserInfo?.statuses_count || 0;
+  let needGenerateWeiboCount = $$database?.currentUserInfo?.statuses_count || 0
 
   // 总需要备份的微博页数
-  let needBackupWeiboPageCount =
-    $$database?.currentUserInfo?.statuses_count || 0;
-  needBackupWeiboPageCount =
-    $$database?.taskConfig.fetchEndAtPageNo -
-    $$database?.taskConfig.fetchStartAtPageNo;
+  let needBackupWeiboPageCount = $$database?.currentUserInfo?.statuses_count || 0
+  needBackupWeiboPageCount = $$database?.taskConfig.fetchEndAtPageNo - $$database?.taskConfig.fetchStartAtPageNo
   if ($$database.taskConfig.isSkipFetch) {
-    needBackupWeiboPageCount = 0;
+    needBackupWeiboPageCount = 0
   }
   if ($$database.taskConfig.isSkipGeneratePdf) {
-    needGenerateWeiboCount = 0;
+    needGenerateWeiboCount = 0
   }
-  console.log('needBackupWeiboPageCount => ', needBackupWeiboPageCount);
+  console.log('needBackupWeiboPageCount => ', needBackupWeiboPageCount)
   // 总需要等待的时长(秒)
-  let needWaitSecond =
-    needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2;
-  let 备份微博耗时_分钟 = Math.floor((needBackupWeiboPageCount * 30) / 60);
-  let 导出微博耗时_分钟 = Math.floor((needGenerateWeiboCount * 2) / 60);
-  let needWaitMinute = Math.floor(needWaitSecond / 60);
-  let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100;
+  let needWaitSecond = needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2
+  let 备份微博耗时_分钟 = Math.floor((needBackupWeiboPageCount * 30) / 60)
+  let 导出微博耗时_分钟 = Math.floor((needGenerateWeiboCount * 2) / 60)
+  let needWaitMinute = Math.floor(needWaitSecond / 60)
+  let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100
 
   return (
     <div className="customer-task">
@@ -297,18 +283,18 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         onOk={() => {
           set$$Status(
             produce($$status, (raw) => {
-              raw.showUpgradeInfo = false;
+              raw.showUpgradeInfo = false
             }),
-          );
-          TaskUtils.jumpToUpgrade($$status.remoteVersionConfig.downloadUrl);
+          )
+          TaskUtils.jumpToUpgrade($$status.remoteVersionConfig.downloadUrl)
         }}
         okText="更新"
         onCancel={() => {
           set$$Status(
             produce($$status, (raw) => {
-              raw.showUpgradeInfo = false;
+              raw.showUpgradeInfo = false
             }),
-          );
+          )
         }}
       >
         <p>最新版本:{$$status.remoteVersionConfig.version}</p>
@@ -321,17 +307,17 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         onOk={() => {
           set$$Status(
             produce($$status, (raw) => {
-              raw.showLoginModel = false;
+              raw.showLoginModel = false
             }),
-          );
-          props.changeTabKey('login');
+          )
+          props.changeTabKey('login')
         }}
         onCancel={() => {
           set$$Status(
             produce($$status, (raw) => {
-              raw.showLoginModel = false;
+              raw.showLoginModel = false
             }),
-          );
+          )
         }}
         okText="去登录"
       >
@@ -345,36 +331,31 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         onValuesChange={(changedValues, values) => {
           set$$Database(
             produce($$database, (raw: TypeDatabase) => {
-              let updateKey = Object.keys(changedValues)[0];
+              let updateKey = Object.keys(changedValues)[0]
               switch (updateKey) {
                 case 'rawInputText':
-                  let rawInput = changedValues['rawInputText'];
+                  let rawInput = changedValues['rawInputText']
                   // 先记录数据, 待点击同步按钮后再更新uid信息
-                  raw.taskConfig.configList[0].rawInputText = rawInput;
-                  raw.taskConfig.configList[0].uid = '';
-                  raw.taskConfig.configList[0].comment = '';
-                  break;
+                  raw.taskConfig.configList[0].rawInputText = rawInput
+                  raw.taskConfig.configList[0].uid = ''
+                  raw.taskConfig.configList[0].comment = ''
+                  break
                 case 'fetchPageNoRange':
-                  raw.taskConfig['fetchStartAtPageNo'] =
-                    changedValues[updateKey][0];
-                  raw.taskConfig['fetchEndAtPageNo'] =
-                    changedValues[updateKey][1];
-                  break;
+                  raw.taskConfig['fetchStartAtPageNo'] = changedValues[updateKey][0]
+                  raw.taskConfig['fetchEndAtPageNo'] = changedValues[updateKey][1]
+                  break
                 case 'outputTimeRange':
-                  raw.taskConfig['outputStartAtMs'] =
-                    changedValues[updateKey][0].unix() * 1000;
-                  raw.taskConfig['outputEndAtMs'] =
-                    changedValues[updateKey][1].unix() * 1000;
-                  break;
+                  raw.taskConfig['outputStartAtMs'] = changedValues[updateKey][0].unix() * 1000
+                  raw.taskConfig['outputEndAtMs'] = changedValues[updateKey][1].unix() * 1000
+                  break
                 case 'volumeSplitBy':
-                  raw.taskConfig['volumeSplitBy'] =
-                    changedValues['volumeSplitBy'];
-                  break;
+                  raw.taskConfig['volumeSplitBy'] = changedValues['volumeSplitBy']
+                  break
                 default:
-                  raw.taskConfig[updateKey] = changedValues[updateKey];
+                  raw.taskConfig[updateKey] = changedValues[updateKey]
               }
             }),
-          );
+          )
         }}
         initialValues={initValue}
       >
@@ -394,7 +375,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             </Form.Item>
             <Button
               onClick={() => {
-                asyncSyncUserInfo(true);
+                asyncSyncUserInfo(true)
               }}
             >
               同步用户信息
@@ -407,22 +388,12 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             '数据待同步'
           ) : (
             <Descriptions bordered column={1}>
-              <Descriptions.Item label="用户名">
-                {$$database.currentUserInfo.screen_name}
-              </Descriptions.Item>
-              <Descriptions.Item label="微博总数">
-                {$$database.currentUserInfo.statuses_count}
-              </Descriptions.Item>
-              <Descriptions.Item label="微博总页面数">
-                {$$database.currentUserInfo.total_page_count}
-              </Descriptions.Item>
+              <Descriptions.Item label="用户名">{$$database.currentUserInfo.screen_name}</Descriptions.Item>
+              <Descriptions.Item label="微博总数">{$$database.currentUserInfo.statuses_count}</Descriptions.Item>
+              <Descriptions.Item label="微博总页面数">{$$database.currentUserInfo.total_page_count}</Descriptions.Item>
               <Descriptions.Item label="待抓取页面范围[从0开始计数]">
-                从{$$database.taskConfig.fetchStartAtPageNo}~
-                {$$database.taskConfig.fetchEndAtPageNo}页, 共
-                {$$database.taskConfig.fetchEndAtPageNo -
-                  $$database.taskConfig.fetchStartAtPageNo +
-                  1}
-                页
+                从{$$database.taskConfig.fetchStartAtPageNo}~{$$database.taskConfig.fetchEndAtPageNo}页, 共
+                {$$database.taskConfig.fetchEndAtPageNo - $$database.taskConfig.fetchStartAtPageNo + 1}页
               </Descriptions.Item>
               <Descriptions.Item
                 label={
@@ -446,9 +417,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                   ? '已勾选跳过pdf输出选项, 不需要渲染pdf, 耗时为0'
                   : `预计共需渲染${needGenerateWeiboCount}条微博, 耗时${导出微博耗时_分钟}分钟`}
               </Descriptions.Item>
-              <Descriptions.Item label="粉丝数">
-                {$$database.currentUserInfo.followers_count}
-              </Descriptions.Item>
+              <Descriptions.Item label="粉丝数">{$$database.currentUserInfo.followers_count}</Descriptions.Item>
             </Descriptions>
           )}
         </Form.Item>
@@ -471,10 +440,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             </Form.Item>
             <span>&nbsp;页备份到第&nbsp;</span>
             <Form.Item name="fetchEndAtPageNo" noStyle>
-              <InputNumber
-                step={1}
-                max={$$database.currentUserInfo.total_page_count || 0}
-              />
+              <InputNumber step={1} max={$$database.currentUserInfo.total_page_count || 0} />
             </Form.Item>
             <span>&nbsp;页&nbsp;</span>
           </div>
@@ -541,17 +507,13 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                     <Option value={Const_Volume_Split_By.不拆分}>不拆分</Option>
                     <Option value={Const_Volume_Split_By.年}>按年拆分</Option>
                     <Option value={Const_Volume_Split_By.月}>按月拆分</Option>
-                    <Option value={Const_Volume_Split_By.微博条数}>
-                      按微博条数拆分
-                    </Option>
+                    <Option value={Const_Volume_Split_By.微博条数}>按微博条数拆分</Option>
                   </Select>
                 </Form.Item>
-                {$$database.taskConfig.volumeSplitBy ===
-                Const_Volume_Split_By.微博条数 ? (
+                {$$database.taskConfig.volumeSplitBy === Const_Volume_Split_By.微博条数 ? (
                   <span>, 每&nbsp;</span>
                 ) : null}
-                {$$database.taskConfig.volumeSplitBy ===
-                Const_Volume_Split_By.微博条数 ? (
+                {$$database.taskConfig.volumeSplitBy === Const_Volume_Split_By.微博条数 ? (
                   <Form.Item name="volumeSplitCount" noStyle>
                     <InputNumber
                       // placeholder="每n条微博拆分为一卷"
@@ -563,8 +525,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                     ></InputNumber>
                   </Form.Item>
                 ) : null}
-                {$$database.taskConfig.volumeSplitBy ===
-                Const_Volume_Split_By.微博条数 ? (
+                {$$database.taskConfig.volumeSplitBy === Const_Volume_Split_By.微博条数 ? (
                   <span>&nbsp;条微博一卷</span>
                 ) : null}
               </div>
@@ -631,16 +592,16 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           <Button
             onClick={async () => {
               // 先同步信息(期间会检查登录状态)
-              let isSyncSuccess = await asyncSyncUserInfo(false);
+              let isSyncSuccess = await asyncSyncUserInfo(false)
               if (isSyncSuccess !== true) {
-                return false;
+                return false
               }
               // 保存日志
-              TaskUtils.saveConfig($$database.taskConfig);
+              TaskUtils.saveConfig($$database.taskConfig)
               // 然后将tab切换到日志栏
-              props.changeTabKey('log');
+              props.changeTabKey('log')
               // 启动任务进程
-              TaskUtils.startBackupTask();
+              TaskUtils.startBackupTask()
             }}
             type="primary"
           >
@@ -651,16 +612,16 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           &nbsp;
           <Button
             onClick={async () => {
-              let remoteConfig = await TaskUtils.asyncCheckNeedUpdate();
+              let remoteConfig = await TaskUtils.asyncCheckNeedUpdate()
               if (remoteConfig === false) {
-                return;
+                return
               }
               set$$Status(
                 produce($$status, (raw) => {
-                  raw.showUpgradeInfo = true;
-                  raw.remoteVersionConfig = remoteConfig;
+                  raw.showUpgradeInfo = true
+                  raw.remoteVersionConfig = remoteConfig
                 }),
-              );
+              )
             }}
           >
             检查更新
@@ -670,5 +631,5 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         </Form.Item>
       </Form>
     </div>
-  );
+  )
 }
