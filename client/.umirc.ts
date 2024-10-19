@@ -13,7 +13,6 @@ export default defineConfig({
     // 设置target为electron
     memo.target("electron-renderer")
   },
-  // plugins: ['@umijs/plugin-electron'],
   locale: {
     default: 'zh-CN',
     antd: true,
