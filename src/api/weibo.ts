@@ -32,7 +32,7 @@ export default class Weibo extends Base {
       let rawStStartStr = jsonStr.split(`st:`)[1]
       let rawStStr = rawStStartStr.split(`,`)[0]
       st = rawStStr.replace(/"|'| /g, '')
-    } catch (e) {}
+    } catch (e) { }
     return st
   }
   static async asyncStep2FetchApiConfig(st: string) {
@@ -73,11 +73,12 @@ export default class Weibo extends Base {
       .get(baseUrl, {
         params: config,
         headers: {
-          Accept: 'application/json, text/plain, */*',
-          'MWeibo-Pwa': 1,
-          'Sec-Fetch-Mode': 'cors',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-XSRF-TOKEN': st,
+          accept: 'application/json, text/plain, */*',
+          'mweibo-pwa': 1,
+          'sec-fetch-mode': 'cors',
+          'x-requested-with': 'XMLHttpRequest',
+          'x-xsrf-token': st,
+          'referer': `https://m.weibo.cn/p/${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`,
         },
       })
       .catch((e) => {
@@ -147,11 +148,21 @@ export default class Weibo extends Base {
    * 根据微博的的bid字段获取长微博详情
    * @param bid
    */
-  static async asyncGetLongTextWeibo(bid: string): Promise<TypeWeibo.TypeMblog | {}> {
+  static async asyncGetLongTextWeibo({ bid, st }: {
+    bid: string,
+    st: string
+  }): Promise<TypeWeibo.TypeMblog | {}> {
     const baseUrl = `https://m.weibo.cn/statuses/show?id=${bid}`
     const config = {}
     const weiboResponse = <TypeWeibo.TypeLongTextWeiboResponse>await Base.http.get(baseUrl, {
       params: config,
+      headers: {
+        'mweibo-pwa': 1,
+        'sec-fetch-mode': 'cors',
+        'x-requested-with': 'XMLHttpRequest',
+        'x-xsrf-token': st,
+        'referer': `https://m.weibo.cn/detail/${bid}`
+      }
     })
     if (_.isEmpty(weiboResponse.data)) {
       return {}

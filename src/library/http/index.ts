@@ -36,7 +36,7 @@ class Http {
           ...config,
           headers: {
             // 加上ua
-            'User-Agent': RequestConfig.ua,
+            'user-agent': RequestConfig.ua,
             cookie: RequestConfig.cookie,
             ...config.headers,
           },
