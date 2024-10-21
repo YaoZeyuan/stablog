@@ -441,8 +441,21 @@ export default function IndexPage() {
   let uid = selectUserId
   let exportUri = ''
 
-  let exportStartAt = dayjs('2009-01-01 00:00:00').unix()
-  let exportEndAt = dayjs().unix()
+  // 用于临时计算当前用户微博列表的起止月份
+  const bufWeiboDateList = []
+  for (let yearItem of rawSummaryList) {
+    for (let monthKey of Object.keys(yearItem.childrenMap)) {
+      bufWeiboDateList.push({
+        dateStr: `${yearItem.date}-${monthKey}`,
+        value: yearItem.childrenMap[monthKey].startAt,
+      })
+    }
+  }
+  bufWeiboDateList.sort((a, b) => a.value - b.value)
+
+  // 以此作为导出时文件名
+  let exportStartAt = bufWeiboDateList[0]?.value ?? dayjs('2009-01-01 00:00:00').unix()
+  let exportEndAt = bufWeiboDateList[bufWeiboDateList.length - 1]?.value ?? dayjs().unix()
   if ($$storageSelect.year) {
     if ($$storageSelect.month) {
       exportStartAt = dayjs(`${$$storageSelect.year}-${$$storageSelect.month}`, 'YYYY年-MM月').startOf('month').unix()
@@ -474,6 +487,7 @@ export default function IndexPage() {
     exportStartAt: exportStartAt,
     exportEndAt: exportEndAt,
   }
+  console.log('exportConfig => ', exportConfig)
 
   return (
     <div className="manager-container">
