@@ -24,8 +24,8 @@ export default class Base extends Component {
 
   async componentDidMount() {
     // 每次访问主动刷新下接口
-    axios.get('https://pruge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json').catch(e=>{})
-    axios.get('https://pruge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json').catch(e=>{})
+    axios.get('https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json').catch(e=>{})
+    axios.get('https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json').catch(e=>{})
     let versionResponse = await axios.get('https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json')
     let thankListResponse = await axios.get('https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json')
     let config = versionResponse.data
