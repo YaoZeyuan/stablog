@@ -487,6 +487,16 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                 <Radio.Button value={ImageQuilty.默认}>有图</Radio.Button>
               </Radio.Group>
             </Form.Item>
+            {/* <Form.Item label="pdf图片清晰度" name="pdfQuilty">
+              <Radio.Group buttonStyle="solid">
+                <Radio.Button value={PdfQuilty[50]}>50</Radio.Button>
+                <Radio.Button value={PdfQuilty[60]}>60-推荐值</Radio.Button>
+                <Radio.Button value={PdfQuilty[70]}>70</Radio.Button>
+                <Radio.Button value={PdfQuilty[80]}>80</Radio.Button>
+                <Radio.Button value={PdfQuilty[90]}>90</Radio.Button>
+                <Radio.Button value={PdfQuilty[100]}>100</Radio.Button>
+              </Radio.Group>
+            </Form.Item> */}
 
             <Form.Item label="时间范围">
               <div className="flex-container">
