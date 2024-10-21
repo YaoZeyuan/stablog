@@ -15,7 +15,7 @@ export default class Base extends Component {
       releaseNote: '稳部落1.1.0, 闪亮发布.',
       version: 1.1,
       detail: {
-          windows: { version: '3.4.0', url: 'https://wwtd.lanzout.com/ibA4c2d3aa0j' },
+          windows: { version: '3.4.0', url: 'https://wwtd.lanzout.com/i6xzw2d3afpe' },
           mac: { version: '暂不支持', url: 'https://github.com/YaoZeyuan/stablog/releases' },
       },
     },
