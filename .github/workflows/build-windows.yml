@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        node-version: ['16.14.2']
+        node-version: ['20.18.0']
 
     steps:
       - uses: actions/checkout@v2
@@ -24,18 +24,27 @@ jobs:
         id: package-version
       - name: Show version number
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
       # 先执行electron的构建, 节约调试时间
-      - run: yarn
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       # sharp需要单独安装
       # - run: npm install --platform=win32 --arch=x64 sharp
       # - run: npm rebuild --platform=win32 --arch=ia32 sharp
       # - run: npm rebuild --platform=win32 --arch=arm sharp
       # - run: npm rebuild --platform=win32 --arch=arm64 sharp
-      - run: cd ./client ; yarn ; cd ..
-      - run: yarn build
+      - run: cd ./client ; pnpm install ; cd ..
+      - run: pnpm build
         env:
           CI: true
-          CI_ENV: "Github Action"
+          CI_ENV: 'Github Action'
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
       - name: Create Release
         id: create_release

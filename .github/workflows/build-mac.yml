@@ -10,7 +10,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        node-version: ['16.14.2']
+        node-version: ['20.18.0']
 
     steps:
       - uses: actions/checkout@v2
@@ -28,15 +28,23 @@ jobs:
       # - run: brew install vips
       # - run: brew install vips
       # 先执行electron的构建, 节约调试时间
-      # - run: yarn
-      - run: yarn
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       # 只安装intel版的sharp库即可, m1上可以运行intel的代码
-      - run: npm install --platform=darwin --arch=x64 sharp
-      - run: cd ./client && yarn && cd ..
-      - run: yarn build
+      - run: pnpm install --platform=darwin --arch=x64 sharp
+      - run: cd ./client && pnpm install && cd ..
+      - run: pnpm build
         env:
           CI: true
-          CI_ENV: "Github Action"
+          CI_ENV: 'Github Action'
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
       - name: Create Release
         id: create_release
