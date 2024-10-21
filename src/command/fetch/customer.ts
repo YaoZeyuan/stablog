@@ -38,6 +38,8 @@ const Const_Fetch_Wati_Seconds = 20
  * 解码后=>  https://m.weibo.cn/feature/applink?scheme=sinaweibo://articlebrowser?object_id=1022:2309404446645566701785&url=https://card.weibo.com/article/m/show/id/2309404446645566701785?_wb_client_=1&extparam=lmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
  * 2021年3月28日新增
  * rawurl格式 => https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
+ * 2024年10月22日新增
+ * http://weibo.com/p/1001603893058344251505?luicode=20000174
  */
 function getArticleId(rawUrl = '') {
   if (!rawUrl) {
@@ -52,6 +54,12 @@ function getArticleId(rawUrl = '') {
     // 说明是新格式 https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
     let rawQuery = querystring.parseUrl(decodeUrl).query
     let articleId = rawQuery?.id || ''
+    return articleId
+  }
+  if (decodeUrl.includes("weibo.com/p/")) {
+    const rawUrl = 'http://weibo.com/p/1001603893058344251505?luicode=20000174'
+    let rawContent = rawUrl.split("weibo.com/p/")?.[1] ?? "";
+    let articleId = rawContent.split("?")?.[0] ?? ""
     return articleId
   }
 
