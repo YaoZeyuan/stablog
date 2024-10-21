@@ -37,7 +37,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install
+      - run: ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      - run: pnpm install
       # 只安装intel版的sharp库即可, m1上可以运行intel的代码
       - run: pnpm install --platform=darwin --arch=x64 sharp
       - run: cd ./client && pnpm install && cd ..
