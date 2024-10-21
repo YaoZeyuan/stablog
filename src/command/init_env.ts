@@ -55,6 +55,7 @@ class InitEnv extends Base {
         params: {
           now: new Date().toISOString,
         },
+        timeout: 10 * 1000
       })
       .catch(e => {
         return {}
