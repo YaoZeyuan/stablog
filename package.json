@@ -70,7 +70,7 @@
     "archiver": "^3.0.0",
     "axios": "^1.7.7",
     "cross-env": "^5.2.0",
-    "dayjs": "^1.11.4",
+    "dayjs": "^1.11.13",
     "decode-html": "^2.0.0",
     "dotenv": "^4.0.0",
     "fflate": "^0.8",
