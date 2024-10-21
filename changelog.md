@@ -4,8 +4,9 @@
 2.  简单技术优化
     1.  优化导出的文件名. 默认选取数据库中已收录的当前用户微博起止时间
     2.  将api接口改为通过jsdeliver托管
-    3.  升级antd/umijs/electron至当前最新版
-    4.  全局移除moment, 替换为dayjs
+    3.  将所有前端中的node调用迁移至electron中
+    4.  升级antd/umijs/electron至当前最新版
+    5.  全局移除moment, 替换为dayjs
 
 # 3.3.7
 
