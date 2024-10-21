@@ -1,6 +1,5 @@
 import http from '../../library/http';
 import _ from 'lodash';
-import fs from 'fs';
 import packageConfig from '@/../../package.json';
 import semver from 'semver';
 
@@ -97,10 +96,10 @@ export async function asyncGetUserInfo(uid: number | string) {
 }
 
 export function saveConfig(taskConfig: any) {
-  fs.writeFileSync(
-    pathConfig.customerTaskConfigUri,
-    JSON.stringify(taskConfig, null, 4),
-  );
+  ipcRenderer.sendSync('saveConfig', {
+    taskConfig,
+    pathConfigUri: pathConfig.customerTaskConfigUri,
+  });
 }
 
 export function openOutputDir() {
@@ -138,7 +137,7 @@ export function startBackupTask() {
 }
 
 export async function asyncCheckNeedUpdate() {
-  let checkUpgradeUri = 'https://api.yaozeyuan.online/stablog/version';
+  let checkUpgradeUri = 'https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json';
   let remoteVersionConfig = await http
     .asyncGet(checkUpgradeUri, {
       params: {

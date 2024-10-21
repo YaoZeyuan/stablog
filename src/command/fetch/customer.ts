@@ -230,7 +230,10 @@ class FetchCustomer extends Base {
       if (rawMblog.mblog.isLongText === true) {
         // 长微博需要调取api重新获得微博内容
         let bid = rawMblog.mblog.bid
-        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid).catch((e) => {
+        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo({
+          bid,
+          st: this.requestConfig.st
+        }).catch((e) => {
           // 避免crash导致整个进程退出
           return {}
         })

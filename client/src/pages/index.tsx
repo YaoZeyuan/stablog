@@ -1,19 +1,19 @@
-import { Tabs } from 'antd';
-import './index.less';
-import CustomerTask from './customer_task';
-import DataManage from './manage';
-import Helper from './helper';
-import Log from './log';
-import Login from './login';
-import { useState } from 'react';
+import { Tabs } from 'antd'
+import './index.less'
+import CustomerTask from './customer_task'
+import DataManage from './manage'
+import Helper from './helper'
+import Log from './log'
+import Login from './login'
+import { useState } from 'react'
 
-const { TabPane } = Tabs;
+const { TabPane } = Tabs
 
 export default function IndexPage() {
-  let [currentTabKey, setCurrentTabKey] = useState<string>('customer_task');
+  let [currentTabKey, setCurrentTabKey] = useState<string>('customer_task')
 
   function changeTabKey(tab: string) {
-    setCurrentTabKey(tab);
+    setCurrentTabKey(tab)
   }
 
   return (
@@ -22,7 +22,7 @@ export default function IndexPage() {
         activeKey={currentTabKey}
         centered
         onTabClick={(key: string) => {
-          setCurrentTabKey(key);
+          setCurrentTabKey(key)
         }}
       >
         <TabPane tab="系统设置" key="customer_task">
@@ -42,5 +42,5 @@ export default function IndexPage() {
         </TabPane>
       </Tabs>
     </div>
-  );
+  )
 }

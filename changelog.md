@@ -1,3 +1,13 @@
+# 3.4.0
+
+1.  修复无法访问微博接口的bug, 恢复软件功能
+2.  简单技术优化
+    1.  优化导出的文件名. 默认选取数据库中已收录的当前用户微博起止时间
+    2.  将api接口改为通过jsdeliver托管
+    3.  将所有前端中的node调用迁移至electron中
+    4.  升级antd/umijs/electron至当前最新版
+    5.  全局移除moment, 替换为dayjs
+
 # 3.3.7
 
 1.  解决 github 上 无法打包 mac 版代码的问题, 优化最终产物包代码体积(移除了 moment 和 sourcemap)

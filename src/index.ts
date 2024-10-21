@@ -1,5 +1,5 @@
 // Modules to control application life and create native browser window
-import Electron, { Menu } from 'electron'
+import Electron, { Menu, dialog } from 'electron'
 import CommonUtil from '~/src/library/util/common'
 import ConfigHelperUtil from '~/src/library/util/config_helper'
 import PathConfig from '~/src/config/path'
@@ -10,7 +10,7 @@ import DataTransferImport from '~/src/command/datatransfer/import'
 import InitEnvCommand from '~/src/command/init_env'
 import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
-import fs from 'fs'
+import fs from 'node:fs'
 import _ from 'lodash'
 import sharp from 'sharp'
 import path from 'path'
@@ -384,7 +384,35 @@ ipcMain.on(
     event.returnValue = 'success'
   },
 )
+ipcMain.on('getFileContent', (event, args: {
+  uri: string
+}) => {
+  if (fs.existsSync(args.uri)) {
+    event.returnValue = fs.readFileSync(args.uri).toString()
+  }
+  event.returnValue = ''
+  return
+})
+ipcMain.on('writeFileContent', (event, args: {
+  uri: string,
+  content: string
+}) => {
+  if (fs.existsSync(args.uri) === false) {
+    const fileDirName = path.dirname(args.uri)
+    if (fs.existsSync(fileDirName) === false) {
+      // 若目录不存在则创建目录
+      fs.mkdirSync(fileDirName, {
+        "recursive": true,
+        // mode: 0o777
+      })
+    }
+    // 若文件不存在则创建文件
+    fs.writeFileSync(args.uri, '')
+  }
+  event.returnValue = fs.writeFileSync(args.uri, args.content)
 
+  return
+})
 ipcMain.on('getPathConfig', (event) => {
   // 获取pathConfig
 
@@ -398,12 +426,50 @@ ipcMain.on('getPathConfig', (event) => {
   event.returnValue = jsonStr
   return
 })
+ipcMain.on('saveConfig', (event, args: {
+  taskConfig: any,
+  pathConfigUri: string,
+}) => {
+  fs.writeFileSync(
+    args.pathConfigUri,
+    JSON.stringify(args.taskConfig, null, 4),
+  );
+  event.returnValue = true
+  return
+})
+ipcMain.on('Dialog_showSaveDialogSync', async (event, args: {
+  title: string;
+  filters: {
+    name: string;
+    extensions: string[];
+  }[]
+  defaultPath: string;
+}) => {
+  const res = await dialog.showSaveDialogSync(args)
+  event.returnValue = res
+  return
+})
+
+ipcMain.on('Dialog_showOpenDialogSync', async (event, args: {
+  title: string;
+  filters: {
+    name: string;
+    extensions: string[];
+  }[]
+  defaultPath: string;
+}) => {
+  const res = await dialog.showOpenDialogSync(args)
+  event.returnValue = res
+  return
+})
+
 ipcMain.on('MBlog_asyncGetWeiboDistribution', async (event, args) => {
   // 获取pathConfig
   let result = await MBlog.asyncGetWeiboDistribution(...args)
   event.returnValue = result
   return
 })
+
 ipcMain.on('MBlog_asyncGetMblogList', async (event, args) => {
   // 获取pathConfig
   let result = await MBlog.asyncGetMblogList(...args)

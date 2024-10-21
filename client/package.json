@@ -1,30 +1,32 @@
 {
   "private": true,
   "scripts": {
-    "start": "umi dev",
-    "build": "umi build",
-    "debug-build": "cross-env COMPRESS=none umi build ",
-    "postinstall": "umi generate tmp",
+    "start": "max  dev",
+    "dev": "npm run start",
+    "build": "max  build",
+    "debug-build": "cross-env COMPRESS=none max  build ",
+    "postinstall": "max setup",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'"
   },
   "dependencies": {
-    "@ant-design/icons": "^4.5.0",
-    "@ant-design/pro-layout": "^6.5.0",
-    "@umijs/preset-react": "1.x",
+    "@ant-design/icons": "^5.5.1",
+    "@ant-design/pro-layout": "^7.20.2",
+    "@umijs/max": "^4.3.26",
+    "antd": "^5.21.5",
+    "dayjs": "^1.11.13",
     "immer": "^8.0.1",
-    "semver": "^7.3.4",
-    "umi": "^3.3.7"
+    "semver": "^7.3.4"
   },
   "devDependencies": {
-    "@types/react": "^16.9.0",
-    "@types/react-dom": "^16.9.0",
+    "@types/react": "^17.0.83",
+    "@types/react-dom": "^17.0.25",
     "@umijs/test": "^3.3.7",
     "cross-env": "^7.0.3",
     "lint-staged": "^10.0.7",
     "prettier": "^2.2.0",
-    "react": "17.x",
-    "react-dom": "17.x",
-    "typescript": "^4.1.2",
+    "react": "~17.0.2",
+    "react-dom": "~17.0.2",
+    "typescript": "^5.6.3",
     "yorkie": "^2.0.0"
   }
 }
