@@ -32,9 +32,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'pnpm'
+      - name: init ssh key
+        run: ssh-keyscan -t rsa github.com > %USERPROFILE%/.ssh/known_hosts
       # 先执行electron的构建, 节约调试时间
       - name: Install dependencies
-        run: ssh-keyscan -t rsa github.com > %USERPROFILE%/.ssh/known_hosts
         run: pnpm install
       # sharp需要单独安装
       # - run: npm install --platform=win32 --arch=x64 sharp
