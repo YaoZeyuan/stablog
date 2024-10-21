@@ -15,8 +15,8 @@ export default class Base extends Component {
       releaseNote: '稳部落1.1.0, 闪亮发布.',
       version: 1.1,
       detail: {
-        windows: { version: 1.1, url: 'https://github.com/YaoZeyuan/stablog/tags' },
-        mac: { version: 1.1, url: 'https://github.com/YaoZeyuan/stablog/tags' },
+          windows: { version: '3.4.0', url: 'https://wwtd.lanzout.com/ibA4c2d3aa0j' },
+          mac: { version: '暂不支持', url: 'https://github.com/YaoZeyuan/stablog/releases' },
       },
     },
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
