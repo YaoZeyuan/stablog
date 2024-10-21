@@ -21,7 +21,7 @@ import { QuestionOutlined, QuestionCircleOutlined, InfoCircleOutlined } from '@a
 import './index.less'
 
 import _ from 'lodash'
-import moment from 'moment'
+import dayjs from 'dayjs'
 import http from '@/library/http'
 import util from '@/library/util'
 import querystring from 'query-string'
@@ -113,8 +113,8 @@ let taskConfig: TypeTaskConfig.Customer = {
   volumeSplitCount: 10000,
   fetchStartAtPageNo: 0,
   fetchEndAtPageNo: 100000,
-  outputStartAtMs: moment('2010-01-01 00:00:00').unix() * 1000,
-  outputEndAtMs: moment().add(1, 'year').unix() * 1000,
+  outputStartAtMs: dayjs('2010-01-01 00:00:00').unix() * 1000,
+  outputEndAtMs: dayjs().add(1, 'year').unix() * 1000,
   isSkipFetch: false,
   isSkipGeneratePdf: false,
   isRegenerateHtml2PdfImage: false,
@@ -132,7 +132,7 @@ try {
   taskConfig = JSON.parse(jsonContent)
 } catch (e) {}
 // 输出时间始终重置为次日
-taskConfig.outputEndAtMs = moment().add(1, 'day').unix() * 1000
+taskConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
 if (taskConfig.configList.length === 0) {
   taskConfig.configList.push(_.clone(defaultConfigItem))
 }
@@ -248,8 +248,8 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     rawInputText: $$database.taskConfig.configList[0].rawInputText,
     fetchPageNoRange: [$$database.taskConfig.fetchStartAtPageNo, $$database.taskConfig.fetchEndAtPageNo],
     outputTimeRange: [
-      moment.unix($$database.taskConfig.outputStartAtMs / 1000),
-      moment.unix($$database.taskConfig.outputEndAtMs / 1000),
+      dayjs.unix($$database.taskConfig.outputStartAtMs / 1000),
+      dayjs.unix($$database.taskConfig.outputEndAtMs / 1000),
     ],
   }
 

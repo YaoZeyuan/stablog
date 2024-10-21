@@ -7,7 +7,7 @@ import produce from 'immer'
 import { Table, Card, Select, Button } from 'antd'
 import { PlusCircleOutlined } from '@ant-design/icons'
 import Util from '@/library/util'
-import moment from 'dayjs'
+import dayjs from 'dayjs'
 import path from 'path'
 
 let Option = Select.Option
@@ -186,8 +186,8 @@ export default function IndexPage() {
   }) {
     let currentUserInfo = $$userDatabase.get(selectUserId)
 
-    let exportStartAtStr = moment.unix(exportStartAt).format('YYYY-MM')
-    let exportEndAtStr = moment.unix(exportEndAt).format('YYYY-MM')
+    let exportStartAtStr = dayjs.unix(exportStartAt).format('YYYY-MM')
+    let exportEndAtStr = dayjs.unix(exportEndAt).format('YYYY-MM')
     let exportRangeStr = `从${exportStartAtStr}到${exportEndAtStr}`
 
     let saveUri = await ipcRenderer.sendSync('Dialog_showSaveDialogSync', {
@@ -380,7 +380,7 @@ export default function IndexPage() {
               render: (record) => {
                 return (
                   <span title={'微博id:' + record.id} key={record.id}>
-                    {moment.unix(record.created_timestamp_at).format('YYYY-MM-DD HH:mm:ss')}
+                    {dayjs.unix(record.created_timestamp_at).format('YYYY-MM-DD HH:mm:ss')}
                   </span>
                 )
               },
@@ -441,15 +441,15 @@ export default function IndexPage() {
   let uid = selectUserId
   let exportUri = ''
 
-  let exportStartAt = moment('2009-01-01 00:00:00').unix()
-  let exportEndAt = moment().unix()
+  let exportStartAt = dayjs('2009-01-01 00:00:00').unix()
+  let exportEndAt = dayjs().unix()
   if ($$storageSelect.year) {
     if ($$storageSelect.month) {
-      exportStartAt = moment(`${$$storageSelect.year}-${$$storageSelect.month}`, 'YYYY年-MM月').startOf('month').unix()
-      exportEndAt = moment(`${$$storageSelect.year}-${$$storageSelect.month}`, 'YYYY年-MM月').endOf('month').unix()
+      exportStartAt = dayjs(`${$$storageSelect.year}-${$$storageSelect.month}`, 'YYYY年-MM月').startOf('month').unix()
+      exportEndAt = dayjs(`${$$storageSelect.year}-${$$storageSelect.month}`, 'YYYY年-MM月').endOf('month').unix()
     } else {
-      exportStartAt = moment($$storageSelect.year, 'YYYY年').startOf('year').unix()
-      exportEndAt = moment($$storageSelect.year, 'YYYY年').endOf('year').unix()
+      exportStartAt = dayjs($$storageSelect.year, 'YYYY年').startOf('year').unix()
+      exportEndAt = dayjs($$storageSelect.year, 'YYYY年').endOf('year').unix()
     }
   }
 
