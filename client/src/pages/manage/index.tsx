@@ -7,7 +7,7 @@ import produce from 'immer'
 import { Table, Card, Select, Button } from 'antd'
 import { PlusCircleOutlined } from '@ant-design/icons'
 import Util from '@/library/util'
-import moment from 'moment'
+import moment from 'dayjs'
 import path from 'path'
 
 let Option = Select.Option

@@ -21,11 +21,18 @@ export default defineConfig({
     baseSeparator: '-',
   },
   antd: {},
-  layout: {
-    // https://umijs.org/docs/max/layout-menu#构建时配置
-    title: 'UmiJS',
-    locale: true,
-  },
+  layout: false,
+  //  {
+  //   // https://umijs.org/docs/max/layout-menu#构建时配置
+  //   title: '稳部落',
+  //   locale: false,
+  //   menuRender: false,
+  //   menuHeaderRender: () => false,
+  //   pure: true,
+  //   layout: 'top',
+  //   siderWidth: 400,
+  //   suppressSiderWhenMenuEmpty: true
+  // },
   // nodeModulesTransform: {
   //   type: 'none',
   // },
