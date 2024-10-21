@@ -1,0 +1,16 @@
+{
+    "downloadUrl": "https://www.yaozeyuan.online/stablog",
+    "releaseAt": "2022年08月3日",
+    "releaseNote": "发布3.3.7, 精简项目体积",
+    "version": "3.3.7",
+    "detail": {
+        "windows": {
+            "version": "3.3.7",
+            "url": "https://wwc.lanzout.com/iNwYW08weh1i"
+        },
+        "mac": {
+            "version": "3.3.7",
+            "url": "https://wwc.lanzout.com/iEfrg08weg8j"
+        }
+    }
+}
