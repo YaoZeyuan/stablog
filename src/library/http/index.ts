@@ -2,11 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios'
 import RequestConfig from '~/src/config/request'
 import logger from '~/src/library/logger'
 import request from 'request-promise'
-// import axiosCookieJarSupport from 'axios-cookiejar-support'
-// import toughCookie from 'tough-cookie'
 import _ from 'lodash'
-
-// axiosCookieJarSupport(axios)
 
 // 创建axios实例
 const http = axios.create({
