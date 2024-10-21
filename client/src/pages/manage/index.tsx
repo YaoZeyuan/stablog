@@ -190,7 +190,7 @@ export default function IndexPage() {
     let exportEndAtStr = moment.unix(exportEndAt).format('YYYY-MM')
     let exportRangeStr = `从${exportStartAtStr}到${exportEndAtStr}`
 
-    let saveUri = await remote.dialog.showSaveDialogSync({
+    let saveUri = await ipcRenderer.sendSync('Dialog_showSaveDialogSync', {
       title: '文件保存地址',
       filters: [
         {
@@ -221,7 +221,7 @@ export default function IndexPage() {
    * 导入数据
    */
   async function asyncDataTransferImport() {
-    let importUriList = await remote.dialog.showOpenDialogSync({
+    let importUriList = ipcRenderer.sendSync('Dialog_showOpenDialogSync', {
       title: '选择导入文件',
       filters: [
         {
@@ -541,7 +541,8 @@ export default function IndexPage() {
         {monthSelectEle}
         &nbsp;
         <Button
-          type="default"
+          color="primary"
+          variant="dashed"
           disabled={selectUserId === ''}
           onClick={() => {
             asyncDataTransferExport(exportConfig)

@@ -1,4 +1,4 @@
-import { defineConfig } from 'umi';
+import { defineConfig } from '@umijs/max';
 import path from 'path'
 
 export default defineConfig({
