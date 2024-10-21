@@ -5,7 +5,7 @@ export default defineConfig({
   // 使用hash模式, 解决基于文件进行浏览时的白屏问题
   history: { type: 'hash' },
   base: "/",
-  publicPath: '/',
+  publicPath: './',
   hash: true,
   chainWebpack(memo, { env, webpack }) {
     // 设置 alias
