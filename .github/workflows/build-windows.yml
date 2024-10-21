@@ -26,7 +26,7 @@ jobs:
         run: echo "current version is ${{ steps.package-version.outputs.version }}"
       - uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
