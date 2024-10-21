@@ -26,9 +26,6 @@ importers:
       immer:
         specifier: ^8.0.1
         version: 8.0.4
-      moment:
-        specifier: ^2.30.1
-        version: 2.30.1
       semver:
         specifier: ^7.3.4
         version: 7.6.3
