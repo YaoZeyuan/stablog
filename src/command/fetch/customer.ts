@@ -58,7 +58,6 @@ function getArticleId(rawUrl = '') {
     return articleId
   }
   if (decodeUrl.includes("weibo.com/p/")) {
-    const rawUrl = 'http://weibo.com/p/1001603893058344251505?luicode=20000174'
     let rawContent = rawUrl.split("weibo.com/p/")?.[1] ?? "";
     let articleId = rawContent.split("?")?.[0] ?? ""
     return articleId

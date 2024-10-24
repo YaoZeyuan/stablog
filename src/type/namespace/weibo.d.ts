@@ -407,29 +407,29 @@ export type TypeLongTextWeiboResponse = {
 }
 
 export type TypeWeiboArticleRecord = {
-  object_id: '1022:2309404619352241471539'
-  vuid: 0
-  uid: 1221171697
+  object_id: string | '1022:2309404619352241471539'
+  vuid: 0 | number
+  uid: 1221171697 | number
   cover_img: {
     image: {
-      url: 'https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg'
+      url: string | 'https://ww4.sinaimg.cn/crop.0.0.1280.719.1000.562/006cSmwjgw1f5e8xstgc4j30zk0k0whp.jpg'
       height: 450
       width: 800
     }
     full_image: {
-      url: 'https://wx2.sinaimg.cn/large/48c999f1ly1goyedm5xexj20kg0bi10f.jpg'
+      url: string | 'https://ww4.sinaimg.cn/crop.0.0.1280.719.1000.562/006cSmwjgw1f5e8xstgc4j30zk0k0whp.jpg'
       height: 562
       width: 1000
     }
   }
-  target_url: 'https://card.weibo.com/article/m/show/id/2309404619352241471539'
-  title: '理解西方人对“种族灭绝”的近代历史心结'
-  create_at: '03-27 13:27'
-  read_count: '40万+'
-  summary: ''
+  target_url: string | 'https://card.weibo.com/article/m/show/id/2309404619352241471539'
+  title: string | '理解西方人对“种族灭绝”的近代历史心结'
+  create_at: string | '03-27 13:27'
+  read_count: string | '40万+'
+  summary: '' | string
   writer: []
   ourl: ''
-  url: 'https://weibo.com/ttarticle/p/show?id=2309404619352241471539'
+  url: string | 'https://weibo.com/ttarticle/p/show?id=2309404619352241471539'
   is_pay: 0
   is_reward: 0
   is_vclub: 0
@@ -437,45 +437,45 @@ export type TypeWeiboArticleRecord = {
   pay_status: 0
   follow_to_read: 1
   userinfo: {
-    uid: 1221171697
-    id: 1221171697
-    screen_name: '兔主席'
-    description: '大历史。大社会。 独立。理性。批判。建设。'
-    followers_count: 1762801
-    friends_count: 465
-    verified: true
-    verified_type: 0
-    verified_type_ext: 0
-    verified_reason: '知名历史博主 头条文章作者'
-    avatar_large: 'https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=rphdPBquHf'
-    profile_image_url: 'https://tva3.sinaimg.cn/crop.0.0.180.180.50/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=eXClERRC%2FH'
-    cover_image: ''
-    cover_image_phone: 'https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg'
-    following: false
-    mbtype: 11
-    mbrank: 6
-    url: 'https://weibo.com/u/1221171697'
-    target_url: 'https://m.weibo.cn/profile/1221171697'
-    scheme_url: 'sinaweibo://userinfo?uid=1221171697'
-    is_vclub: 0
-    is_vclub_gold: 0
+    uid: 1221171697 | number
+    id: 1221171697 | number
+    screen_name: '兔主席' | string
+    description: '大历史。大社会。 独立。理性。批判。建设。' | string
+    followers_count: 1762801 | number
+    friends_count: 465 | number
+    verified: boolean
+    verified_type: 0 | 1
+    verified_type_ext: 0 | 1
+    verified_reason: '知名历史博主 头条文章作者' | string
+    avatar_large: string | 'https://tva3.sinaimg.cn/crop.0.0.180.180.180/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=rphdPBquHf'
+    profile_image_url: string | 'https://tva3.sinaimg.cn/crop.0.0.180.180.50/48c999f1jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1616914030&ssig=eXClERRC%2FH'
+    cover_image: string | ''
+    cover_image_phone: string | 'https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg'
+    following: boolean
+    mbtype: number
+    mbrank: number
+    url: string | 'https://weibo.com/u/1221171697'
+    target_url: string | 'https://m.weibo.cn/profile/1221171697'
+    scheme_url: string | 'sinaweibo://userinfo?uid=1221171697'
+    is_vclub: 0 | 1
+    is_vclub_gold: 0 | 1
   }
-  content: '文本内容'
+  content: string | '文本内容'
   is_import: 0
   is_repost_to_share: 0
   reward_data: {
-    seller: 1221171697
+    seller: number | 1221171697
     bid: 1000207805
-    oid: '1022:2309404619352241471539'
+    oid: string | '1022:2309404619352241471539'
     access_type: 'mobileLayer'
     share: 1
-    sign: '6233ad671c5222c7f2aee451af28a202'
+    sign: string | '6233ad671c5222c7f2aee451af28a202'
   }
   copyright: 0
-  mid: 4619352240819112
+  mid: 4619352240819112 | string
   is_word: 1
   article_browser: 1
-  scheme_url: 'sinaweibo://articlebrowser?object_id=1022:2309404619352241471539&url=https%3A%2F%2Fcard.weibo.com%2Farticle%2Fm%2Fshow%2Fid%2F2309404619352241471539'
+  scheme_url: string | 'sinaweibo://articlebrowser?object_id=1022:2309404619352241471539&url=https%3A%2F%2Fcard.weibo.com%2Farticle%2Fm%2Fshow%2Fid%2F2309404619352241471539'
   article_recommend: []
   article_recommend_info: {
     type: 1
@@ -496,7 +496,7 @@ export type TypeWeiboArticleRecord = {
   pay_data: {
     version: '531294344d21a6d3'
     ua: 'h5'
-    vuid: 1221171697
+    vuid: 1221171697 | number
     body_btn: []
     footer_btn: []
   }
@@ -506,6 +506,41 @@ export type TypeWeiboArticleRecord = {
   hide_repost_button: 0
   article_fingerprinting: 'f8a66a53c0cf5b726a6703d83df4fdd9'
   is_follow: 0
+}
+
+export type TypeWeiboArticleRecordOld = {
+  "article": "xxxxxxx"
+  "config": {
+    "uid": "5687069307",
+    "id": "",
+    "cid": "1001603925683628839885",
+    "vid": "7305723493",
+    "object_id": "1022:1001603925683628839885",
+    "v_p": "5",
+    "from": "1110006030",
+    "wm": "",
+    "ip": "",
+    "containerid": "1001603925683628839885",
+    "v": "1",
+    "page": "1",
+    "count": "20",
+    "index_count": "3",
+    "max_id": "0",
+    "read_count": "29715",
+    "is_owner": "",
+    "is_login": "1",
+    "desc": "\u5199\u5728\u524d\u9762\uff0c\u91cd\u8981\uff1a\u670b\u53cb\u4eec\uff0c\u5f00\u59cb\u6d4f\u89c8\u672c\u6708ETF\u8ba1\u5212\u524d\uff0c\u8bf7\u4ed4\u7ec6\u9605\u8bfb\u4ee5\u4e0b\u4e24\u70b9\uff1a1\u3001\u672c\u8ba1\u5212\u7edd\u975e\u4efb\u4f55\u5f62\u5f0f\u7684\u6295\u8d44\u5efa\u8bae\u6216\u662f\u6295\u8d44\u6307\u5bfc\u3002\u5728\u8fd9\u91cc\uff0c\u4ec5\u4ec5\u662f\u5c06\u672c\u4eba\u5341\u5e74\u524d\u5f00\u59cb\uff0c\u4e00\u4e9b\u670b\u53cb\u4e94\u5e74\u524d\u5f00\u59cb\u8fdb\u884c\u7684\u4e00\u4e2a\u6295\u8d44\u6307\u6570\u7684\u8ba1\u5212\u516c\u4e4b\u4e8e\u4f17\uff0c",
+    "image": "https:\/\/ww1.sinaimg.cn\/bmiddle\/006cSmwjgw1ezhfldti8jj307j04jjri.jpg",
+    "author": "ETF\u62ef\u6551\u4e16\u754c",
+    "card_ad": false,
+    "comment": true,
+    "ispay": 0,
+    "third_module": true,
+    "copyright": 0
+  },
+  "scripts": "",
+  "title": "投资指数才是你进行金融投资的最佳方式",
+  "version": "3"
 }
 
 /**
