@@ -279,7 +279,7 @@ export default class Weibo extends Base {
           "is_vclub": 0,
           "is_vclub_gold": 0
         },
-        "content": '',
+        "content": oldArticleConfig.article,
         "is_import": 0,
         "is_repost_to_share": 0,
         "reward_data": {

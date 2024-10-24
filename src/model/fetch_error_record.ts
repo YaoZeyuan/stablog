@@ -17,7 +17,7 @@ type TypeFetchErrorRecord = {
 }
 
 export default class FetchErrorRecord extends Base {
-  static TABLE_NAME = `total_mblog`
+  static TABLE_NAME = `fetch_error_record`
   static TABLE_COLUMN = [
     // `id`,
     `author_uid`,
