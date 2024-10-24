@@ -60,7 +60,11 @@ export default class Weibo extends Base {
     st: string,
     author_uid: string,
     page: number = 1,
-  ): Promise<Array<TypeWeibo.TypeWeiboRecord>> {
+  ): Promise<{
+    recordList: TypeWeibo.TypeWeiboRecord[],
+    isSuccess: boolean,
+    errorInfo: any
+  }> {
     let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
     const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&page=${page}`
     const config = {
@@ -69,30 +73,45 @@ export default class Weibo extends Base {
       // page: page,
     }
     // console.log('url =>', baseUrl)
-    let weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http
-      .get(baseUrl, {
-        params: config,
-        headers: {
-          accept: 'application/json, text/plain, */*',
-          'mweibo-pwa': 1,
-          'sec-fetch-mode': 'cors',
-          'x-requested-with': 'XMLHttpRequest',
-          'x-xsrf-token': st,
-          'referer': `https://m.weibo.cn/p/${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`,
-        },
-      })
-      .catch((e) => {
-        return undefined
-      })
+    let weiboResponse: TypeWeibo.TypeWeiboListResponse = {} as any
+    try {
+      weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http
+        .get(baseUrl, {
+          params: config,
+          headers: {
+            accept: 'application/json, text/plain, */*',
+            'mweibo-pwa': 1,
+            'sec-fetch-mode': 'cors',
+            'x-requested-with': 'XMLHttpRequest',
+            'x-xsrf-token': st,
+            'referer': `https://m.weibo.cn/p/${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`,
+          },
+        })
+    } catch (e) {
+      return {
+        recordList: [],
+        isSuccess: false,
+        errorInfo: e
+      }
+    }
+
     if (_.isEmpty(weiboResponse?.data?.cards)) {
-      return []
+      return {
+        recordList: [],
+        isSuccess: weiboResponse?.msg === '这里还没有内容',
+        errorInfo: {}
+      }
     }
     const rawRecordList = weiboResponse?.data?.cards || []
     // 需要按cardType进行过滤, 只要id为9的(微博卡片)
     let recordList = rawRecordList.filter((item) => {
       return item.card_type === 9
     })
-    return recordList
+    return {
+      recordList,
+      isSuccess: true,
+      errorInfo: {}
+    }
   }
 
   /**

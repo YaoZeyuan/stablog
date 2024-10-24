@@ -386,7 +386,8 @@ export type TypeWeiboRecord = {
 }
 
 export type TypeWeiboListResponse = {
-  ok: 1
+  ok: 1 | 0
+  msg: "" | '这里还没有内容'
   data: {
     cardlistInfo: {
       containerid: '1076031221171697'

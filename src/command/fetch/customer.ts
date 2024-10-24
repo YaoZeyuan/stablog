@@ -200,11 +200,10 @@ class FetchCustomer extends Base {
   async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
-    let rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page).catch((e) => {
-      // 避免crash导致整个进程退出
-      return []
-    })
-    if (rawMblogList.length === 0) {
+    let rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+
+
+    if (rawMBlogRes.isSuccess === false) {
       // 说明抓取失败, 等待30s后重试一次
       this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
       await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
@@ -212,22 +211,22 @@ class FetchCustomer extends Base {
       let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
       this.requestConfig.st = newSt
       // 带着新st重新抓取一次
-      rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+      rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
     }
-    if (rawMblogList.length === 0) {
+    if (rawMBlogRes.isSuccess === false) {
       this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
       await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-      rawMblogList = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+      rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
     }
-    if (rawMblogList.length === 0) {
-      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取`)
+    if (rawMBlogRes.isSuccess === false) {
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取, 记录到数据库中`)
       await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
       return
     }
     let mblogList: Array<TypeWeibo.TypeMblog> = []
 
     // 此处要根据微博类型进行具体定制
-    for (let rawMblog of rawMblogList) {
+    for (let rawMblog of rawMBlogRes.recordList) {
       let mblog = rawMblog.mblog
       if (_.isEmpty(mblog) || _.isEmpty(mblog.user)) {
         // 数据为空自动跳过
