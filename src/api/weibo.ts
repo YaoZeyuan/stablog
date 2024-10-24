@@ -21,9 +21,9 @@ export default class Weibo extends Base {
    */
   static async asyncStep1FetchPageConfigSt() {
     let url = 'https://m.weibo.cn/p/index'
-    let responseHtml = await Base.http.get(url)
     let st = ''
     try {
+      let responseHtml = await Base.http.get(url)
       let scriptContent = responseHtml.split('<router-view>')[1]
       let rawJsContent = scriptContent.split('<script>')[1]
       let jsContent = rawJsContent.split('</script>')[0]
@@ -45,8 +45,8 @@ export default class Weibo extends Base {
         'X-Requested-With': 'XMLHttpRequest',
         'X-XSRF-TOKEN': st,
       },
-    })
-    let newSt: string = _.get(responseConfig, ['data', 'st'], '')
+    }).catch(e => { return {} })
+    let newSt: string = responseConfig?.['data']?.['st'] ?? ''
     return newSt
   }
 
@@ -131,11 +131,8 @@ export default class Weibo extends Base {
     console.log('url =>', baseUrl)
     const weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
       params: config,
-    })
-    if (_.isEmpty(weiboResponse.data.cards)) {
-      return []
-    }
-    const rawRecordList = weiboResponse.data.cards
+    }).catch(e => { return {} })
+    const rawRecordList = weiboResponse?.data?.cards ?? []
     // 需要按cardType进行过滤, 只要id为9的(微博卡片)
     let recordList = rawRecordList.filter((item) => {
       return item.card_type === 9
@@ -158,9 +155,19 @@ export default class Weibo extends Base {
         'x-xsrf-token': st,
         referer: `https://m.weibo.cn/profile/${author_uid}`,
       },
+    }).catch(e => {
+      this.logger.log(`网络请求失败, 您的账号可能因抓取频繁被认为有风险, 请6小时后再试`)
+      this.logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
+      // 避免由于status不存在导致进程退出
+      let errorStatus = _.get(e, ['response', 'status'], '')
+      if (errorStatus === 404) {
+        return undefined
+      }
+
+      return {}
     })
-    const responseData = rawResponse.data
-    return responseData.user.statuses_count
+    const responseData = rawResponse?.data ?? {}
+    return responseData?.user?.statuses_count ?? 0
   }
 
   /**
