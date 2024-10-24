@@ -223,7 +223,7 @@ export default class Weibo extends Base {
     let json: TypeWeibo.TypeWeiboArticleRecord = _.get(response, ['data'], {})
     if (isOldArticle) {
       const oldArticleConfig = json as unknown as TypeWeibo.TypeWeiboArticleRecordOld
-      const defaultTitleImage = 'https://ww4.sinaimg.cn/crop.0.0.1280.719.1000.562/006cSmwjgw1f5e8xstgc4j30zk0k0whp.jpg'
+      const defaultTitleImage = ''//'''https://ww4.sinaimg.cn/crop.0.0.1280.719.1000.562/006cSmwjgw1f5e8xstgc4j30zk0k0whp.jpg'
       // 需要将旧字段处理成新文章字段
       json = {
         "object_id": "1022:2309404958925064634396",
@@ -266,10 +266,10 @@ export default class Weibo extends Base {
           "verified_type": 1,
           "verified_type_ext": 1,
           "verified_reason": "",
-          "avatar_large": "https://tvax2.sinaimg.cn/crop.0.0.996.996.180/008vY20Uly8hbuu0rz23xj30ro0ro750.jpg?KID=imgbed,tva&Expires=1729790414&ssig=e33S6uSCOG",
-          "profile_image_url": "https://tvax2.sinaimg.cn/crop.0.0.996.996.50/008vY20Uly8hbuu0rz23xj30ro0ro750.jpg?KID=imgbed,tva&Expires=1729790414&ssig=vKXOlLj4Xj",
+          "avatar_large": "",
+          "profile_image_url": "",
           "cover_image": "",
-          "cover_image_phone": "https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg",
+          "cover_image_phone": "",
           "following": false,
           "mbtype": 12,
           "mbrank": 4,
