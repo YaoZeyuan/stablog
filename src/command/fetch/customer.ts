@@ -47,7 +47,7 @@ function getArticleId(rawUrl = '') {
     return ''
   }
   // 需要多次解析，才能将url完全解码成正常文本
-  let decodeUrl = unescape(unescape(unescape(rawUrl)))
+  let decodeUrl = decodeURI(decodeURI(decodeURI(rawUrl)))
   if (!decodeUrl) {
     return ''
   }
@@ -191,7 +191,7 @@ class FetchCustomer extends Base {
           })
           if (fetchRes.isSuccess === true) {
             const lastItem = fetchRes.mblogList[fetchRes.mblogList.length - 1]
-            lastest_page_mid = lastItem.mid ?? '0'
+            lastest_page_mid = lastItem?.mid ?? '0'
             // 有1次成功则归0
             lastest_page_offset = 0
           } else {
