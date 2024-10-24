@@ -9,6 +9,7 @@ import dayjs from 'dayjs'
 import ApiWeibo from '~/src/api/weibo'
 import MMblog from '~/src/model/mblog'
 import MMblogUser from '~/src/model/mblog_user'
+import MFetchErrorRecord from '~/src/model/fetch_error_record'
 import CommonUtil from '~/src/library/util/common'
 import * as TypeWeibo from '~/src/type/namespace/weibo'
 import Util from '~/src/library/util/common'
@@ -171,6 +172,9 @@ class FetchCustomer extends Base {
       let maxFetchPageNo = this.fetchEndAtPageNo <= totalPageCount ? this.fetchEndAtPageNo : totalPageCount
       this.log(`本次抓取的页码范围为:${this.fetchStartAtPageNo}~${maxFetchPageNo}`)
 
+      // 记录最近一次成功的微博mid, 方便后续重抓
+      let lastest_page_mid = '0'
+      let lastest_page_offset = 0 // 从0开始记录, 在fetchMblogListAndSaveToDb中自动加1
       for (let page = 1; page <= totalPageCount; page++) {
         if (page < this.fetchStartAtPageNo) {
           page = this.fetchStartAtPageNo
@@ -179,7 +183,24 @@ class FetchCustomer extends Base {
         if (page > this.fetchEndAtPageNo) {
           this.log(`已抓取至设定的第${page}/${this.fetchEndAtPageNo}页数据, 自动跳过抓取`)
         } else {
-          await this.fetchMblogListAndSaveToDb(uid, page, totalPageCount)
+          const fetchRes = await this.fetchMblogListAndSaveToDb({
+            author_uid: uid,
+            page,
+            totalPage: totalPageCount,
+            lastest_page_mid: `${lastest_page_mid}`,
+            lastest_page_offset,
+          })
+          if (fetchRes.isSuccess === true) {
+            const lastItem = fetchRes.mblogList[fetchRes.mblogList.length - 1]
+            lastest_page_mid = lastItem.mid ?? '0'
+            // 有1次成功则归0
+            lastest_page_offset = 0
+          } else {
+            // 失败时mid不需要变
+            // lastest_page_mid 
+            // page_offset递增1
+            lastest_page_offset = lastest_page_offset + 1
+          }
           // 微博的反爬虫措施太强, 只能用每20s抓一次的方式拿数据🤦‍♂️
           this.log(`已抓取${page}/${totalPageCount}页记录, 休眠${Const_Fetch_Wati_Seconds}s, 避免被封`)
           await Util.asyncSleep(Const_Fetch_Wati_Seconds * 1000)
@@ -197,11 +218,16 @@ class FetchCustomer extends Base {
    * @param totalPage
    * @param newFormatRecordMap
    */
-  async fetchMblogListAndSaveToDb(author_uid: string, page: number, totalPage: number) {
+  async fetchMblogListAndSaveToDb({
+    author_uid,
+    page,
+    totalPage,
+    lastest_page_mid,
+    lastest_page_offset = 1
+  }: { author_uid: string, page: number, totalPage: number, lastest_page_mid: string, lastest_page_offset: number }) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
     let rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
-
 
     if (rawMBlogRes.isSuccess === false) {
       // 说明抓取失败, 等待30s后重试一次
@@ -219,9 +245,36 @@ class FetchCustomer extends Base {
       rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
     }
     if (rawMBlogRes.isSuccess === false) {
-      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取, 记录到数据库中`)
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取, 记录到数据库中待后续重抓`)
+
+      this.log(`${author_uid}的第${page}/${totalPage}页微博获取失败, 记入数据库, 待后续重试`)
+
+      await MFetchErrorRecord.asyncAddErrorRecord({
+        author_uid: author_uid,
+        resource_type: 'weibo_page',
+        long_text_weibo_id: '',
+        article_url: '',
+        lastest_page_mid: lastest_page_mid,
+        // 比上次抓取的offset+1
+        lastest_page_offset: lastest_page_offset + 1,
+        debug_info_json: JSON.stringify(
+          {
+            author_uid,
+            page,
+            totalPage
+          }
+        ),
+        error_info_json: JSON.stringify({
+          message: rawMBlogRes.errorInfo.message,
+          stack: rawMBlogRes.errorInfo.stack
+        })
+      })
+
       await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-      return
+      return {
+        isSuccess: false,
+        mblogList: []
+      }
     }
     let mblogList: Array<TypeWeibo.TypeMblog> = []
 
@@ -240,8 +293,29 @@ class FetchCustomer extends Base {
         let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo({
           bid,
           st: this.requestConfig.st
-        }).catch((e) => {
-          // 避免crash导致整个进程退出
+        }).catch(async (e) => {
+          // 记录抓取失败信息 & 避免crash导致整个进程退出 
+          this.log(`${author_uid}的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
+          const errorInfo = e as Error
+
+          await MFetchErrorRecord.asyncAddErrorRecord({
+            author_uid: author_uid,
+            resource_type: 'long_text_weibo',
+            long_text_weibo_id: rawMblog.mblog.bid,
+            article_url: '',
+            lastest_page_mid: '',
+            lastest_page_offset: 0,
+            debug_info_json: JSON.stringify(
+              {
+                rawMblog,
+                isRetweet: false
+              }
+            ),
+            error_info_json: JSON.stringify({
+              message: errorInfo.message,
+              stack: errorInfo.stack
+            })
+          })
           return {}
         })
         if (_.isEmpty(realMblog)) {
@@ -254,7 +328,33 @@ class FetchCustomer extends Base {
         if (rawMblog.mblog.retweeted_status.isLongText === true) {
           // 转发微博属于长微博
           let bid = rawMblog.mblog.retweeted_status.bid
-          let realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
+          let realRetweetMblog: TypeWeibo.TypeMblog | undefined = undefined
+          try {
+            realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
+          } catch (e) {
+            // 记录抓取失败信息 & 避免crash导致整个进程退出 
+            this.log(`${author_uid}转发的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
+            const errorInfo = e as Error
+
+            await MFetchErrorRecord.asyncAddErrorRecord({
+              author_uid: author_uid,
+              resource_type: 'long_text_weibo',
+              long_text_weibo_id: rawMblog.mblog.bid,
+              article_url: '',
+              lastest_page_mid: '',
+              lastest_page_offset: 0,
+              debug_info_json: JSON.stringify(
+                {
+                  rawMblog,
+                  isRetweet: true
+                }
+              ),
+              error_info_json: JSON.stringify({
+                message: errorInfo.message,
+                stack: errorInfo.stack
+              })
+            })
+          }
           mblog.retweeted_status = realRetweetMblog
         }
         if (
@@ -265,8 +365,31 @@ class FetchCustomer extends Base {
           // 转发的是微博文章
           let pageInfo = rawMblog.mblog.retweeted_status.page_info
           let articleId = getArticleId(pageInfo.page_url)
-          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch((e) => {
-            // 避免crash导致整个进程退出
+          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
+            // 记录抓取失败信息 & 避免crash导致整个进程退出 
+            this.log(`${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
+            const errorInfo = e as Error
+
+            await MFetchErrorRecord.asyncAddErrorRecord({
+              author_uid: author_uid,
+              resource_type: 'article',
+              long_text_weibo_id: '',
+              article_url: pageInfo.page_url,
+              lastest_page_mid: '',
+              lastest_page_offset: 0,
+              debug_info_json: JSON.stringify(
+                {
+                  rawMblog,
+                  page_url: pageInfo.page_url,
+                  isRetweet: true
+                }
+              ),
+              error_info_json: JSON.stringify({
+                message: errorInfo.message,
+                stack: errorInfo.stack
+              })
+            })
+
             return {}
           })
           if (_.isEmpty(articleRecord)) {
@@ -280,8 +403,31 @@ class FetchCustomer extends Base {
         // 文章类型为微博文章
         let pageInfo = rawMblog.mblog.page_info
         let articleId = getArticleId(pageInfo.page_url)
-        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch((e) => {
-          // 避免crash导致整个进程退出
+        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
+          // 记录抓取失败信息 & 避免crash导致整个进程退出 
+          this.log(`${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
+          const errorInfo = e as Error
+
+          await MFetchErrorRecord.asyncAddErrorRecord({
+            author_uid: author_uid,
+            resource_type: 'article',
+            long_text_weibo_id: '',
+            article_url: pageInfo.page_url,
+            lastest_page_mid: '',
+            lastest_page_offset: 0,
+            debug_info_json: JSON.stringify(
+              {
+                rawMblog,
+                page_url: pageInfo.page_url,
+                isRetweet: false
+              }
+            ),
+            error_info_json: JSON.stringify({
+              message: errorInfo.message,
+              stack: errorInfo.stack
+            })
+          })
+
           return {}
         })
         if (_.isEmpty(articleRecord)) {
@@ -324,6 +470,11 @@ class FetchCustomer extends Base {
       })
     }
     this.log(`${target}成功存入数据库`)
+    // 返回微博列表, 方便后续处理
+    return {
+      isSuccess: true,
+      mblogList
+    }
   }
 
   /**

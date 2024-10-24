@@ -88,10 +88,14 @@ export default class Weibo extends Base {
           },
         })
     } catch (e) {
+      const errorInfo = e as Error
       return {
         recordList: [],
         isSuccess: false,
-        errorInfo: e
+        errorInfo: {
+          message: errorInfo.message,
+          stack: errorInfo.stack
+        }
       }
     }
 

@@ -27,7 +27,7 @@ export default class FetchErrorRecord extends Base {
     `lastest_page_mid`,
     `lastest_page_offset`,
     `error_info_json`,
-    `debug_info`
+    `debug_info_json`
   ]
 
   /**
@@ -44,6 +44,38 @@ export default class FetchErrorRecord extends Base {
         console.log("e =>", e)
         return []
       })
+    return resultList
+  }
+
+  static async asyncAddErrorRecord({
+    author_uid,
+    resource_type,
+    long_text_weibo_id,
+    article_url,
+    lastest_page_mid,
+    lastest_page_offset,
+    debug_info_json = '{}',
+    error_info_json = '{}',
+  }: {
+    author_uid: string
+    resource_type: 'weibo_page' | 'long_text_weibo' | 'article';
+    long_text_weibo_id: string;
+    article_url: string;
+    lastest_page_mid: string;
+    lastest_page_offset: number;
+    debug_info_json?: string
+    error_info_json?: string
+  }) {
+    let resultList = <TypeFetchErrorRecord[]>await this.replaceInto({
+      author_uid,
+      resource_type,
+      long_text_weibo_id,
+      article_url,
+      lastest_page_mid,
+      lastest_page_offset,
+      error_info_json,
+      debug_info_json,
+    })
     return resultList
   }
 
