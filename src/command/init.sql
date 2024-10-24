@@ -11,7 +11,7 @@ CREATE TABLE  IF NOT EXISTS `total_mblog` (
 CREATE TABLE  IF NOT EXISTS `fetch_error_record` (
   `id` INTEGER AUTOINCREMENT, ---- COMMENT '记录id',
   `author_uid` varchar(30) NOT NULL DEFAULT '', ---- COMMENT '博主uid',
-  `type` varchar(30) NOT NULL DEFAULT 'page', ---- COMMENT '错误类型: page=>页面抓取失败, long_text_weibo => 长微博抓取失败, ',
+  `resource_type` varchar(30) NOT NULL DEFAULT 'weibo_page', ---- COMMENT '错误类型: weibo_page=>页面抓取失败, long_text_weibo => 长微博抓取失败, article => 文章抓取失败',
   `long_text_weibo_id` varchar(30) NOT NULL DEFAULT '' ---- COMMENT '抓取失败的长微博id',
   `article_url` varchar(1000) NOT NULL DEFAULT '' ---- COMMENT '抓取失败的微博文章url',
   `lastest_page_mid` varchar(30) NOT NULL DEFAULT '', ---- COMMENT '上一页成功抓取的微博id, 重抓时, 使用微博id进行抓取',
@@ -20,6 +20,10 @@ CREATE TABLE  IF NOT EXISTS `fetch_error_record` (
   `debug_info` text, --- COMMENT '当时运行配置, 用于调试'
   PRIMARY KEY (`id`)
 ); 
+
+---- 添加唯一索引, 方便执行replace into
+CREATE UNIQUE INDEX uniq_fetch_error_record
+on fetch_error_record (author_uid, resource_type, long_text_weibo_id, article_url, lastest_page_mid, lastest_page_offset);
 
 CREATE TABLE  IF NOT EXISTS `total_user` (
   `author_uid` varchar(30) NOT NULL DEFAULT '', ---- COMMENT '博主uid',
