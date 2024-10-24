@@ -218,7 +218,7 @@ class FetchCustomer extends Base {
    * @param totalPage
    * @param newFormatRecordMap
    */
-  async c({
+  async fetchMblogListAndSaveToDb({
     author_uid,
     page,
     totalPage,
