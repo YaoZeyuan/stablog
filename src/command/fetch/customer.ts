@@ -218,7 +218,7 @@ class FetchCustomer extends Base {
    * @param totalPage
    * @param newFormatRecordMap
    */
-  async fetchMblogListAndSaveToDb({
+  async c({
     author_uid,
     page,
     totalPage,
@@ -247,7 +247,7 @@ class FetchCustomer extends Base {
     if (rawMBlogRes.isSuccess === false) {
       this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取, 记录到数据库中待后续重抓`)
 
-      this.log(`${author_uid}的第${page}/${totalPage}页微博获取失败, 记入数据库, 待后续重试`)
+      this.log(`⚠️${author_uid}的第${page}/${totalPage}页微博获取失败, 记入数据库, 待后续重试`)
 
       await MFetchErrorRecord.asyncAddErrorRecord({
         author_uid: author_uid,
@@ -295,7 +295,7 @@ class FetchCustomer extends Base {
           st: this.requestConfig.st
         }).catch(async (e) => {
           // 记录抓取失败信息 & 避免crash导致整个进程退出 
-          this.log(`${author_uid}的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
+          this.log(`⚠️${author_uid}的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
           const errorInfo = e as Error
 
           await MFetchErrorRecord.asyncAddErrorRecord({
@@ -333,7 +333,7 @@ class FetchCustomer extends Base {
             realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
           } catch (e) {
             // 记录抓取失败信息 & 避免crash导致整个进程退出 
-            this.log(`${author_uid}转发的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
+            this.log(`⚠️${author_uid}转发的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
             const errorInfo = e as Error
 
             await MFetchErrorRecord.asyncAddErrorRecord({
@@ -367,7 +367,7 @@ class FetchCustomer extends Base {
           let articleId = getArticleId(pageInfo.page_url)
           let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
             // 记录抓取失败信息 & 避免crash导致整个进程退出 
-            this.log(`${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
+            this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
             const errorInfo = e as Error
 
             await MFetchErrorRecord.asyncAddErrorRecord({
@@ -405,7 +405,7 @@ class FetchCustomer extends Base {
         let articleId = getArticleId(pageInfo.page_url)
         let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
           // 记录抓取失败信息 & 避免crash导致整个进程退出 
-          this.log(`${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
+          this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
           const errorInfo = e as Error
 
           await MFetchErrorRecord.asyncAddErrorRecord({
