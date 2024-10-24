@@ -39,11 +39,11 @@ export default class Weibo extends Base {
     let url = 'https://m.weibo.cn/api/config'
     let responseConfig = await Base.http.get(url, {
       headers: {
-        Accept: 'application/json, text/plain, */*',
-        'MWeibo-Pwa': 1,
-        'Sec-Fetch-Mode': 'cors',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-XSRF-TOKEN': st,
+        accept: 'application/json, text/plain, */*',
+        'mweibo-pwa': 1,
+        'sec-fetch-mode': 'cors',
+        'x-requested-with': 'XMLHttpRequest',
+        'x-xsrf-token': st,
       },
     }).catch(e => { return {} })
     let newSt: string = responseConfig?.['data']?.['st'] ?? ''
@@ -148,15 +148,14 @@ export default class Weibo extends Base {
    * 微博列表中用户信息的total可能不准, 因此使用cardlistInfo中的字段
    */
   static async asyncGetWeiboCount({ author_uid, st }: { author_uid: string; st: string }): Promise<number> {
-    const baseUrl = `https://m.weibo.cn/profile/info`
-    const config = {
-      uid: author_uid,
-    }
+    const baseUrl = `https://m.weibo.cn/profile/info?uid=${author_uid}`
     const rawResponse = <TypeWeibo.Type_Profile_Info>await Base.http.get(baseUrl, {
-      params: config,
       headers: {
+        'mweibo-pwa': 1,
         'x-requested-with': 'XMLHttpRequest',
         'x-xsrf-token': st,
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+        'accept': 'application/json, text/plain, */*',
         referer: `https://m.weibo.cn/profile/${author_uid}`,
       },
     }).catch(e => {
