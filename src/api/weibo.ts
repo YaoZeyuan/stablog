@@ -143,6 +143,76 @@ export default class Weibo extends Base {
     })
     return recordList
   }
+
+  /**
+   * 根据sinceId获取用户微博列表, 接口返回值和通过page返回内容一致
+   * demo => https://m.weibo.cn/api/container/getIndex?containerid=2304132838824962_-_WEIBO_SECOND_PROFILE_WEIBO&page_type=03&since_id=5078832170406473
+   * @param author_uid
+   * @param page
+   */
+  static async asyncGetWeiboListBySinceId(
+    st: string,
+    author_uid: string,
+    since_id: string,
+  ): Promise<{
+    recordList: TypeWeibo.TypeWeiboRecord[],
+    isSuccess: boolean,
+    errorInfo: any
+  }> {
+    let containerId = `${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`
+    const baseUrl = `https://m.weibo.cn/api/container/getIndex?containerid=${containerId}&page_type=03&since_id=${since_id}`
+    const config = {
+      // containerid: containerId,
+      // page_type: '03',
+      // page: page,
+    }
+    // console.log('url =>', baseUrl)
+    let weiboResponse: TypeWeibo.TypeWeiboListResponse = {} as any
+    try {
+      weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http
+        .get(baseUrl, {
+          params: config,
+          headers: {
+            accept: 'application/json, text/plain, */*',
+            'mweibo-pwa': 1,
+            'sec-fetch-mode': 'cors',
+            'x-requested-with': 'XMLHttpRequest',
+            'x-xsrf-token': st,
+            'referer': `https://m.weibo.cn/p/${Total_Mblog_Container_Id}${author_uid}_-_WEIBO_SECOND_PROFILE_WEIBO`,
+          },
+        })
+    } catch (e) {
+      const errorInfo = e as Error
+      return {
+        recordList: [],
+        isSuccess: false,
+        errorInfo: {
+          message: errorInfo.message,
+          stack: errorInfo.stack
+        }
+      }
+    }
+
+    if (weiboResponse?.data?.cards?.[0]?.card_type === 58) {
+      // 没有数据时会返回cart_type 58
+      return {
+        recordList: [],
+        isSuccess: true,
+        errorInfo: {}
+      }
+    }
+    const rawRecordList = weiboResponse?.data?.cards || []
+    // 需要按cardType进行过滤, 只要id为9的(微博卡片)
+    let recordList = rawRecordList.filter((item) => {
+      return item.card_type === 9
+    })
+    return {
+      recordList,
+      isSuccess: true,
+      errorInfo: {}
+    }
+  }
+
   /**
    * 获取用户微博总数
    * 微博列表中用户信息的total可能不准, 因此使用cardlistInfo中的字段
