@@ -31,52 +31,6 @@ const Const_Retry_Wait_Seconds = 30
  */
 const Const_Fetch_Wati_Seconds = 20
 
-/**
- * 解析微博文章id，方便构造api, 抓取文章内容
- * @param rawUrl
- * 原始
- * rawurl格式 => https://m.weibo.cn/feature/applink?scheme=sinaweibo%3A%2F%2Farticlebrowser%3Fobject_id%3D1022%253A2309404446645566701785%26url%3Dhttps%253A%252F%252Fcard.weibo.com%252Farticle%252Fm%252Fshow%252Fid%252F2309404446645566701785%253F_wb_client_%253D1%26extparam%3Dlmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
- * 解码后=>  https://m.weibo.cn/feature/applink?scheme=sinaweibo://articlebrowser?object_id=1022:2309404446645566701785&url=https://card.weibo.com/article/m/show/id/2309404446645566701785?_wb_client_=1&extparam=lmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
- * 2021年3月28日新增
- * rawurl格式 => https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
- * 2024年10月22日新增
- * http://weibo.com/p/1001603893058344251505?luicode=20000174
- */
-function getArticleId(rawUrl = '') {
-  if (!rawUrl) {
-    return ''
-  }
-  // 需要多次解析，才能将url完全解码成正常文本
-  let decodeUrl = decodeURI(decodeURI(decodeURI(rawUrl)))
-  if (!decodeUrl) {
-    return ''
-  }
-  if (decodeUrl.includes('id=') && decodeUrl.includes('/ttarticle/p/show')) {
-    // 说明是新格式 https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
-    let rawQuery = querystring.parseUrl(decodeUrl).query
-    let articleId = rawQuery?.id || ''
-    return articleId
-  }
-  if (decodeUrl.includes("weibo.com/p/")) {
-    let rawContent = rawUrl.split("weibo.com/p/")?.[1] ?? "";
-    let articleId = rawContent.split("?")?.[0] ?? ""
-    return articleId
-  }
-
-  let rawArticleUrl = decodeUrl.split('url=')[1]
-  if (!rawArticleUrl) {
-    return ''
-  }
-  let baseArticleUrl = rawArticleUrl.split('?')[0] // url => 'https://card.weibo.com/article/m/show/id/2309404446645566701785'
-  if (!baseArticleUrl) {
-    return ''
-  }
-  let articleId = baseArticleUrl.split('show/id/')[1]
-  if (!articleId) {
-    return ''
-  }
-  return articleId
-}
 
 class FetchCustomer extends Base {
   fetchStartAtPageNo = 0
@@ -498,10 +452,11 @@ class FetchCustomer extends Base {
         return {}
       })
       if (_.isEmpty(realMblog)) {
-        return undefined
+        return mblog
       }
       return realMblog
     }
+
     if (_.isEmpty(mblog.retweeted_status) == false && mblog.retweeted_status !== undefined) {
       if (mblog.retweeted_status.isLongText === true) {
         // 转发微博属于长微博
@@ -545,7 +500,7 @@ class FetchCustomer extends Base {
       ) {
         // 转发的是微博文章
         let pageInfo = mblog.retweeted_status.page_info
-        let articleId = getArticleId(pageInfo.page_url)
+        let articleId = this.getArticleId(pageInfo.page_url)
         let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
           // 记录抓取失败信息 & 避免crash导致整个进程退出 
           this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
@@ -583,7 +538,7 @@ class FetchCustomer extends Base {
     if (mblog?.page_info?.type === 'article') {
       // 文章类型为微博文章
       let pageInfo = mblog.page_info
-      let articleId = getArticleId(pageInfo.page_url)
+      let articleId = this.getArticleId(pageInfo.page_url)
       let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
         // 记录抓取失败信息 & 避免crash导致整个进程退出 
         this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
@@ -654,6 +609,52 @@ class FetchCustomer extends Base {
       return
     })
     return true
+  }
+  /**
+   * 解析微博文章id，方便构造api, 抓取文章内容
+   * @param rawUrl
+   * 原始
+   * rawurl格式 => https://m.weibo.cn/feature/applink?scheme=sinaweibo%3A%2F%2Farticlebrowser%3Fobject_id%3D1022%253A2309404446645566701785%26url%3Dhttps%253A%252F%252Fcard.weibo.com%252Farticle%252Fm%252Fshow%252Fid%252F2309404446645566701785%253F_wb_client_%253D1%26extparam%3Dlmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
+   * 解码后=>  https://m.weibo.cn/feature/applink?scheme=sinaweibo://articlebrowser?object_id=1022:2309404446645566701785&url=https://card.weibo.com/article/m/show/id/2309404446645566701785?_wb_client_=1&extparam=lmid--4446645569803228&luicode=10000011&lfid=2304131913094142_-_WEIBO_SECOND_PROFILE_WEIBO
+   * 2021年3月28日新增
+   * rawurl格式 => https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
+   * 2024年10月22日新增
+   * http://weibo.com/p/1001603893058344251505?luicode=20000174
+   */
+  private getArticleId(rawUrl = '') {
+    if (!rawUrl) {
+      return ''
+    }
+    // 需要多次解析，才能将url完全解码成正常文本
+    let decodeUrl = decodeURI(decodeURI(decodeURI(rawUrl)))
+    if (!decodeUrl) {
+      return ''
+    }
+    if (decodeUrl.includes('id=') && decodeUrl.includes('/ttarticle/p/show')) {
+      // 说明是新格式 https://weibo.com/ttarticle/p/show?id=2309404619352241471539&luicode=10000011&lfid=2304131221171697_-_WEIBO_SECOND_PROFILE_WEIBO
+      let rawQuery = querystring.parseUrl(decodeUrl).query
+      let articleId = rawQuery?.id as string || ''
+      return articleId
+    }
+    if (decodeUrl.includes("weibo.com/p/")) {
+      let rawContent = rawUrl.split("weibo.com/p/")?.[1] ?? "";
+      let articleId = rawContent.split("?")?.[0] ?? ""
+      return articleId
+    }
+
+    let rawArticleUrl = decodeUrl.split('url=')[1]
+    if (!rawArticleUrl) {
+      return ''
+    }
+    let baseArticleUrl = rawArticleUrl.split('?')[0] // url => 'https://card.weibo.com/article/m/show/id/2309404446645566701785'
+    if (!baseArticleUrl) {
+      return ''
+    }
+    let articleId = baseArticleUrl.split('show/id/')[1]
+    if (!articleId) {
+      return ''
+    }
+    return articleId
   }
 }
 
