@@ -293,7 +293,6 @@ class FetchCustomer extends Base {
         // 数据为空自动跳过
         continue
       }
-
       // 检查是否是长微博
       if (rawMblog.mblog.isLongText === true) {
         // 长微博需要调取api重新获得微博内容
@@ -450,32 +449,7 @@ class FetchCustomer extends Base {
     this.log(`${target}抓取成功, 准备存入数据库`)
     for (let mblog of mblogList) {
       // 处理完毕, 将数据存入数据库中
-      let id = mblog.id
-      let author_uid = `${mblog.user.id}`
-      let createAt = 0
-      // 目前微博的created_at字段均为标准时区字符串格式
-      createAt = this.parseMblogCreateTimestamp(mblog)
-      mblog.created_timestamp_at = createAt
-      let raw_json = JSON.stringify(mblog)
-      let is_retweet = mblog.retweeted_status ? 1 : 0
-      let is_article = mblog.article ? 1 : 0
-
-      // 这里可能会出报SQLITE_BUSY: database is locked
-      await MMblog.replaceInto({
-        id,
-        author_uid,
-        is_retweet,
-        is_article,
-        raw_json,
-        post_publish_at: mblog.created_timestamp_at,
-      }).catch((e: Error) => {
-        this.log('数据库插入出错 => ', {
-          name: e?.name,
-          message: e?.message,
-          stack: e?.stack,
-        })
-        return
-      })
+      await this.asyncReplaceMblogIntoDb(mblog)
     }
     this.log(`${target}成功存入数据库`)
     // 返回微博列表, 方便后续处理
@@ -536,8 +510,32 @@ class FetchCustomer extends Base {
     this.log(`首先获取加载失败的页面`)
     for (let errorPageConfig of pageFetchFailedList) {
       this.log(`从mid${errorPageConfig.lastest_page_mid}后, 有${errorPageConfig.lastest_page_offset}页加载失败, 开始重新获取`)
-
+      const res = await this.asyncFetchBySinceMid({
+        author_uid,
+        "mid": errorPageConfig.lastest_page_mid,
+        "needFetchPage": errorPageConfig.lastest_page_offset,
+      })
+      if (res.isSuccess === false) {
+        this.log(`重新获取mid:${errorPageConfig.lastest_page_mid}对应的${errorPageConfig.lastest_page_offset}页失败, 跳过该部分`)
+        continue
+      }
+      this.log(`获取mid:${errorPageConfig.lastest_page_mid}对应的${errorPageConfig.lastest_page_offset}页成功, 录入数据库`)
+      for (let mblog of mblogList) {
+        // 处理完毕, 将数据存入数据库中
+        await this.asyncReplaceMblogIntoDb(mblog)
+      }
+      // 然后删除旧记录
+      // await MFetchErrorRecord.asyncRemoveErrorRecord({
+      //   author_uid,
+      //   resource_type: errorPageConfig.resource_type,
+      //   "lastest_page_mid": errorPageConfig.lastest_page_mid,
+      //   "lastest_page_offset": errorPageConfig.lastest_page_offset,
+      //   "long_text_weibo_id": errorPageConfig.long_text_weibo_id,
+      //   "article_url": errorPageConfig.article_url
+      // })
     }
+    this.log(`开始重新获取文章/长微博数据`)
+
 
   }
 
@@ -546,12 +544,12 @@ class FetchCustomer extends Base {
    * @param mid 
    * @param needFetchPage 
    */
-  private async asyncFetchBySinceMid({ author_uid, mid, needFetchPage, st }: { author_uid: string, mid: string, st: string, needFetchPage: number }): Promise<{
-    recordList: TypeWeibo.TypeWeiboRecord[],
+  private async asyncFetchBySinceMid({ author_uid, mid, needFetchPage }: { author_uid: string, mid: string, needFetchPage: number }): Promise<{
+    recordList: TypeWeibo.TypeMblog[],
     isSuccess: boolean,
     errorInfo: any
   }> {
-    const weiboList: TypeWeibo.TypeWeiboRecord[] = []
+    const weiboList: TypeWeibo.TypeMblog[] = []
     // 最多重试5次
     const maxRetryCount = 5
     for (let offsetPage = 0; offsetPage < needFetchPage; offsetPage++) {
@@ -560,20 +558,20 @@ class FetchCustomer extends Base {
       this.log(`开始获取author_uid:${author_uid}从mid:${mid}开始的第${offsetPage + 1}/${needFetchPage}页的数据`)
       while (retryCount < maxRetryCount && isSuccess === false) {
         const res = await ApiWeibo.asyncGetWeiboListBySinceId({
-          st,
+          st: this.requestConfig.st,
           since_id: mid,
           author_uid
         })
         if (res.isSuccess) {
-          this.log(`第${retryCount + 1}次请求成功, 将获取到的微博记录添加至结果列表中`)
           // 请求成功后则无需重试
+          this.log(`第${retryCount + 1}次请求成功, 将获取到的微博记录添加至结果列表中`)
           isSuccess = true
           // 将结果录入列表中
-          weiboList.push(...res.recordList)
+          weiboList.push(...res.recordList.map(item => item.mblog))
           continue
         } else {
-          this.log(`第${retryCount + 1}次请求失败, 等待${Const_Retry_Wait_Seconds}s后重试`)
           // 否则, 增加一次重试次数
+          this.log(`第${retryCount + 1}次请求失败, 等待${Const_Retry_Wait_Seconds}s后重试`)
           retryCount++
           Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
         }
@@ -592,6 +590,42 @@ class FetchCustomer extends Base {
       isSuccess: true,
       errorInfo: {}
     }
+  }
+
+  /**
+   * 将单条微博数据存入数据库中
+   * @param mblog 
+   * @returns 
+   */
+  private async asyncReplaceMblogIntoDb(mblog: TypeWeibo.TypeMblog) {
+    // 处理完毕, 将数据存入数据库中
+    let id = mblog.id
+    let author_uid = `${mblog.user.id}`
+    let createAt = 0
+    // 目前微博的created_at字段均为标准时区字符串格式
+    createAt = this.parseMblogCreateTimestamp(mblog)
+    mblog.created_timestamp_at = createAt
+    let raw_json = JSON.stringify(mblog)
+    let is_retweet = mblog.retweeted_status ? 1 : 0
+    let is_article = mblog.article ? 1 : 0
+
+    // 这里可能会出报SQLITE_BUSY: database is locked
+    await MMblog.replaceInto({
+      id,
+      author_uid,
+      is_retweet,
+      is_article,
+      raw_json,
+      post_publish_at: mblog.created_timestamp_at,
+    }).catch((e: Error) => {
+      this.log('数据库插入出错 => ', {
+        name: e?.name,
+        message: e?.message,
+        stack: e?.stack,
+      })
+      return
+    })
+    return true
   }
 }
 
