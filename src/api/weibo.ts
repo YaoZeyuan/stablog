@@ -151,9 +151,16 @@ export default class Weibo extends Base {
    * @param page
    */
   static async asyncGetWeiboListBySinceId(
-    st: string,
-    author_uid: string,
-    since_id: string,
+    {
+      st,
+      author_uid,
+      since_id,
+    }: {
+
+      st: string,
+      author_uid: string,
+      since_id: string,
+    }
   ): Promise<{
     recordList: TypeWeibo.TypeWeiboRecord[],
     isSuccess: boolean,

@@ -486,7 +486,7 @@ class FetchCustomer extends Base {
   }
 
   /**
-   * 简单将微博发布时间解析为
+   * 简单将微博发布时间解析为时间戳
    * @param mlog
    */
   parseMblogCreateTimestamp(mlog: TypeWeibo.TypeMblog) {
@@ -509,6 +509,89 @@ class FetchCustomer extends Base {
     }
     // 否则, 为'2012-01-02'  模式, 直接解析即可
     return dayjs(rawCreateAtStr).unix()
+  }
+
+
+  async retryFetch(author_uid: string) {
+    const fetchErrorRecordList = await MFetchErrorRecord.asyncGetErrorRecordList(author_uid)
+    this.log(`准备抓取${author_uid}中, 所有失败的记录, 共${fetchErrorRecordList.length}项`)
+
+    const mblogList = fetchErrorRecordList
+      .filter(item => ["article", 'long_text_weibo'].includes(item.resource_type))
+      .filter(item => {
+        try {
+          JSON.parse(item.mblog_json)
+          return true
+        } catch (e) {
+          this.log(`记录的mblog_json解析失败, 自动跳过`, item)
+          return false
+        }
+      })
+      .map(item => {
+        const mblog = JSON.parse(item.mblog_json)
+        return mblog as TypeWeibo.TypeMblog
+      })
+    this.log(`准备等待重新抓取的微博记录整理完毕, 共${mblogList.length}项`)
+    const pageFetchFailedList = fetchErrorRecordList.filter(item => item.resource_type === 'weibo_page')
+    this.log(`首先获取加载失败的页面`)
+    for (let errorPageConfig of pageFetchFailedList) {
+      this.log(`从mid${errorPageConfig.lastest_page_mid}后, 有${errorPageConfig.lastest_page_offset}页加载失败, 开始重新获取`)
+
+    }
+
+  }
+
+  /**
+   * 从mid处, 连续获取needFetchPage条微博记录
+   * @param mid 
+   * @param needFetchPage 
+   */
+  private async asyncFetchBySinceMid({ author_uid, mid, needFetchPage, st }: { author_uid: string, mid: string, st: string, needFetchPage: number }): Promise<{
+    recordList: TypeWeibo.TypeWeiboRecord[],
+    isSuccess: boolean,
+    errorInfo: any
+  }> {
+    const weiboList: TypeWeibo.TypeWeiboRecord[] = []
+    // 最多重试5次
+    const maxRetryCount = 5
+    for (let offsetPage = 0; offsetPage < needFetchPage; offsetPage++) {
+      let retryCount = 0;
+      let isSuccess = false;
+      this.log(`开始获取author_uid:${author_uid}从mid:${mid}开始的第${offsetPage + 1}/${needFetchPage}页的数据`)
+      while (retryCount < maxRetryCount && isSuccess === false) {
+        const res = await ApiWeibo.asyncGetWeiboListBySinceId({
+          st,
+          since_id: mid,
+          author_uid
+        })
+        if (res.isSuccess) {
+          this.log(`第${retryCount + 1}次请求成功, 将获取到的微博记录添加至结果列表中`)
+          // 请求成功后则无需重试
+          isSuccess = true
+          // 将结果录入列表中
+          weiboList.push(...res.recordList)
+          continue
+        } else {
+          this.log(`第${retryCount + 1}次请求失败, 等待${Const_Retry_Wait_Seconds}s后重试`)
+          // 否则, 增加一次重试次数
+          retryCount++
+          Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+        }
+      }
+      if (isSuccess === false) {
+        this.log(`第${offsetPage + 1}页经过${maxRetryCount}次重试后仍失败, 跳过对该记录的补录`)
+        return {
+          recordList: [],
+          isSuccess: false,
+          errorInfo: {}
+        }
+      }
+    }
+    return {
+      recordList: weiboList,
+      isSuccess: true,
+      errorInfo: {}
+    }
   }
 }
 
