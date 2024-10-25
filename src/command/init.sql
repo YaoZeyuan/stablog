@@ -17,7 +17,8 @@ CREATE TABLE  IF NOT EXISTS `fetch_error_record` (
   `lastest_page_mid` varchar(30) NOT NULL DEFAULT '', ---- COMMENT '上一页成功抓取的微博id, 重抓时, 使用微博id进行抓取',
   `lastest_page_offset` int(10) NOT NULL DEFAULT 1, ---- COMMENT '距离最近成功抓取微博的页码, 重抓时, 通过该页面确认应向后抓取多少页, 默认只抓取一页',
   `error_info_json` text, --- COMMENT '报错内容json, 用于调试'
-  `debug_info_json` text --- COMMENT '当时运行配置, 用于调试'
+  `debug_info_json` text, --- COMMENT '当时运行配置, 用于调试'
+  `mblog_json` text --- COMMENT '故障微博记录, 二次抓取时使用'
 ); 
 
 ---- 添加唯一索引, 方便执行replace into

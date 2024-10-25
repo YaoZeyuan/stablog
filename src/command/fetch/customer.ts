@@ -174,6 +174,8 @@ class FetchCustomer extends Base {
       // 记录最近一次成功的微博mid, 方便后续重抓
       let lastest_page_mid = '0'
       let lastest_page_offset = 0 // 从0开始记录, 在fetchMblogListAndSaveToDb中自动加1
+      let lastest_page_mblog = {}
+
       for (let page = 1; page <= totalPageCount; page++) {
         if (page < this.fetchStartAtPageNo) {
           page = this.fetchStartAtPageNo
@@ -188,16 +190,21 @@ class FetchCustomer extends Base {
             totalPage: totalPageCount,
             lastest_page_mid: `${lastest_page_mid}`,
             lastest_page_offset,
+            lastest_page_mblog
           })
           if (fetchRes.isSuccess === true) {
-            const lastItem = fetchRes.mblogList[fetchRes.mblogList.length - 1]
-            lastest_page_mid = lastItem?.mid ?? '0'
+            lastest_page_mblog = fetchRes.mblogList[fetchRes.mblogList.length - 1] ?? {}
+            // @ts-ignore
+            lastest_page_mid = lastest_page_mblog?.mid ?? '0'
             // 有1次成功则归0
             lastest_page_offset = 0
+            lastest_page_mblog = {}
           } else {
             // 失败时mid不需要变
             // lastest_page_mid 
-            // page_offset递增1
+            // 最近成功微博也不需要变
+            // lastest_page_mblog
+            // 仅page_offset递增1
             lastest_page_offset = lastest_page_offset + 1
           }
           // 微博的反爬虫措施太强, 只能用每20s抓一次的方式拿数据🤦‍♂️
@@ -222,8 +229,9 @@ class FetchCustomer extends Base {
     page,
     totalPage,
     lastest_page_mid,
-    lastest_page_offset = 1
-  }: { author_uid: string, page: number, totalPage: number, lastest_page_mid: string, lastest_page_offset: number }) {
+    lastest_page_offset = 1,
+    lastest_page_mblog,
+  }: { author_uid: string, page: number, totalPage: number, lastest_page_mid: string, lastest_page_offset: number, lastest_page_mblog: any }) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
     let rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
@@ -266,7 +274,8 @@ class FetchCustomer extends Base {
         error_info_json: JSON.stringify({
           message: rawMBlogRes.errorInfo.message,
           stack: rawMBlogRes.errorInfo.stack
-        })
+        }),
+        mblog_json: JSON.stringify(lastest_page_mblog)
       })
 
       await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
@@ -306,14 +315,14 @@ class FetchCustomer extends Base {
             lastest_page_offset: 0,
             debug_info_json: JSON.stringify(
               {
-                rawMblog,
                 isRetweet: false
               }
             ),
             error_info_json: JSON.stringify({
               message: errorInfo.message,
               stack: errorInfo.stack
-            })
+            }),
+            mblog_json: JSON.stringify(rawMblog)
           })
           return {}
         })
@@ -344,14 +353,14 @@ class FetchCustomer extends Base {
               lastest_page_offset: 0,
               debug_info_json: JSON.stringify(
                 {
-                  rawMblog,
                   isRetweet: true
                 }
               ),
               error_info_json: JSON.stringify({
                 message: errorInfo.message,
                 stack: errorInfo.stack
-              })
+              }),
+              mblog_json: JSON.stringify(rawMblog)
             })
           }
           mblog.retweeted_status = realRetweetMblog
@@ -378,7 +387,6 @@ class FetchCustomer extends Base {
               lastest_page_offset: 0,
               debug_info_json: JSON.stringify(
                 {
-                  rawMblog,
                   page_url: pageInfo.page_url,
                   isRetweet: true
                 }
@@ -386,7 +394,8 @@ class FetchCustomer extends Base {
               error_info_json: JSON.stringify({
                 message: errorInfo.message,
                 stack: errorInfo.stack
-              })
+              }),
+              mblog_json: JSON.stringify(rawMblog)
             })
 
             return {}
@@ -416,7 +425,6 @@ class FetchCustomer extends Base {
             lastest_page_offset: 0,
             debug_info_json: JSON.stringify(
               {
-                rawMblog,
                 page_url: pageInfo.page_url,
                 isRetweet: false
               }
@@ -424,7 +432,8 @@ class FetchCustomer extends Base {
             error_info_json: JSON.stringify({
               message: errorInfo.message,
               stack: errorInfo.stack
-            })
+            }),
+            mblog_json: JSON.stringify(rawMblog)
           })
 
           return {}
