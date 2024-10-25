@@ -293,157 +293,15 @@ class FetchCustomer extends Base {
         // 数据为空自动跳过
         continue
       }
-      // 检查是否是长微博
-      if (rawMblog.mblog.isLongText === true) {
-        // 长微博需要调取api重新获得微博内容
-        let bid = rawMblog.mblog.bid
-        let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo({
-          bid,
-          st: this.requestConfig.st
-        }).catch(async (e) => {
-          // 记录抓取失败信息 & 避免crash导致整个进程退出 
-          this.log(`⚠️${author_uid}的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
-          const errorInfo = e as Error
-
-          await MFetchErrorRecord.asyncAddErrorRecord({
-            author_uid: author_uid,
-            resource_type: 'long_text_weibo',
-            long_text_weibo_id: rawMblog.mblog.bid,
-            article_url: '',
-            lastest_page_mid: '',
-            lastest_page_offset: 0,
-            debug_info_json: JSON.stringify(
-              {
-                isRetweet: false
-              }
-            ),
-            error_info_json: JSON.stringify({
-              message: errorInfo.message,
-              stack: errorInfo.stack
-            }),
-            mblog_json: JSON.stringify(rawMblog)
-          })
-          return {}
-        })
-        if (_.isEmpty(realMblog)) {
-          continue
-        }
-        // @ts-ignore
-        mblog = realMblog
+      const hydrateBlog = await this.asyncHydrateMBlog({
+        author_uid,
+        mblog
+      })
+      if (hydrateBlog === undefined) {
+        continue
       }
-      if (_.isEmpty(rawMblog.mblog.retweeted_status) == false && rawMblog.mblog.retweeted_status !== undefined) {
-        if (rawMblog.mblog.retweeted_status.isLongText === true) {
-          // 转发微博属于长微博
-          let bid = rawMblog.mblog.retweeted_status.bid
-          let realRetweetMblog: TypeWeibo.TypeMblog | undefined = undefined
-          try {
-            realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo(bid)
-          } catch (e) {
-            // 记录抓取失败信息 & 避免crash导致整个进程退出 
-            this.log(`⚠️${author_uid}转发的长微博${rawMblog.mblog.bid}获取失败, 记入数据库, 待后续重试`)
-            const errorInfo = e as Error
 
-            await MFetchErrorRecord.asyncAddErrorRecord({
-              author_uid: author_uid,
-              resource_type: 'long_text_weibo',
-              long_text_weibo_id: rawMblog.mblog.bid,
-              article_url: '',
-              lastest_page_mid: '',
-              lastest_page_offset: 0,
-              debug_info_json: JSON.stringify(
-                {
-                  isRetweet: true
-                }
-              ),
-              error_info_json: JSON.stringify({
-                message: errorInfo.message,
-                stack: errorInfo.stack
-              }),
-              mblog_json: JSON.stringify(rawMblog)
-            })
-          }
-          mblog.retweeted_status = realRetweetMblog
-        }
-        if (
-          rawMblog.mblog.retweeted_status !== undefined &&
-          rawMblog.mblog.retweeted_status.page_info !== undefined &&
-          rawMblog.mblog.retweeted_status.page_info.type === 'article'
-        ) {
-          // 转发的是微博文章
-          let pageInfo = rawMblog.mblog.retweeted_status.page_info
-          let articleId = getArticleId(pageInfo.page_url)
-          let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
-            // 记录抓取失败信息 & 避免crash导致整个进程退出 
-            this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
-            const errorInfo = e as Error
-
-            await MFetchErrorRecord.asyncAddErrorRecord({
-              author_uid: author_uid,
-              resource_type: 'article',
-              long_text_weibo_id: '',
-              article_url: pageInfo.page_url,
-              lastest_page_mid: '',
-              lastest_page_offset: 0,
-              debug_info_json: JSON.stringify(
-                {
-                  page_url: pageInfo.page_url,
-                  isRetweet: true
-                }
-              ),
-              error_info_json: JSON.stringify({
-                message: errorInfo.message,
-                stack: errorInfo.stack
-              }),
-              mblog_json: JSON.stringify(rawMblog)
-            })
-
-            return {}
-          })
-          if (_.isEmpty(articleRecord)) {
-            // 文章详情获取失败, 不储存该记录
-            continue
-          }
-          mblog.retweeted_status.article = articleRecord
-        }
-      }
-      if (rawMblog?.mblog?.page_info?.type === 'article') {
-        // 文章类型为微博文章
-        let pageInfo = rawMblog.mblog.page_info
-        let articleId = getArticleId(pageInfo.page_url)
-        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
-          // 记录抓取失败信息 & 避免crash导致整个进程退出 
-          this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
-          const errorInfo = e as Error
-
-          await MFetchErrorRecord.asyncAddErrorRecord({
-            author_uid: author_uid,
-            resource_type: 'article',
-            long_text_weibo_id: '',
-            article_url: pageInfo.page_url,
-            lastest_page_mid: '',
-            lastest_page_offset: 0,
-            debug_info_json: JSON.stringify(
-              {
-                page_url: pageInfo.page_url,
-                isRetweet: false
-              }
-            ),
-            error_info_json: JSON.stringify({
-              message: errorInfo.message,
-              stack: errorInfo.stack
-            }),
-            mblog_json: JSON.stringify(rawMblog)
-          })
-
-          return {}
-        })
-        if (_.isEmpty(articleRecord)) {
-          // 文章详情获取失败, 不储存该记录
-          continue
-        }
-        mblog.article = articleRecord
-      }
-      mblogList.push(mblog)
+      mblogList.push(hydrateBlog)
     }
 
     this.log(`${target}抓取成功, 准备存入数据库`)
@@ -590,6 +448,176 @@ class FetchCustomer extends Base {
       isSuccess: true,
       errorInfo: {}
     }
+  }
+
+
+  /**
+   * 补全微博数据(eg: 长微博/微博文章)
+   * @param mblog 
+   */
+  private async asyncHydrateMBlog({
+    author_uid,
+    mblog
+  }: {
+    author_uid: string, mblog: TypeWeibo.TypeMblog
+  }) {
+    if (_.isEmpty(mblog)) {
+      return undefined
+    }
+
+    // 检查是否是长微博
+    if (mblog.isLongText === true) {
+      // 长微博需要调取api重新获得微博内容
+      let bid = mblog.bid
+      let realMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo({
+        bid,
+        st: this.requestConfig.st
+      }).catch(async (e) => {
+        // 记录抓取失败信息 & 避免crash导致整个进程退出 
+        this.log(`⚠️${author_uid}的长微博${mblog.bid}获取失败, 记入数据库, 待后续重试`)
+        const errorInfo = e as Error
+
+        await MFetchErrorRecord.asyncAddErrorRecord({
+          author_uid: author_uid,
+          resource_type: 'long_text_weibo',
+          long_text_weibo_id: mblog.bid,
+          article_url: '',
+          lastest_page_mid: '',
+          lastest_page_offset: 0,
+          debug_info_json: JSON.stringify(
+            {
+              isRetweet: false
+            }
+          ),
+          error_info_json: JSON.stringify({
+            message: errorInfo.message,
+            stack: errorInfo.stack
+          }),
+          mblog_json: JSON.stringify(mblog)
+        })
+        return {}
+      })
+      if (_.isEmpty(realMblog)) {
+        return undefined
+      }
+      return realMblog
+    }
+    if (_.isEmpty(mblog.retweeted_status) == false && mblog.retweeted_status !== undefined) {
+      if (mblog.retweeted_status.isLongText === true) {
+        // 转发微博属于长微博
+        let bid = mblog.retweeted_status.bid
+        let realRetweetMblog: TypeWeibo.TypeMblog | undefined = undefined
+        try {
+          realRetweetMblog = <TypeWeibo.TypeMblog>await ApiWeibo.asyncGetLongTextWeibo({
+            bid,
+            st: this.requestConfig.st
+          })
+        } catch (e) {
+          // 记录抓取失败信息 & 避免crash导致整个进程退出 
+          this.log(`⚠️${author_uid}转发的长微博${mblog.bid}获取失败, 记入数据库, 待后续重试`)
+          const errorInfo = e as Error
+
+          await MFetchErrorRecord.asyncAddErrorRecord({
+            author_uid: author_uid,
+            resource_type: 'long_text_weibo',
+            long_text_weibo_id: mblog.bid,
+            article_url: '',
+            lastest_page_mid: '',
+            lastest_page_offset: 0,
+            debug_info_json: JSON.stringify(
+              {
+                isRetweet: true
+              }
+            ),
+            error_info_json: JSON.stringify({
+              message: errorInfo.message,
+              stack: errorInfo.stack
+            }),
+            mblog_json: JSON.stringify(mblog)
+          })
+        }
+        mblog.retweeted_status = realRetweetMblog
+      }
+      if (
+        mblog.retweeted_status !== undefined &&
+        mblog.retweeted_status.page_info !== undefined &&
+        mblog.retweeted_status.page_info.type === 'article'
+      ) {
+        // 转发的是微博文章
+        let pageInfo = mblog.retweeted_status.page_info
+        let articleId = getArticleId(pageInfo.page_url)
+        let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
+          // 记录抓取失败信息 & 避免crash导致整个进程退出 
+          this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
+          const errorInfo = e as Error
+
+          await MFetchErrorRecord.asyncAddErrorRecord({
+            author_uid: author_uid,
+            resource_type: 'article',
+            long_text_weibo_id: '',
+            article_url: pageInfo.page_url,
+            lastest_page_mid: '',
+            lastest_page_offset: 0,
+            debug_info_json: JSON.stringify(
+              {
+                page_url: pageInfo.page_url,
+                isRetweet: true
+              }
+            ),
+            error_info_json: JSON.stringify({
+              message: errorInfo.message,
+              stack: errorInfo.stack
+            }),
+            mblog_json: JSON.stringify(mblog)
+          })
+
+          return {}
+        })
+        if (_.isEmpty(articleRecord)) {
+          // 文章详情获取失败, 不储存该记录
+          return undefined
+        }
+        mblog.retweeted_status.article = articleRecord
+      }
+    }
+    if (mblog?.page_info?.type === 'article') {
+      // 文章类型为微博文章
+      let pageInfo = mblog.page_info
+      let articleId = getArticleId(pageInfo.page_url)
+      let articleRecord = await ApiWeibo.asyncGetWeiboArticle(articleId).catch(async (e) => {
+        // 记录抓取失败信息 & 避免crash导致整个进程退出 
+        this.log(`⚠️${author_uid}转发的微博文章${pageInfo.page_url}获取失败, 记入数据库, 待后续重试`)
+        const errorInfo = e as Error
+
+        await MFetchErrorRecord.asyncAddErrorRecord({
+          author_uid: author_uid,
+          resource_type: 'article',
+          long_text_weibo_id: '',
+          article_url: pageInfo.page_url,
+          lastest_page_mid: '',
+          lastest_page_offset: 0,
+          debug_info_json: JSON.stringify(
+            {
+              page_url: pageInfo.page_url,
+              isRetweet: false
+            }
+          ),
+          error_info_json: JSON.stringify({
+            message: errorInfo.message,
+            stack: errorInfo.stack
+          }),
+          mblog_json: JSON.stringify(mblog)
+        })
+
+        return {}
+      })
+      if (_.isEmpty(articleRecord)) {
+        // 文章详情获取失败, 不储存该记录
+        return undefined
+      }
+      mblog.article = articleRecord
+    }
+    return mblog
   }
 
   /**
