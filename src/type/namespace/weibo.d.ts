@@ -377,7 +377,7 @@ export type TypenWeiboRecord_Pic = {
 }
 
 export type TypeWeiboRecord = {
-  card_type: 9
+  card_type: 9 | number
   itemid: '1076031221171697_-_4414052358656728'
   scheme: 'https://m.weibo.cn/status/I5Tz5Ak0E?mblogid=I5Tz5Ak0E&luicode=10000011&lfid=1076031221171697'
   mblog: TypeMblog

@@ -13,7 +13,8 @@ type TypeFetchErrorRecord = {
   lastest_page_mid: string;
   lastest_page_offset: number;
   error_info_json: string;
-  debug_info: string;
+  debug_info_json: string;
+  mblog_json: string;
 }
 
 export default class FetchErrorRecord extends Base {
