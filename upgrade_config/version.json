@@ -1,10 +1,10 @@
 {
   "downloadUrl": "https://www.yaozeyuan.online/stablog",
   "releaseAt": "2024年10月26日",
-  "releaseNote": "发布3.5.1, 增加重试抓取失败任务能力. Etf save the world",
-  "version": "3.5.1",
+  "releaseNote": "发布3.5.2, 增加重试抓取失败任务能力. Etf save the world",
+  "version": "3.5.2",
   "detail": {
-    "windows": { "version": "3.5.1", "url": "https://wwtd.lanzout.com/iVHMp2dggifg" },
-    "mac": { "version": "3.5.1", "url": "https://wwtd.lanzout.com/iTM0b2dgryib" }
+    "windows": { "version": "3.5.2", "url": "https://wwtd.lanzout.com/iNRRv2dgvbqf" },
+    "mac": { "version": "3.5.2", "url": "https://wwtd.lanzout.com/iUSYq2dgux2h" }
   }
 }
