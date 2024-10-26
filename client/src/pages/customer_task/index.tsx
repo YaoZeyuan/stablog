@@ -454,6 +454,20 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             <span>&nbsp;页&nbsp;</span>
           </div>
         </Form.Item>
+        <Form.Item
+          label={
+            <span>
+              仅重试失败页面&nbsp;
+              <Tooltip title="跳过全量抓取, 只对之前抓取失败的页面记录进行重试. 重试成功后自动删除对应记录(正常抓取完成后, 默认重试失败页面, 不需要专门勾选. 如果本身没有失败记录, 相当于跳过抓取流程)">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="onlyRetry"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
         <Collapse>
           <Collapse.Panel header="[高级选项]输出规则" key="output-config">
             <Form.Item
@@ -568,20 +582,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             >
               <Switch></Switch>
             </Form.Item>
-            <Form.Item
-              label={
-                <span>
-                  只对失败记录进行重试&nbsp;
-                  <Tooltip title="跳过全量抓取, 只对失败记录进行重试(若没有失败记录, eg: 未进行过抓取, 相当于跳过全部抓取过程)">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="onlyRetry"
-              valuePropName="checked"
-            >
-              <Switch></Switch>
-            </Form.Item>
+
             <Form.Item
               label={
                 <span>
