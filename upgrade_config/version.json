@@ -1,16 +1,16 @@
 {
   "downloadUrl": "https://www.yaozeyuan.online/stablog",
-  "releaseAt": "2024年10月21日",
-  "releaseNote": "发布3.4.0, 恢复软件功能. etf save the world",
-  "version": "3.4.0",
+  "releaseAt": "2024年10月26日",
+  "releaseNote": "发布3.5.0, 增加重试抓取失败任务能力. Etf save the world",
+  "version": "3.5.0",
   "detail": {
     "windows": {
-      "version": "3.4.0",
-      "url": "https://wwtd.lanzout.com/i6xzw2d3afpe"
+      "version": "3.5.0",
+      "url": "https://wwtd.lanzout.com/iKmBr2dge5zg"
     },
     "mac": {
-      "version": "暂不支持",
-      "url": "https://wwc.lanzout.com/iEfrg08weg8j"
+      "version": "3.5.0",
+      "url": "https://wwtd.lanzout.com/itdHB2dgeehc"
     }
   }
 }
