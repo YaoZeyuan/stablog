@@ -25,7 +25,7 @@
     "eslint": "eslint src",
     "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
     "postinstall": "electron-builder install-app-deps",
-    "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
+    "rebuild-sqlite3": "electron-rebuild -f -w better-sqlite3",
     "build-4-local": "electron-builder"
   },
   "config": {
