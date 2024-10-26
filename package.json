@@ -1,6 +1,6 @@
 {
   "name": "stablog",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "稳部落. 专业备份微blog, 老铁, 稳!",
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
     "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
     "postinstall": "electron-builder install-app-deps",
     "rebuild-sqlite3": "electron-rebuild -f -w sqlite3",
-    "build-4-local":"electron-builder"
+    "build-4-local": "electron-builder"
   },
   "config": {
     "forge": "./forge.config.js"
