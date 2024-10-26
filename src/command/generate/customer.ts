@@ -832,7 +832,7 @@ class GenerateCustomer extends Base {
 
     let doc = new jsPDF({
       unit: 'px',
-      format: [Const_Default_Webview_Width, 500],
+      format: [Const_Default_Webview_Width, 700],
       orientation: "landscape"
     })
     // let fontUri = path.resolve(__dirname, '../../public/font/mi_sans_normal_thin.ttf')

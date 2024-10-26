@@ -246,7 +246,10 @@ class FetchCustomer extends Base {
         mblog
       })
       this.log(`第${rawMblogFetchIndex}/${rawMBlogRes.recordList.length}条微博详情请求完毕, 休眠1s`)
-      await Util.asyncSleep(1000)
+      if (hydrateBlogRes.hasFetch) {
+        // 仅发生抓取时, 需要额外休眠1s
+        await Util.asyncSleep(1000)
+      }
       if (rawMblogFetchIndex > 1 && rawMblogFetchIndex % 10 === 0) {
         // 避免频繁请求导致被封ip
         this.log(`累计抓取${rawMblogFetchIndex}条微博, 额外休眠${Const_Retry_Wait_Seconds}s`)
@@ -337,7 +340,10 @@ class FetchCustomer extends Base {
         // 处理完毕, 将数据存入数据库中
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
         this.log(`第${refetchMblogIndex}/${res.recordList.length}条微博详情请求完毕, 休眠1s`)
-        await Util.asyncSleep(1000)
+        if (hydrateBlogRes.hasFetch) {
+          // 仅发生抓取时, 需要额外休眠1s
+          await Util.asyncSleep(1000)
+        }
         if (refetchMblogIndex > 1 && refetchMblogIndex % 10 === 0) {
           // 避免频繁请求导致被封ip
           this.log(`累计抓取${refetchMblogIndex}条微博, 额外休眠${Const_Retry_Wait_Seconds}s`)
@@ -382,8 +388,10 @@ class FetchCustomer extends Base {
         mblog
       })
       this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}条微博详情请求完毕, 休眠1s`)
-      await Util.asyncSleep(1000)
-      await Util.asyncSleep(1000)
+      if (hydrateBlogRes.hasFetch) {
+        // 仅发生抓取时, 需要额外休眠1s
+        await Util.asyncSleep(1000)
+      }
       if (retryMblogConfigIndex > 1 && retryMblogConfigIndex % 10 === 0) {
         // 避免频繁请求导致被封ip
         this.log(`累计抓取${retryMblogConfigIndex}条微博, 额外休眠${Const_Retry_Wait_Seconds}s`)
@@ -519,16 +527,19 @@ class FetchCustomer extends Base {
   }): Promise<{
     isSuccess: boolean,
     record: TypeWeibo.TypeMblog
+    hasFetch: boolean
   }> {
     // 最多重试5次
     const maxRetryCount = 5
     if (_.isEmpty(mblog)) {
       return {
         isSuccess: false,
-        record: mblog
+        record: mblog,
+        hasFetch: false,
       }
     }
 
+    let hasFetch = false
     const asyncGetLongTextWeibo = async ({ bid }: { bid: string }) => {
       let retryCount = 0
       let isSuccess = false
@@ -628,6 +639,7 @@ class FetchCustomer extends Base {
 
     // 检查是否是长微博
     if (mblog.isLongText === true) {
+      hasFetch = true
       // 长微博需要调取api重新获得微博内容
       let bid = mblog.bid
       let realMblog = <TypeWeibo.TypeMblog>await asyncGetLongTextWeibo({ bid })
@@ -635,17 +647,20 @@ class FetchCustomer extends Base {
         // 获取失败, 自动返回
         return {
           isSuccess: false,
-          record: mblog
+          record: mblog,
+          hasFetch
         }
       }
       return {
         isSuccess: true,
-        record: realMblog
+        record: realMblog,
+        hasFetch,
       }
     }
 
     if (_.isEmpty(mblog.retweeted_status) == false && mblog.retweeted_status !== undefined) {
       if (mblog.retweeted_status.isLongText === true) {
+        hasFetch = true
         // 转发微博属于长微博
         let bid = mblog.retweeted_status.bid
         let realRetweetMblog: TypeWeibo.TypeMblog | undefined = undefined
@@ -654,7 +669,8 @@ class FetchCustomer extends Base {
           // 获取失败, 自动返回
           return {
             isSuccess: false,
-            record: mblog
+            record: mblog,
+            hasFetch
           }
         }
         mblog.retweeted_status = realRetweetMblog
@@ -667,6 +683,7 @@ class FetchCustomer extends Base {
         // 转发的是微博文章
         let pageInfo = mblog.retweeted_status.page_info
         let articleId = this.getArticleId(pageInfo.page_url)
+        hasFetch = true
         let articleRecord = await asyncGetArticle({
           articleId,
           page_url: pageInfo.page_url
@@ -675,7 +692,8 @@ class FetchCustomer extends Base {
           // 文章详情获取失败, 不储存该记录
           return {
             isSuccess: false,
-            record: mblog
+            record: mblog,
+            hasFetch
           }
         }
         mblog.retweeted_status.article = articleRecord
@@ -685,6 +703,7 @@ class FetchCustomer extends Base {
       // 文章类型为微博文章
       let pageInfo = mblog.page_info
       let articleId = this.getArticleId(pageInfo.page_url)
+      hasFetch = true
       let articleRecord = await asyncGetArticle({
         articleId,
         page_url: pageInfo.page_url
@@ -693,14 +712,16 @@ class FetchCustomer extends Base {
         // 文章详情获取失败, 不储存该记录
         return {
           isSuccess: false,
-          record: mblog
+          record: mblog,
+          hasFetch
         }
       }
       mblog.article = articleRecord
     }
     return {
       isSuccess: true,
-      record: mblog
+      record: mblog,
+      hasFetch
     }
   }
 
