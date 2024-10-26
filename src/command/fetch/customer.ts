@@ -122,6 +122,13 @@ class FetchCustomer extends Base {
       })
       let totalPageCount = Math.ceil(totalMblogCount / 10)
       this.log(`用户${userInfo.screen_name}共发布了${totalMblogCount}条微博, 正式开始抓取`)
+      if (customerTaskConfig.onlyRetry) {
+        this.log(`启用了仅抓取失败项配置, 本次仅抓取失败部分`)
+        await this.retryFetch(uid)
+        this.log(`${userInfo.screen_name}的重抓逻辑执行完毕`)
+        continue
+      }
+
       let maxFetchPageNo = this.fetchEndAtPageNo <= totalPageCount ? this.fetchEndAtPageNo : totalPageCount
       this.log(`本次抓取的页码范围为:${this.fetchStartAtPageNo}~${maxFetchPageNo}`)
 
@@ -225,8 +232,10 @@ class FetchCustomer extends Base {
     }
     let mblogList: Array<TypeWeibo.TypeMblog> = []
 
+    let rawMblogFetchIndex = 0
     // 此处要根据微博类型进行具体定制
     for (let rawMblog of rawMBlogRes.recordList) {
+      rawMblogFetchIndex++
       let mblog = rawMblog.mblog
       if (_.isEmpty(mblog) || _.isEmpty(mblog.user)) {
         // 数据为空自动跳过
@@ -236,6 +245,8 @@ class FetchCustomer extends Base {
         author_uid,
         mblog
       })
+      this.log(`第${rawMblogFetchIndex}/${rawMBlogRes.recordList.length}条微博详情请求完毕, 休眠1s`)
+      await Util.asyncSleep(1000)
       // 不管成功或失败, 都应把数据记录下来
       // if (hydrateBlogRes.isSuccess === false) {
       //   continue
@@ -307,7 +318,9 @@ class FetchCustomer extends Base {
         continue
       }
       this.log(`获取mid:${errorPageConfig.lastest_page_mid}对应的${errorPageConfig.lastest_page_offset}页成功, 录入数据库`)
+      let refetchMblogIndex = 0
       for (let mblog of res.recordList) {
+        refetchMblogIndex++
         if (_.isEmpty(mblog)) {
           // 为空自动跳过
           continue
@@ -316,6 +329,8 @@ class FetchCustomer extends Base {
           author_uid,
           mblog
         })
+        this.log(`第${refetchMblogIndex}/${res.recordList.length}条微博详情请求完毕, 休眠1s`)
+        await Util.asyncSleep(1000)
         // 处理完毕, 将数据存入数据库中
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
       }
@@ -343,22 +358,24 @@ class FetchCustomer extends Base {
         }
       })
     this.log(`准备等待重新抓取的微博记录整理完毕, 共${retryMblogConfigList.length}项`)
-    let index = 0
+    let retryMblogConfigIndex = 0
     for (let retryMblogConfig of retryMblogConfigList) {
       let mblog = JSON.parse(retryMblogConfig.mblog_json)
       if (mblog.mblog !== undefined) {
         // @todo(待移除) 适配旧版本中, 嵌套两层的场景
         mblog = mblog.mblog
       }
-      index++
-      this.log(`开始处理第${index}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}`)
+      retryMblogConfigIndex++
+      this.log(`开始处理第${retryMblogConfigIndex}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}`)
       const hydrateBlogRes = await this.asyncHydrateMBlog({
         author_uid,
         mblog
       })
+      this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}条微博详情请求完毕, 休眠1s`)
+      await Util.asyncSleep(1000)
       // 处理完毕, 将数据存入数据库中
       if (hydrateBlogRes.isSuccess) {
-        this.log(`第${index}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}处理完毕, 将错误记录从数据库中移除`)
+        this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}处理完毕, 将错误记录从数据库中移除`)
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
         // 然后删除旧记录
         // await MFetchErrorRecord.asyncRemoveErrorRecord({
@@ -370,7 +387,7 @@ class FetchCustomer extends Base {
         //   "article_url": retryMblogConfig.article_url
         // })
       } else {
-        this.log(`第${index}/${retryMblogConfigList.length}项微博, mid:${mblog.mid}水合失败, 自动跳过, 待后续重抓`)
+        this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项微博, mid:${mblog.mid}水合失败, 自动跳过, 待后续重抓`)
       }
     }
     this.log(`author_uid:${author_uid}对应的补抓任务执行完毕`)

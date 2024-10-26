@@ -133,8 +133,12 @@ let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri)
 try {
   taskConfig = JSON.parse(jsonContent)
 } catch (e) {}
-// 输出时间始终重置为次日
-taskConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
+if (taskConfig.enableAutoConfig) {
+  // 仅在启用自动生成配置时, 才自动重置输出时间
+
+  // 输出时间始终重置为次日
+  taskConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
+}
 if (taskConfig.configList.length === 0) {
   taskConfig.configList.push(_.clone(defaultConfigItem))
 }
@@ -232,8 +236,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         raw.currentUserInfo = userInfo
         if (updatePageRange) {
           // 当启动任务时, 不需要更新页面列表
-          raw.taskConfig.fetchStartAtPageNo = 0
-          raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000
+          if (raw.taskConfig.enableAutoConfig) {
+            // 仅在启用自动生成配置时, 才更新配置内容
+            raw.taskConfig.fetchStartAtPageNo = 0
+            raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000
+          }
         }
         form.setFieldsValue({
           fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
