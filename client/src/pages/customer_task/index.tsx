@@ -468,6 +468,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         >
           <Switch></Switch>
         </Form.Item>
+        <Form.Item label="ℹ️Tip">
+          <div className="flex-container">
+            若频繁提示抓取失败, 请重新点击下方`退出当前账号`按钮后重登, 或者6小时后再来即可
+          </div>
+        </Form.Item>
         <Collapse>
           <Collapse.Panel header="[高级选项]输出规则" key="output-config">
             <Form.Item

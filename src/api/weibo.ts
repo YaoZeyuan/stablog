@@ -236,7 +236,7 @@ export default class Weibo extends Base {
         referer: `https://m.weibo.cn/profile/${author_uid}`,
       },
     }).catch(e => {
-      this.logger.log(`网络请求失败, 您的账号可能因抓取频繁被认为有风险, 请6小时后再试`)
+      this.logger.log(`网络请求失败, 您的账号可能因抓取频繁被认为有风险, 请重新登录账号, 或6小时后再试`)
       this.logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
       // 避免由于status不存在导致进程退出
       let errorStatus = _.get(e, ['response', 'status'], '')

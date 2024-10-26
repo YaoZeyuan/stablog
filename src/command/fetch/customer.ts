@@ -335,14 +335,14 @@ class FetchCustomer extends Base {
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
       }
       // 然后删除旧记录
-      // await MFetchErrorRecord.asyncRemoveErrorRecord({
-      //   author_uid,
-      //   resource_type: errorPageConfig.resource_type,
-      //   "lastest_page_mid": errorPageConfig.lastest_page_mid,
-      //   "lastest_page_offset": errorPageConfig.lastest_page_offset,
-      //   "long_text_weibo_id": errorPageConfig.long_text_weibo_id,
-      //   "article_url": errorPageConfig.article_url
-      // })
+      await MFetchErrorRecord.asyncRemoveErrorRecord({
+        author_uid,
+        resource_type: errorPageConfig.resource_type,
+        "lastest_page_mid": errorPageConfig.lastest_page_mid,
+        "lastest_page_offset": errorPageConfig.lastest_page_offset,
+        "long_text_weibo_id": errorPageConfig.long_text_weibo_id,
+        "article_url": errorPageConfig.article_url
+      })
     }
     this.log(`页面重抓完毕, 开始收集微博文章/长文本抓取异常的项`)
 
@@ -375,17 +375,17 @@ class FetchCustomer extends Base {
       await Util.asyncSleep(1000)
       // 处理完毕, 将数据存入数据库中
       if (hydrateBlogRes.isSuccess) {
-        this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}处理完毕, 将错误记录从数据库中移除`)
+        this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}处理完毕, 更新数据库配置, 将错误记录从数据库中移除`)
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
         // 然后删除旧记录
-        // await MFetchErrorRecord.asyncRemoveErrorRecord({
-        //   author_uid,
-        //   resource_type: retryMblogConfig.resource_type,
-        //   "lastest_page_mid": retryMblogConfig.lastest_page_mid,
-        //   "lastest_page_offset": retryMblogConfig.lastest_page_offset,
-        //   "long_text_weibo_id": retryMblogConfig.long_text_weibo_id,
-        //   "article_url": retryMblogConfig.article_url
-        // })
+        await MFetchErrorRecord.asyncRemoveErrorRecord({
+          author_uid,
+          resource_type: retryMblogConfig.resource_type,
+          "lastest_page_mid": retryMblogConfig.lastest_page_mid,
+          "lastest_page_offset": retryMblogConfig.lastest_page_offset,
+          "long_text_weibo_id": retryMblogConfig.long_text_weibo_id,
+          "article_url": retryMblogConfig.article_url
+        })
       } else {
         this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项微博, mid:${mblog.mid}水合失败, 自动跳过, 待后续重抓`)
       }

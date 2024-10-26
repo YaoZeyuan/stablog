@@ -39,7 +39,7 @@ export default class FetchErrorRecord extends Base {
    */
   static async asyncGetErrorRecordList(author_uid: string) {
     let resultList = <TypeFetchErrorRecord[]>await this.db
-      .count('*')
+      .select('*')
       .from(this.TABLE_NAME)
       .where('author_uid', '=', author_uid)
       .catch((e) => {
@@ -48,6 +48,25 @@ export default class FetchErrorRecord extends Base {
       })
     return resultList
   }
+
+  /**
+   * 获取抓取失败的分项记录数
+   * @param uid 
+   * @returns 
+   */
+  static async asyncGetErrorDistributionCount(author_uid: string) {
+    let resultList = <TypeFetchErrorRecord[]>await this.db
+      .count('*')
+      .from(this.TABLE_NAME)
+      .where('author_uid', '=', author_uid)
+      .groupBy("resource_type")
+      .catch((e) => {
+        console.log("e =>", e)
+        return []
+      })
+    return resultList
+  }
+
 
   static async asyncAddErrorRecord({
     author_uid,
