@@ -23,7 +23,6 @@
   "comment": "测试",
   "mergeBy": "month",
   "mergeCount": 100,
-  "pdfQuilty": 60,
   "postAtOrderBy": "asc",
   "fetchStartAtPageNo": 0,
   "fetchEndAtPageNo": 100,

@@ -81,13 +81,6 @@ const ImageQuilty = {
   无图: 'none',
   默认: 'default',
 }
-const PdfQuilty: { [key: string]: 50 | 60 | 70 | 90 | 100 } = {
-  '50': 50,
-  '60': 60,
-  '70': 70,
-  '90': 90,
-  '100': 100,
-}
 
 const Translate_Image_Quilty = {
   [TaskConfigType.CONST_Image_Quilty_默认]: '默认',
@@ -109,7 +102,6 @@ const Const_Volume_Split_By: { [key: string]: string } = {
 let taskConfig: TypeTaskConfig.Customer = {
   configList: [_.clone(defaultConfigItem)],
   imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
-  pdfQuilty: PdfQuilty['60'],
   maxBlogInBook: 100000,
   postAtOrderBy: TaskConfigType.CONST_Order_Asc,
   bookTitle: '',
@@ -557,17 +549,6 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                 <Radio.Button value={ImageQuilty.默认}>有图</Radio.Button>
               </Radio.Group>
             </Form.Item>
-            {/* <Form.Item label="pdf图片清晰度" name="pdfQuilty">
-              <Radio.Group buttonStyle="solid">
-                <Radio.Button value={PdfQuilty[50]}>50</Radio.Button>
-                <Radio.Button value={PdfQuilty[60]}>60-推荐值</Radio.Button>
-                <Radio.Button value={PdfQuilty[70]}>70</Radio.Button>
-                <Radio.Button value={PdfQuilty[80]}>80</Radio.Button>
-                <Radio.Button value={PdfQuilty[90]}>90</Radio.Button>
-                <Radio.Button value={PdfQuilty[100]}>100</Radio.Button>
-              </Radio.Group>
-            </Form.Item> */}
-
             <Form.Item label="时间范围">
               <div className="flex-container">
                 <span>只输出从</span>

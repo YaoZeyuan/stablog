@@ -55,6 +55,11 @@ const Const_Max_Jpge_Height_In_Sharp_Px = 25000
  * 如果  Screen_Display_Rate 不一致， 需要提前对截图结果进行处理。 否则后续图片合并会失败
  */
 let Is_Normal_Display_Rate = true
+/**
+ * 图片压缩比率
+ * 处理质量 百分比-80%时体积1600kb, 50%时体积1000kb, 但未观察到肉眼可见区别
+ */
+const Const_Jpeg_Compress_Rate = 50
 
 
 // 硬编码传入
@@ -86,7 +91,6 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_volumeSplitCount: TaskConfig.Customer['volumeSplitCount'] = 10000
   CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
-  CUSTOMER_CONFIG_pdfQuilty: TaskConfig.Customer['pdfQuilty'] = 70
   CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
   CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] =
     dayjs()
@@ -133,7 +137,6 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_volumeSplitCount = customerTaskConfig.volumeSplitCount
     this.CUSTOMER_CONFIG_postAtOrderBy = customerTaskConfig.postAtOrderBy
     this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
-    this.CUSTOMER_CONFIG_pdfQuilty = customerTaskConfig.pdfQuilty || 60 // 加上默认值
     this.CUSTOMER_CONFIG_isSkipFetch = customerTaskConfig.isSkipFetch
     this.CUSTOMER_CONFIG_isSkipGeneratePdf = customerTaskConfig.isSkipGeneratePdf
     this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage = customerTaskConfig.isRegenerateHtml2PdfImage
@@ -739,7 +742,7 @@ class GenerateCustomer extends Base {
               })
               let out = mozjpeg.encode(jpgContent, {
                 //处理质量 百分比
-                quality: 50
+                quality: Const_Jpeg_Compress_Rate
               });
               jpgContent = out.data
               fs.writeFileSync(
@@ -774,7 +777,7 @@ class GenerateCustomer extends Base {
             })
             let out = mozjpeg.encode(jpgContent, {
               //处理质量 百分比
-              quality: 50
+              quality: Const_Jpeg_Compress_Rate
             });
             jpgContent = out.data
             fs.writeFileSync(
@@ -801,7 +804,7 @@ class GenerateCustomer extends Base {
 
           let out = mozjpeg.encode(jpgContent, {
             //处理质量 百分比
-            quality: 50
+            quality: Const_Jpeg_Compress_Rate
           });
           jpgContent = out.data
           let imageUri = baseImageUri + '0.jpg'

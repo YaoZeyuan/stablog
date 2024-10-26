@@ -114,7 +114,7 @@ function createWindow() {
     // 配置最大高度, 该值默认值为屏幕高度, 如果大于该高度, 会出现滚动条
     maxHeight: 10000,
     // 负责渲染的子窗口不需要显示出来, 避免被用户误关闭
-    show: true,
+    show: false,
   })
 
   async function debugCaputure() {

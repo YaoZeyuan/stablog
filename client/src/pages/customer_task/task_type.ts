@@ -11,7 +11,6 @@ export namespace TypeTaskConfig {
   export type Customer = {
     configList: Array<Record>
     imageQuilty: imageQuilty // 图片质量
-    pdfQuilty: 50 | 60 | 70 | 90 | 100 // pdf输出质量(默认60, 质量体积平衡点)
     bookTitle: string // 书名
     comment: string // 备注
     maxBlogInBook: maxBlogInBook // 自动分卷: 单本电子书中最大微博数
