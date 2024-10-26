@@ -188,28 +188,10 @@ class FetchCustomer extends Base {
   }: { author_uid: string, page: number, totalPage: number, lastest_page_mid: string, lastest_page_offset: number, lastest_page_mblog: any }) {
     let target = `第${page}/${totalPage}页微博记录`
     this.log(`准备抓取${target}`)
-    let rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+    let rawMBlogRes = await this.asyncGetWeiboList({ author_uid, page, totalPage })
 
     if (rawMBlogRes.isSuccess === false) {
-      // 说明抓取失败, 等待30s后重试一次
-      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(1/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
-      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-      // 更新st
-      let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
-      this.requestConfig.st = newSt
-      // 带着新st重新抓取一次
-      rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
-    }
-    if (rawMBlogRes.isSuccess === false) {
-      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(2/3), 等待${Const_Retry_Wait_Seconds}s后重试`)
-      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
-      rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
-    }
-    if (rawMBlogRes.isSuccess === false) {
-      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(3/3), 跳过对本页的抓取, 记录到数据库中待后续重抓`)
-
       this.log(`⚠️${author_uid}的第${page}/${totalPage}页微博获取失败, 记入数据库, 待后续重试`)
-
       await MFetchErrorRecord.asyncAddErrorRecord({
         author_uid: author_uid,
         resource_type: 'weibo_page',
@@ -231,7 +213,6 @@ class FetchCustomer extends Base {
         }),
         mblog_json: JSON.stringify(lastest_page_mblog)
       })
-
       await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
       return {
         isSuccess: false,
@@ -390,6 +371,49 @@ class FetchCustomer extends Base {
     }
     this.log(`author_uid:${author_uid}对应的补抓任务执行完毕`)
     return
+  }
+
+  /**
+   * 获取微博列表, 添加retry机制
+   */
+  private async asyncGetWeiboList({ author_uid, page, totalPage }: {
+    author_uid: string,
+    page: number
+    totalPage: number
+  }) {
+    // 最多重试5次
+    const maxRetryCount = 5
+    let retryCount = 0;
+    let isSuccess = false;
+    let rawMBlogRes: Awaited<ReturnType<typeof ApiWeibo.asyncStep3GetWeiboList>> = {
+      recordList: [],
+      isSuccess: false,
+      errorInfo: {}
+    }
+    while (retryCount < maxRetryCount && isSuccess === false) {
+      rawMBlogRes = await ApiWeibo.asyncStep3GetWeiboList(this.requestConfig.st, author_uid, page)
+      if (rawMBlogRes.isSuccess) {
+        isSuccess = true
+        return {
+          recordList: rawMBlogRes.recordList,
+          isSuccess: true,
+          errorInfo: {}
+        }
+      }
+      this.log(`经ApiV1接口抓取第${page}/${totalPage}页数据失败(${retryCount + 1}/${maxRetryCount}), 等待${Const_Retry_Wait_Seconds}s后重试`)
+      // 更新st
+      let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+      this.requestConfig.st = newSt
+      retryCount++
+      Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+    }
+    this.log(`第${page}/${totalPage}页经过${maxRetryCount}次重试后仍失败, 跳过对该页面的抓取, 待后续重试`)
+    return {
+      recordList: [],
+      isSuccess: false,
+      errorInfo: rawMBlogRes.errorInfo
+    }
+
   }
 
   /**
