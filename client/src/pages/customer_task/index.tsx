@@ -63,6 +63,11 @@ type TypeDatabase = {
     total_page_count: number
     followers_count: number
   }
+  fetchErrorDistribution: {
+    weibo_page: number
+    long_text_weibo: number
+    article: number
+  }
 }
 
 const Order: {
@@ -75,13 +80,6 @@ const Order: {
 const ImageQuilty = {
   无图: 'none',
   默认: 'default',
-}
-const PdfQuilty: { [key: string]: 50 | 60 | 70 | 90 | 100 } = {
-  '50': 50,
-  '60': 60,
-  '70': 70,
-  '90': 90,
-  '100': 100,
 }
 
 const Translate_Image_Quilty = {
@@ -104,7 +102,6 @@ const Const_Volume_Split_By: { [key: string]: string } = {
 let taskConfig: TypeTaskConfig.Customer = {
   configList: [_.clone(defaultConfigItem)],
   imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
-  pdfQuilty: PdfQuilty['60'],
   maxBlogInBook: 100000,
   postAtOrderBy: TaskConfigType.CONST_Order_Asc,
   bookTitle: '',
@@ -115,6 +112,8 @@ let taskConfig: TypeTaskConfig.Customer = {
   fetchEndAtPageNo: 100000,
   outputStartAtMs: dayjs('2010-01-01 00:00:00').unix() * 1000,
   outputEndAtMs: dayjs().add(1, 'year').unix() * 1000,
+  enableAutoConfig: true,
+  onlyRetry: false,
   isSkipFetch: false,
   isSkipGeneratePdf: false,
   isRegenerateHtml2PdfImage: false,
@@ -131,8 +130,12 @@ let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri)
 try {
   taskConfig = JSON.parse(jsonContent)
 } catch (e) {}
-// 输出时间始终重置为次日
-taskConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
+if (taskConfig.enableAutoConfig) {
+  // 仅在启用自动生成配置时, 才自动重置输出时间
+
+  // 输出时间始终重置为次日
+  taskConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
+}
 if (taskConfig.configList.length === 0) {
   taskConfig.configList.push(_.clone(defaultConfigItem))
 }
@@ -164,6 +167,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           statuses_count: 0,
           total_page_count: 0,
           followers_count: 0,
+        },
+        fetchErrorDistribution: {
+          article: 0,
+          long_text_weibo: 0,
+          weibo_page: 0,
         },
       },
       (e) => e,
@@ -224,14 +232,37 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       return
     }
 
+    // 获取数据库中的抓取错误记录
+    const errorDistributionList = await ipcRenderer.sendSync('MFetchErrorRecord_asyncGetErrorDistributionCount', {
+      author_uid: uid,
+    })
     set$$Database(
       produce($$database, (raw) => {
+        // 更新错误数据分布
+        for (let record of errorDistributionList) {
+          switch (record.resource_type) {
+            case 'weibo_page':
+              raw.fetchErrorDistribution.weibo_page = record.count
+              break
+            case 'long_text_weibo':
+              raw.fetchErrorDistribution.long_text_weibo = record.count
+              break
+            case 'article':
+              raw.fetchErrorDistribution.article = record.count
+              break
+            default:
+          }
+        }
+
         raw.taskConfig.configList[0].uid = uid
         raw.currentUserInfo = userInfo
         if (updatePageRange) {
           // 当启动任务时, 不需要更新页面列表
-          raw.taskConfig.fetchStartAtPageNo = 0
-          raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000
+          if (raw.taskConfig.enableAutoConfig) {
+            // 仅在启用自动生成配置时, 才更新配置内容
+            raw.taskConfig.fetchStartAtPageNo = 0
+            raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000
+          }
         }
         form.setFieldsValue({
           fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
@@ -421,6 +452,22 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             </Descriptions>
           )}
         </Form.Item>
+        <Form.Item label="待重试记录数">
+          <div className="flex-container">
+            <Descriptions bordered column={1}>
+              <Descriptions.Item label="微博页面">{$$database.fetchErrorDistribution.weibo_page}页</Descriptions.Item>
+              <Descriptions.Item label="长微博">
+                {$$database.fetchErrorDistribution.long_text_weibo}条
+              </Descriptions.Item>
+              <Descriptions.Item label="微博文章">{$$database.fetchErrorDistribution.article}篇</Descriptions.Item>
+            </Descriptions>
+          </div>
+        </Form.Item>
+        <Form.Item label="ℹ️Tip">
+          <div className="flex-container">
+            若频繁提示抓取失败, 请重新点击下方`退出当前账号`按钮后重登, 或者6小时后再来即可
+          </div>
+        </Form.Item>
         <Divider>备份配置</Divider>
 
         <Form.Item
@@ -445,6 +492,21 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             <span>&nbsp;页&nbsp;</span>
           </div>
         </Form.Item>
+        <Form.Item
+          label={
+            <span>
+              仅重试失败记录&nbsp;
+              <Tooltip title="跳过全量抓取, 只对之前抓取失败的页面记录进行重试. 重试成功后自动删除对应记录(正常抓取完成后, 默认重试失败页面, 不需要专门勾选. 如果本身没有失败记录, 相当于跳过抓取流程)">
+                <QuestionCircleOutlined />
+              </Tooltip>
+            </span>
+          }
+          name="onlyRetry"
+          valuePropName="checked"
+        >
+          <Switch></Switch>
+        </Form.Item>
+
         <Collapse>
           <Collapse.Panel header="[高级选项]输出规则" key="output-config">
             <Form.Item
@@ -487,17 +549,6 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                 <Radio.Button value={ImageQuilty.默认}>有图</Radio.Button>
               </Radio.Group>
             </Form.Item>
-            {/* <Form.Item label="pdf图片清晰度" name="pdfQuilty">
-              <Radio.Group buttonStyle="solid">
-                <Radio.Button value={PdfQuilty[50]}>50</Radio.Button>
-                <Radio.Button value={PdfQuilty[60]}>60-推荐值</Radio.Button>
-                <Radio.Button value={PdfQuilty[70]}>70</Radio.Button>
-                <Radio.Button value={PdfQuilty[80]}>80</Radio.Button>
-                <Radio.Button value={PdfQuilty[90]}>90</Radio.Button>
-                <Radio.Button value={PdfQuilty[100]}>100</Radio.Button>
-              </Radio.Group>
-            </Form.Item> */}
-
             <Form.Item label="时间范围">
               <div className="flex-container">
                 <span>只输出从</span>
@@ -545,6 +596,21 @@ export default function IndexPage(props: { changeTabKey: Function }) {
 
         <Collapse>
           <Collapse.Panel header="[高级选项]开发调试" key="develop-config">
+            <Form.Item
+              label={
+                <span>
+                  自动更新抓取/导出范围&nbsp;
+                  <Tooltip title="自动更新抓取范围和导出范围,默认启用,仅在调试时推荐关闭">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="enableAutoConfig"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
+            </Form.Item>
+
             <Form.Item
               label={
                 <span>

@@ -11,10 +11,13 @@ export namespace TypeTaskConfig {
   export type Customer = {
     configList: Array<Record>
     imageQuilty: imageQuilty // 图片质量
-    pdfQuilty: 50 | 60 | 70 | 90 | 100 // pdf输出质量(默认60, 质量体积平衡点)
     bookTitle: string // 书名
     comment: string // 备注
     maxBlogInBook: maxBlogInBook // 自动分卷: 单本电子书中最大微博数
+    /**
+     * 是否启用自动配置(自动配置会将用户配置的起止时间等参数还原, 默认启用)
+     */
+    enableAutoConfig: boolean
     /**
      * 微博排序方式: 按发布事件升序排列, 按发布时间降序排列
      */
@@ -28,13 +31,17 @@ export namespace TypeTaskConfig {
      */
     fetchEndAtPageNo: number
     /**
-     * 输出微博时间上限(毫秒值)
+     * 输出微博时间段-开始时间(毫秒)
      */
     outputStartAtMs: number
     /**
-     * 输出微博时间下限(毫秒值)
+     * 输出微博时间段-结束时间(毫秒)
      */
     outputEndAtMs: number
+    /**
+     * 是否只进行重抓
+     */
+    onlyRetry: boolean
     /**
      * 是否跳过备份阶段
      */
@@ -48,8 +55,8 @@ export namespace TypeTaskConfig {
      */
     isRegenerateHtml2PdfImage: boolean
     /**
-    * 是否只看微博文章(微博文章一定是原创, 转发微博不算原创)
-    */
+     * 是否只看微博文章(微博文章一定是原创, 转发微博不算原创)
+     */
     isOnlyArticle: boolean
     /**
      * 是否只看原创

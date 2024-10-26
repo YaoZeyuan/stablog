@@ -16,18 +16,19 @@
       "comment": "孤鸿泽"
     }
   ],
+  "enableAutoConfig": true,
   "maxBlogInBook": 1000,
   "imageQuilty": "default",
   "bookTitle": "测试电子书",
   "comment": "测试",
   "mergeBy": "month",
   "mergeCount": 100,
-  "pdfQuilty": 60,
   "postAtOrderBy": "asc",
   "fetchStartAtPageNo": 0,
   "fetchEndAtPageNo": 100,
   "outputStartAtMs": 1420041600000,
   "outputEndAtMs": 1571339017000,
   "isOnlyArticle": false,
-  "isOnlyOriginal": false
+  "isOnlyOriginal": false,
+  "onlyRetry": false
 }

@@ -30,6 +30,11 @@ import CommonUtil from '~/src/library/util/common'
  */
 const Const_Render_Html_Timeout_Second = 60
 /**
+ * 宽为760px的图片, 在电脑端打开正常, 但是pdf中会被拉伸到全屏大小, 成为原先的200%, 导致模糊.
+ * 为了保证pdf中图片清晰, 因此需要在截图时, 主动x2. 代价是pdf文件更大, 但可接受
+ */
+const Pixel_Zoom_Rate = 2
+/**
  * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
  */
 const Const_Max_Webview_Render_Height_Px = 5000
@@ -50,11 +55,17 @@ const Const_Max_Jpge_Height_In_Sharp_Px = 25000
  * 如果  Screen_Display_Rate 不一致， 需要提前对截图结果进行处理。 否则后续图片合并会失败
  */
 let Is_Normal_Display_Rate = true
+/**
+ * jpg图片压缩比率
+ * 实测显示, 对于相同内容文件, 压缩80%时体积1600kb, 50%时体积1000kb, 但pdf质量上没有肉眼可见区别
+ */
+const Const_Jpeg_Compress_Rate = 60
 
 
 // 硬编码传入
 let globalSubWindow: InstanceType<typeof BrowserWindow> = null
-const Const_Default_Webview_Width = 760;
+// 图片放大后, 页面宽度也要等比例放大
+const Const_Default_Webview_Width = 760 * Pixel_Zoom_Rate;
 const Const_Default_Webview_Height = 10;
 class GenerateCustomer extends Base {
   static get signature() {
@@ -80,7 +91,6 @@ class GenerateCustomer extends Base {
   CUSTOMER_CONFIG_volumeSplitCount: TaskConfig.Customer['volumeSplitCount'] = 10000
   CUSTOMER_CONFIG_postAtOrderBy: TaskConfig.Customer['postAtOrderBy'] = 'asc'
   CUSTOMER_CONFIG_imageQuilty: TaskConfig.Customer['imageQuilty'] = 'default'
-  CUSTOMER_CONFIG_pdfQuilty: TaskConfig.Customer['pdfQuilty'] = 70
   CUSTOMER_CONFIG_outputStartAtMs: TaskConfig.Customer['outputStartAtMs'] = 0
   CUSTOMER_CONFIG_outputEndAtMs: TaskConfig.Customer['outputEndAtMs'] =
     dayjs()
@@ -127,7 +137,6 @@ class GenerateCustomer extends Base {
     this.CUSTOMER_CONFIG_volumeSplitCount = customerTaskConfig.volumeSplitCount
     this.CUSTOMER_CONFIG_postAtOrderBy = customerTaskConfig.postAtOrderBy
     this.CUSTOMER_CONFIG_imageQuilty = customerTaskConfig.imageQuilty
-    this.CUSTOMER_CONFIG_pdfQuilty = customerTaskConfig.pdfQuilty || 60 // 加上默认值
     this.CUSTOMER_CONFIG_isSkipFetch = customerTaskConfig.isSkipFetch
     this.CUSTOMER_CONFIG_isSkipGeneratePdf = customerTaskConfig.isSkipGeneratePdf
     this.CUSTOMER_CONFIG_isRegenerateHtml2PdfImage = customerTaskConfig.isRegenerateHtml2PdfImage
@@ -595,18 +604,24 @@ class GenerateCustomer extends Base {
       }, Const_Render_Html_Timeout_Second * 1000)
 
       let render = async () => {
+        // 先载入html文件
         // this.log("load url -> ", pageConfig.htmlUri)
         await webview.loadURL(htmlUri);
         // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
+        // 然后设置分辨率, Const_Default_Webview_Width x Const_Default_Webview_Height, 这里是正常的
         await globalSubWindow.setContentSize(
           Const_Default_Webview_Width,
           Const_Default_Webview_Height,
         );
+        // 若希望文件清晰, 分辨率需进行放大
+        globalSubWindow.webContents.setZoomFactor(Pixel_Zoom_Rate)
+
+        // 放大后页面scrollHeight为css值, 需要乘以放大系数后, 才是实际像素值
         // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
         // this.log("resize page, executeJavaScript ")
         let scrollHeight = await webview.executeJavaScript(
           `document.children[0].children[1].scrollHeight`,
-        );
+        ) * Pixel_Zoom_Rate;
 
         let imageUriList: string[] = []
         if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
@@ -727,7 +742,7 @@ class GenerateCustomer extends Base {
               })
               let out = mozjpeg.encode(jpgContent, {
                 //处理质量 百分比
-                quality: 80
+                quality: Const_Jpeg_Compress_Rate
               });
               jpgContent = out.data
               fs.writeFileSync(
@@ -762,7 +777,7 @@ class GenerateCustomer extends Base {
             })
             let out = mozjpeg.encode(jpgContent, {
               //处理质量 百分比
-              quality: 80
+              quality: Const_Jpeg_Compress_Rate
             });
             jpgContent = out.data
             fs.writeFileSync(
@@ -789,7 +804,7 @@ class GenerateCustomer extends Base {
 
           let out = mozjpeg.encode(jpgContent, {
             //处理质量 百分比
-            quality: 80
+            quality: Const_Jpeg_Compress_Rate
           });
           jpgContent = out.data
           let imageUri = baseImageUri + '0.jpg'
@@ -826,7 +841,7 @@ class GenerateCustomer extends Base {
     // let fontName = "mi_sans_normal_thin" 
     // 恢复使用方正书宋字体
     let fontUri = path.resolve(__dirname, '../../public/font/fangzheng_shusong_normal.ttf')
-    let fontName = "fangzheng_shusong_normal" 
+    let fontName = "fangzheng_shusong_normal"
     let fontContent = fs.readFileSync(fontUri)
 
     doc.addFileToVFS(`${fontName}.ttf`, fontContent.toString("base64"))
@@ -878,6 +893,10 @@ class GenerateCustomer extends Base {
     addLine("")
     addLine("该文件由稳部落自动生成")
     addLine("")
+    addLine("pdf本身支持天级别目录&文本检索, 但需要阅读器支持")
+    addLine("电脑端推荐通过 Chrome浏览器/福昕阅读器 打开")
+    addLine("手机端推荐通过 多看阅读 打开")
+    addLine("")
     addLine("项目主页")
     addLink("https://www.yaozeyuan.online/stablog")
 
@@ -926,7 +945,7 @@ class GenerateCustomer extends Base {
                 x: 0,
                 y: 0,
                 width: width,
-                height: height
+                height: height,
               })
             if (i === 0) {
               // 只在第一页添加文字
