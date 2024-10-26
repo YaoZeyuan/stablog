@@ -346,7 +346,7 @@ class FetchCustomer extends Base {
     }
     this.log(`页面重抓完毕, 开始收集微博文章/长文本抓取异常的项`)
 
-    const mblogList = fetchErrorRecordList
+    const retryMblogConfigList = fetchErrorRecordList
       .filter(item => ["article", 'long_text_weibo'].includes(item.resource_type))
       .filter(item => {
         try {
@@ -357,29 +357,35 @@ class FetchCustomer extends Base {
           return false
         }
       })
-      .map(item => {
-        let mblog = JSON.parse(item.mblog_json)
-        if (mblog.mblog !== undefined) {
-          // @todo(待移除) 适配旧版本中, 嵌套两层的场景
-          mblog = mblog.mblog
-        }
-        return mblog as TypeWeibo.TypeMblog
-      })
-    this.log(`准备等待重新抓取的微博记录整理完毕, 共${mblogList.length}项`)
+    this.log(`准备等待重新抓取的微博记录整理完毕, 共${retryMblogConfigList.length}项`)
     let index = 0
-    for (let mblog of mblogList) {
+    for (let retryMblogConfig of retryMblogConfigList) {
+      let mblog = JSON.parse(retryMblogConfig.mblog_json)
+      if (mblog.mblog !== undefined) {
+        // @todo(待移除) 适配旧版本中, 嵌套两层的场景
+        mblog = mblog.mblog
+      }
       index++
-      this.log(`开始处理第${index}/${mblogList.length}项`)
+      this.log(`开始处理第${index}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}`)
       const hydrateBlogRes = await this.asyncHydrateMBlog({
         author_uid,
         mblog
       })
       // 处理完毕, 将数据存入数据库中
       if (hydrateBlogRes.isSuccess) {
-        this.log(`第${index}/${mblogList.length}项处理完毕`)
+        this.log(`第${index}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}处理完毕, 将错误记录从数据库中移除`)
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
+        // 然后删除旧记录
+        // await MFetchErrorRecord.asyncRemoveErrorRecord({
+        //   author_uid,
+        //   resource_type: retryMblogConfig.resource_type,
+        //   "lastest_page_mid": retryMblogConfig.lastest_page_mid,
+        //   "lastest_page_offset": retryMblogConfig.lastest_page_offset,
+        //   "long_text_weibo_id": retryMblogConfig.long_text_weibo_id,
+        //   "article_url": retryMblogConfig.article_url
+        // })
       } else {
-        this.log(`第${index}/${mblogList.length}项微博, mid:${mblog.mid}水合失败, 自动跳过, 待后续重抓`)
+        this.log(`第${index}/${retryMblogConfigList.length}项微博, mid:${mblog.mid}水合失败, 自动跳过, 待后续重抓`)
       }
     }
     this.log(`author_uid:${author_uid}对应的补抓任务执行完毕`)
