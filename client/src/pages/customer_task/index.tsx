@@ -63,6 +63,11 @@ type TypeDatabase = {
     total_page_count: number
     followers_count: number
   }
+  fetchErrorDistribution: {
+    weibo_page: number
+    long_text_weibo: number
+    article: number
+  }
 }
 
 const Order: {
@@ -171,6 +176,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
           total_page_count: 0,
           followers_count: 0,
         },
+        fetchErrorDistribution: {
+          article: 0,
+          long_text_weibo: 0,
+          weibo_page: 0,
+        },
       },
       (e) => e,
     ),
@@ -230,8 +240,29 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       return
     }
 
+    // 获取数据库中的抓取错误记录
+    const errorDistributionList = await ipcRenderer.sendSync('MFetchErrorRecord_asyncGetErrorDistributionCount', {
+      author_uid: uid,
+    })
+    console.log('errorDistribution => ', errorDistributionList)
     set$$Database(
       produce($$database, (raw) => {
+        // 更新错误数据分布
+        for (let record of errorDistributionList) {
+          switch (record.resource_type) {
+            case 'weibo_page':
+              raw.fetchErrorDistribution.weibo_page = record.count
+              break
+            case 'long_text_weibo':
+              raw.fetchErrorDistribution.long_text_weibo = record.count
+              break
+            case 'article':
+              raw.fetchErrorDistribution.article = record.count
+              break
+            default:
+          }
+        }
+
         raw.taskConfig.configList[0].uid = uid
         raw.currentUserInfo = userInfo
         if (updatePageRange) {
@@ -430,6 +461,22 @@ export default function IndexPage(props: { changeTabKey: Function }) {
             </Descriptions>
           )}
         </Form.Item>
+        <Form.Item label="待重试记录数">
+          <div className="flex-container">
+            <Descriptions bordered column={1}>
+              <Descriptions.Item label="微博页面">{$$database.fetchErrorDistribution.weibo_page}页</Descriptions.Item>
+              <Descriptions.Item label="长微博">
+                {$$database.fetchErrorDistribution.long_text_weibo}条
+              </Descriptions.Item>
+              <Descriptions.Item label="微博文章">{$$database.fetchErrorDistribution.article}篇</Descriptions.Item>
+            </Descriptions>
+          </div>
+        </Form.Item>
+        <Form.Item label="ℹ️Tip">
+          <div className="flex-container">
+            若频繁提示抓取失败, 请重新点击下方`退出当前账号`按钮后重登, 或者6小时后再来即可
+          </div>
+        </Form.Item>
         <Divider>备份配置</Divider>
 
         <Form.Item
@@ -457,7 +504,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         <Form.Item
           label={
             <span>
-              仅重试失败页面&nbsp;
+              仅重试失败记录&nbsp;
               <Tooltip title="跳过全量抓取, 只对之前抓取失败的页面记录进行重试. 重试成功后自动删除对应记录(正常抓取完成后, 默认重试失败页面, 不需要专门勾选. 如果本身没有失败记录, 相当于跳过抓取流程)">
                 <QuestionCircleOutlined />
               </Tooltip>
@@ -468,11 +515,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         >
           <Switch></Switch>
         </Form.Item>
-        <Form.Item label="ℹ️Tip">
-          <div className="flex-container">
-            若频繁提示抓取失败, 请重新点击下方`退出当前账号`按钮后重登, 或者6小时后再来即可
-          </div>
-        </Form.Item>
+
         <Collapse>
           <Collapse.Panel header="[高级选项]输出规则" key="output-config">
             <Form.Item

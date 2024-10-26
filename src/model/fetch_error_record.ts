@@ -55,8 +55,12 @@ export default class FetchErrorRecord extends Base {
    * @returns 
    */
   static async asyncGetErrorDistributionCount(author_uid: string) {
-    let resultList = <TypeFetchErrorRecord[]>await this.db
+    let resultList = <{
+      resource_type: string
+      'count(*)': number
+    }[]>await this.db
       .count('*')
+      .select('resource_type')
       .from(this.TABLE_NAME)
       .where('author_uid', '=', author_uid)
       .groupBy("resource_type")
@@ -64,7 +68,12 @@ export default class FetchErrorRecord extends Base {
         console.log("e =>", e)
         return []
       })
-    return resultList
+    return resultList.map(item => {
+      return {
+        resource_type: item.resource_type,
+        count: item['count(*)']
+      }
+    })
   }
 
 

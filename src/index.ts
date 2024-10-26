@@ -10,6 +10,7 @@ import DataTransferImport from '~/src/command/datatransfer/import'
 import InitEnvCommand from '~/src/command/init_env'
 import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
+import MFetchErrorRecord from '~/src/model/fetch_error_record'
 import fs from 'node:fs'
 import _ from 'lodash'
 import sharp from 'sharp'
@@ -478,6 +479,12 @@ ipcMain.on('MBlog_asyncGetMblogList', async (event, args) => {
 })
 ipcMain.on('MUser_asyncGetUserList', async (event) => {
   let result = await MUser.asyncGetUserList()
+  event.returnValue = result
+  return
+})
+// 获取抓取用户数分布
+ipcMain.on('MFetchErrorRecord_asyncGetErrorDistributionCount', async (event, { author_uid }: { author_uid: string }) => {
+  let result = await MFetchErrorRecord.asyncGetErrorDistributionCount(author_uid)
   event.returnValue = result
   return
 })
