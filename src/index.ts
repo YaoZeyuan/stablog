@@ -11,13 +11,15 @@ import InitEnvCommand from '~/src/command/init_env'
 import MUser from '~/src/model/mblog_user'
 import MBlog from '~/src/model/mblog'
 import MFetchErrorRecord from '~/src/model/fetch_error_record'
-import fs from 'node:fs'
+import fs from 'fs'
 import _ from 'lodash'
 import sharp from 'sharp'
 import path from 'path'
+import os from 'os'
 
 let argv = process.argv
 let isDebug = argv.includes('--stablog-debug')
+const isMacOS = os.platform() === 'darwin'
 let { app, BrowserWindow, ipcMain, session, shell } = Electron
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -103,6 +105,10 @@ function createWindow() {
     mainWindow.loadURL('http://127.0.0.1:8000')
     mainWindow.webContents.openDevTools()
   } else {
+    if (isMacOS) {
+      // MacOS下, 不打开控制台无法正常加载页面
+      mainWindow.webContents.openDevTools()
+    }
     // 线上地址
     mainWindow.loadFile('./dist/client/dist/index.html')
   }
