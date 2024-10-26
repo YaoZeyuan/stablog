@@ -30,6 +30,11 @@ import CommonUtil from '~/src/library/util/common'
  */
 const Const_Render_Html_Timeout_Second = 60
 /**
+ * 宽为760px的图片, 在电脑端打开正常, 但是pdf中会被拉伸到全屏大小, 成为原先的200%, 导致模糊.
+ * 为了保证pdf中图片清晰, 因此需要在截图时, 主动x2. 代价是pdf文件更大, 但可接受
+ */
+const Pixel_Zoom_Rate = 2
+/**
  * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
  */
 const Const_Max_Webview_Render_Height_Px = 5000
@@ -54,7 +59,8 @@ let Is_Normal_Display_Rate = true
 
 // 硬编码传入
 let globalSubWindow: InstanceType<typeof BrowserWindow> = null
-const Const_Default_Webview_Width = 760;
+// 图片放大后, 页面宽度也要等比例放大
+const Const_Default_Webview_Width = 760 * Pixel_Zoom_Rate;
 const Const_Default_Webview_Height = 10;
 class GenerateCustomer extends Base {
   static get signature() {
@@ -595,18 +601,24 @@ class GenerateCustomer extends Base {
       }, Const_Render_Html_Timeout_Second * 1000)
 
       let render = async () => {
+        // 先载入html文件
         // this.log("load url -> ", pageConfig.htmlUri)
         await webview.loadURL(htmlUri);
         // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
+        // 然后设置分辨率, Const_Default_Webview_Width x Const_Default_Webview_Height, 这里是正常的
         await globalSubWindow.setContentSize(
           Const_Default_Webview_Width,
           Const_Default_Webview_Height,
         );
+        // 若希望文件清晰, 分辨率需进行放大
+        globalSubWindow.webContents.setZoomFactor(Pixel_Zoom_Rate)
+
+        // 放大后页面scrollHeight为css值, 需要乘以放大系数后, 才是实际像素值
         // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
         // this.log("resize page, executeJavaScript ")
         let scrollHeight = await webview.executeJavaScript(
           `document.children[0].children[1].scrollHeight`,
-        );
+        ) * Pixel_Zoom_Rate;
 
         let imageUriList: string[] = []
         if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
@@ -727,7 +739,7 @@ class GenerateCustomer extends Base {
               })
               let out = mozjpeg.encode(jpgContent, {
                 //处理质量 百分比
-                quality: 80
+                quality: 50
               });
               jpgContent = out.data
               fs.writeFileSync(
@@ -762,7 +774,7 @@ class GenerateCustomer extends Base {
             })
             let out = mozjpeg.encode(jpgContent, {
               //处理质量 百分比
-              quality: 80
+              quality: 50
             });
             jpgContent = out.data
             fs.writeFileSync(
@@ -789,7 +801,7 @@ class GenerateCustomer extends Base {
 
           let out = mozjpeg.encode(jpgContent, {
             //处理质量 百分比
-            quality: 80
+            quality: 50
           });
           jpgContent = out.data
           let imageUri = baseImageUri + '0.jpg'
@@ -926,7 +938,7 @@ class GenerateCustomer extends Base {
                 x: 0,
                 y: 0,
                 width: width,
-                height: height
+                height: height,
               })
             if (i === 0) {
               // 只在第一页添加文字

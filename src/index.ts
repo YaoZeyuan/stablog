@@ -114,16 +114,19 @@ function createWindow() {
     // 配置最大高度, 该值默认值为屏幕高度, 如果大于该高度, 会出现滚动条
     maxHeight: 10000,
     // 负责渲染的子窗口不需要显示出来, 避免被用户误关闭
-    show: false,
+    show: true,
   })
 
   async function debugCaputure() {
     let targetSource =
-      'file:///F:/www/share/github/stablog/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/%E5%85%94%E4%B8%BB%E5%B8%AD-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86(2021-03-08~2021-03-27)/html_to_pdf/2021%EF%BC%8D03%EF%BC%8D27%2013%EF%BC%9A27%EF%BC%9A40_4619352240819112.html'
+      'file:///D:/win_www/stablog/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/%E4%BA%8C%E7%BA%A7%E5%B8%82%E5%9C%BA%E6%8D%A1%E8%BE%A3%E9%B8%A1%E5%86%A0%E5%86%9B-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86-(2020-11-06~2023-01-19)/html_to_pdf/2023-01-13%2013%EF%BC%9A54%EF%BC%9A49_4857447900517349.html'
     let demoUri = path.resolve(__dirname, '../demo.jpg')
 
-    const Const_Max_Webview_Render_Height_Px = 5000
-    const Const_Default_Webview_Width = 760
+    // 图片放大系数, 系数越大, pdf越清晰, 文件体积越大
+    const Pixel_Zoom_Radio = 2
+
+    const Const_Max_Webview_Render_Height_Px = 5000 * Pixel_Zoom_Radio
+    const Const_Default_Webview_Width = 760 * Pixel_Zoom_Radio
     const Const_Default_Webview_Height = 10
 
     let webview = subWindow.webContents
@@ -132,9 +135,11 @@ function createWindow() {
     await webview.loadURL(targetSource)
     // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
     await globalSubWindow.setContentSize(Const_Default_Webview_Width, Const_Default_Webview_Height)
+    // 扩大为200%
+    await globalSubWindow.webContents.setZoomFactor(Pixel_Zoom_Radio)
     // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
     // this.log("resize page, executeJavaScript ")
-    let scrollHeight = await webview.executeJavaScript(`document.children[0].children[1].scrollHeight`)
+    let scrollHeight = await webview.executeJavaScript(`document.children[0].children[1].scrollHeight`) * Pixel_Zoom_Radio
 
     let jpgContent: Buffer
     if (scrollHeight > Const_Max_Webview_Render_Height_Px) {
