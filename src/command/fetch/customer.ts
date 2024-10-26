@@ -167,6 +167,10 @@ class FetchCustomer extends Base {
         }
       }
       this.log(`用户${userInfo.screen_name}的微博数据抓取完毕`)
+
+      this.log(`针对抓取用户${userInfo.screen_name}过程中的失败任务, 执行重抓逻辑`)
+      await this.retryFetch(uid)
+      this.log(`重抓逻辑执行完毕`)
     }
     this.log(`所有任务抓取完毕`)
   }
