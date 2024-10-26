@@ -247,6 +247,11 @@ class FetchCustomer extends Base {
       })
       this.log(`第${rawMblogFetchIndex}/${rawMBlogRes.recordList.length}条微博详情请求完毕, 休眠1s`)
       await Util.asyncSleep(1000)
+      if (rawMblogFetchIndex > 1 && rawMblogFetchIndex % 10 === 0) {
+        // 避免频繁请求导致被封ip
+        this.log(`累计抓取${rawMblogFetchIndex}条微博, 额外休眠${Const_Retry_Wait_Seconds}s`)
+        await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      }
       // 不管成功或失败, 都应把数据记录下来
       // if (hydrateBlogRes.isSuccess === false) {
       //   continue
@@ -329,10 +334,15 @@ class FetchCustomer extends Base {
           author_uid,
           mblog
         })
-        this.log(`第${refetchMblogIndex}/${res.recordList.length}条微博详情请求完毕, 休眠1s`)
-        await Util.asyncSleep(1000)
         // 处理完毕, 将数据存入数据库中
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
+        this.log(`第${refetchMblogIndex}/${res.recordList.length}条微博详情请求完毕, 休眠1s`)
+        await Util.asyncSleep(1000)
+        if (refetchMblogIndex > 1 && refetchMblogIndex % 10 === 0) {
+          // 避免频繁请求导致被封ip
+          this.log(`累计抓取${refetchMblogIndex}条微博, 额外休眠${Const_Retry_Wait_Seconds}s`)
+          await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+        }
       }
       // 然后删除旧记录
       await MFetchErrorRecord.asyncRemoveErrorRecord({
@@ -373,6 +383,12 @@ class FetchCustomer extends Base {
       })
       this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}条微博详情请求完毕, 休眠1s`)
       await Util.asyncSleep(1000)
+      await Util.asyncSleep(1000)
+      if (retryMblogConfigIndex > 1 && retryMblogConfigIndex % 10 === 0) {
+        // 避免频繁请求导致被封ip
+        this.log(`累计抓取${retryMblogConfigIndex}条微博, 额外休眠${Const_Retry_Wait_Seconds}s`)
+        await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      }
       // 处理完毕, 将数据存入数据库中
       if (hydrateBlogRes.isSuccess) {
         this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项抓取失败任务, id:${retryMblogConfig.id}处理完毕, 将新数据更新至数据库中, 移除失败记录`)
@@ -532,6 +548,11 @@ class FetchCustomer extends Base {
           retryCount++
           this.log(`第${retryCount}/${maxRetryCount}次获取${author_uid}的微博${mblog.id}对应的长微博${bid}获取失败, 休眠${Const_Retry_Wait_Seconds}s后重试`)
           await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+
+          // 更新st
+          let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+          this.log(`更新st, 新st值:${newSt}`)
+          this.requestConfig.st = newSt
         }
       }
       this.log(`${maxRetryCount}次获取${author_uid}的微博${mblog.id}对应的长微博${bid}获取均失败, 录入数据库`)
@@ -574,6 +595,10 @@ class FetchCustomer extends Base {
           retryCount++
           this.log(`第${retryCount}/${maxRetryCount}次获取${author_uid}的微博${mblog.id}对应的微博文章${articleId}获取失败, 休眠${Const_Retry_Wait_Seconds}s后重试`)
           await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+          // 更新st
+          let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
+          this.log(`更新st, 新st值:${newSt}`)
+          this.requestConfig.st = newSt
         }
       }
       this.log(`${maxRetryCount}次获取${author_uid}的微博${mblog.id}对应的微博文章${articleId}获取均失败, 录入数据库`)
