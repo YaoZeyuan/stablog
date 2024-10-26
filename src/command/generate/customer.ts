@@ -56,10 +56,10 @@ const Const_Max_Jpge_Height_In_Sharp_Px = 25000
  */
 let Is_Normal_Display_Rate = true
 /**
- * 图片压缩比率
- * 处理质量 百分比-80%时体积1600kb, 50%时体积1000kb, 但未观察到肉眼可见区别
+ * jpg图片压缩比率
+ * 实测显示, 对于相同内容文件, 压缩80%时体积1600kb, 50%时体积1000kb, 但pdf质量上没有肉眼可见区别
  */
-const Const_Jpeg_Compress_Rate = 50
+const Const_Jpeg_Compress_Rate = 60
 
 
 // 硬编码传入
