@@ -247,15 +247,16 @@ class FetchCustomer extends Base {
         // 数据为空自动跳过
         continue
       }
-      const hydrateBlog = await this.asyncHydrateMBlog({
+      const hydrateBlogRes = await this.asyncHydrateMBlog({
         author_uid,
         mblog
       })
-      if (hydrateBlog === undefined) {
-        continue
-      }
+      // 不管成功或失败, 都应把数据记录下来
+      // if (hydrateBlogRes.isSuccess === false) {
+      //   continue
+      // }
 
-      mblogList.push(hydrateBlog)
+      mblogList.push(hydrateBlogRes.record)
     }
 
     this.log(`${target}抓取成功, 准备存入数据库`)
@@ -298,6 +299,11 @@ class FetchCustomer extends Base {
   }
 
 
+  /**
+   * 运行完成后, 自动进行重抓
+   * @param author_uid 
+   * @returns 
+   */
   async retryFetch(author_uid: string) {
     const fetchErrorRecordList = await MFetchErrorRecord.asyncGetErrorRecordList(author_uid)
     this.log(`准备抓取${author_uid}中, 所有失败的记录, 共${fetchErrorRecordList.length}项`)
@@ -317,16 +323,16 @@ class FetchCustomer extends Base {
       }
       this.log(`获取mid:${errorPageConfig.lastest_page_mid}对应的${errorPageConfig.lastest_page_offset}页成功, 录入数据库`)
       for (let mblog of res.recordList) {
-        const hydrateBlog = await this.asyncHydrateMBlog({
+        if (_.isEmpty(mblog)) {
+          // 为空自动跳过
+          continue
+        }
+        const hydrateBlogRes = await this.asyncHydrateMBlog({
           author_uid,
           mblog
         })
         // 处理完毕, 将数据存入数据库中
-        if (hydrateBlog === undefined) {
-          await this.asyncReplaceMblogIntoDb(mblog)
-        } else {
-          await this.asyncReplaceMblogIntoDb(hydrateBlog)
-        }
+        await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
       }
       // 然后删除旧记录
       // await MFetchErrorRecord.asyncRemoveErrorRecord({
@@ -364,17 +370,17 @@ class FetchCustomer extends Base {
     for (let mblog of mblogList) {
       index++
       this.log(`开始处理第${index}/${mblogList.length}项`)
-      const hydrateBlog = await this.asyncHydrateMBlog({
+      const hydrateBlogRes = await this.asyncHydrateMBlog({
         author_uid,
         mblog
       })
       // 处理完毕, 将数据存入数据库中
-      if (hydrateBlog === undefined) {
-        await this.asyncReplaceMblogIntoDb(mblog)
+      if (hydrateBlogRes.isSuccess) {
+        this.log(`第${index}/${mblogList.length}项处理完毕`)
+        await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
       } else {
-        await this.asyncReplaceMblogIntoDb(hydrateBlog)
+        this.log(`第${index}/${mblogList.length}项微博, mid:${mblog.mid}水合失败, 自动跳过, 待后续重抓`)
       }
-      this.log(`第${index}/${mblogList.length}项处理完毕`)
     }
     this.log(`author_uid:${author_uid}对应的补抓任务执行完毕`)
     return
@@ -443,11 +449,17 @@ class FetchCustomer extends Base {
     mblog
   }: {
     author_uid: string, mblog: TypeWeibo.TypeMblog
-  }) {
+  }): Promise<{
+    isSuccess: boolean,
+    record: TypeWeibo.TypeMblog
+  }> {
     // 最多重试5次
     const maxRetryCount = 5
     if (_.isEmpty(mblog)) {
-      return undefined
+      return {
+        isSuccess: false,
+        record: mblog
+      }
     }
 
     const asyncGetLongTextWeibo = async ({ bid }: { bid: string }) => {
@@ -473,6 +485,7 @@ class FetchCustomer extends Base {
       }
       this.log(`${maxRetryCount}次获取${author_uid}的微博${mblog.id}对应的长微博${bid}获取均失败, 录入数据库`)
 
+      // 有uniq索引限制, 可以多次replace, 不会出现重复
       await MFetchErrorRecord.asyncAddErrorRecord({
         author_uid: author_uid,
         resource_type: 'long_text_weibo',
@@ -514,6 +527,7 @@ class FetchCustomer extends Base {
       }
       this.log(`${maxRetryCount}次获取${author_uid}的微博${mblog.id}对应的微博文章${articleId}获取均失败, 录入数据库`)
 
+      // 有uniq索引限制, 可以多次replace, 不会出现重复
       await MFetchErrorRecord.asyncAddErrorRecord({
         author_uid: author_uid,
         resource_type: 'article',
@@ -543,9 +557,15 @@ class FetchCustomer extends Base {
       let realMblog = <TypeWeibo.TypeMblog>await asyncGetLongTextWeibo({ bid })
       if (realMblog === undefined) {
         // 获取失败, 自动返回
-        return mblog
+        return {
+          isSuccess: false,
+          record: mblog
+        }
       }
-      return realMblog
+      return {
+        isSuccess: true,
+        record: realMblog
+      }
     }
 
     if (_.isEmpty(mblog.retweeted_status) == false && mblog.retweeted_status !== undefined) {
@@ -556,7 +576,10 @@ class FetchCustomer extends Base {
         realRetweetMblog = <TypeWeibo.TypeMblog>await asyncGetLongTextWeibo({ bid })
         if (realRetweetMblog === undefined) {
           // 获取失败, 自动返回
-          return mblog
+          return {
+            isSuccess: false,
+            record: mblog
+          }
         }
         mblog.retweeted_status = realRetweetMblog
       }
@@ -574,7 +597,10 @@ class FetchCustomer extends Base {
         })
         if (_.isEmpty(articleRecord)) {
           // 文章详情获取失败, 不储存该记录
-          return mblog
+          return {
+            isSuccess: false,
+            record: mblog
+          }
         }
         mblog.retweeted_status.article = articleRecord
       }
@@ -589,11 +615,17 @@ class FetchCustomer extends Base {
       })
       if (_.isEmpty(articleRecord)) {
         // 文章详情获取失败, 不储存该记录
-        return mblog
+        return {
+          isSuccess: false,
+          record: mblog
+        }
       }
       mblog.article = articleRecord
     }
-    return mblog
+    return {
+      isSuccess: true,
+      record: mblog
+    }
   }
 
   /**
