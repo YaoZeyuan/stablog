@@ -244,7 +244,6 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     const errorDistributionList = await ipcRenderer.sendSync('MFetchErrorRecord_asyncGetErrorDistributionCount', {
       author_uid: uid,
     })
-    console.log('errorDistribution => ', errorDistributionList)
     set$$Database(
       produce($$database, (raw) => {
         // 更新错误数据分布
