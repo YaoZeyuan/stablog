@@ -10,13 +10,13 @@ export default class Base extends Component {
   state = {
     showThankList: false,
     config: {
-      downloadUrl: 'https://github.com/YaoZeyuan/stablog#%E8%BD%AF%E4%BB%B6%E4%B8%8B%E8%BD%BD',
-      releaseAt: '2019年10月22日',
-      releaseNote: '稳部落1.1.0, 闪亮发布.',
-      version: 1.1,
+      downloadUrl: 'https://www.yaozeyuan.online/stablog',
+      releaseAt: '2024年10月26日',
+      releaseNote: '发布3.5.1, 增加重试抓取失败任务能力. Etf save the world',
+      version: '3.5.1',
       detail: {
-          windows: { version: '3.4.0', url: 'https://wwtd.lanzout.com/i6xzw2d3afpe' },
-          mac: { version: '暂不支持', url: 'https://github.com/YaoZeyuan/stablog/releases' },
+        windows: { version: '3.5.1', url: 'https://wwtd.lanzout.com/iVHMp2dggifg' },
+        mac: { version: '3.5.1', url: 'https://wwtd.lanzout.com/it6pH2dggdpg' },
       },
     },
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
@@ -24,16 +24,19 @@ export default class Base extends Component {
 
   async componentDidMount() {
     // 每次访问主动刷新下接口
-    axios.get('https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json').catch(e=>{})
-    axios.get('https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json').catch(e=>{})
-    let versionResponse = await axios.get('https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json')
-    let thankListResponse = await axios.get('https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json')
-    let config = versionResponse.data
-    let thankList = thankListResponse.data
-    this.setState({
-      config,
-      thankList,
-    })
+    axios.get('https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json').catch((e) => {})
+    axios
+      .get('https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json')
+      .catch((e) => {})
+    // 直接写死接口数据
+    // let versionResponse = await axios.get('https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json')
+    // let thankListResponse = await axios.get('https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json')
+    // let config = versionResponse.data
+    // let thankList = thankListResponse.data
+    // this.setState({
+    //   config,
+    //   thankList,
+    // })
   }
 
   toggleThankList = () => {
