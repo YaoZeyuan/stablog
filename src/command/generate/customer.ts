@@ -889,6 +889,7 @@ class GenerateCustomer extends Base {
     addLine(timeRangeStr)
     addLine("")
     addLine("该文件由稳部落自动生成")
+    addLine("手机端使用多看阅读打开效果最佳, 可检索文本")
     addLine("")
     addLine("项目主页")
     addLink("https://www.yaozeyuan.online/stablog")
