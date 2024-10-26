@@ -115,6 +115,8 @@ let taskConfig: TypeTaskConfig.Customer = {
   fetchEndAtPageNo: 100000,
   outputStartAtMs: dayjs('2010-01-01 00:00:00').unix() * 1000,
   outputEndAtMs: dayjs().add(1, 'year').unix() * 1000,
+  enableAutoConfig: true,
+  onlyRetry: false,
   isSkipFetch: false,
   isSkipGeneratePdf: false,
   isRegenerateHtml2PdfImage: false,
@@ -545,6 +547,34 @@ export default function IndexPage(props: { changeTabKey: Function }) {
 
         <Collapse>
           <Collapse.Panel header="[高级选项]开发调试" key="develop-config">
+            <Form.Item
+              label={
+                <span>
+                  自动更新抓取/导出范围&nbsp;
+                  <Tooltip title="自动更新抓取范围和导出范围,默认启用,仅在调试时推荐关闭">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="enableAutoConfig"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
+            </Form.Item>
+            <Form.Item
+              label={
+                <span>
+                  只对失败记录进行重试&nbsp;
+                  <Tooltip title="跳过全量抓取, 只对失败记录进行重试(若没有失败记录, eg: 未进行过抓取, 相当于跳过全部抓取过程)">
+                    <QuestionCircleOutlined />
+                  </Tooltip>
+                </span>
+              }
+              name="onlyRetry"
+              valuePropName="checked"
+            >
+              <Switch></Switch>
+            </Form.Item>
             <Form.Item
               label={
                 <span>

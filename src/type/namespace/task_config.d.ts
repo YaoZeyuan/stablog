@@ -15,6 +15,10 @@ declare namespace TaskConfig {
     bookTitle: string // 书名
     comment: string // 备注
     /**
+     * 是否启用自动配置(自动配置会将用户配置的起止时间等参数还原, 默认启用)
+     */
+    enableAutoConfig: boolean
+    /**
      * 微博排序方式: 按发布事件升序排列, 按发布时间降序排列
      */
     postAtOrderBy: 'desc' | 'asc'
@@ -34,6 +38,10 @@ declare namespace TaskConfig {
      * 输出微博时间段-结束时间(毫秒)
      */
     outputEndAtMs: number
+    /**
+     * 是否只进行重抓
+     */
+    onlyRetry: boolean
     /**
      * 是否跳过备份阶段
      */

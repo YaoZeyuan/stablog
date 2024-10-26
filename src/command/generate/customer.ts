@@ -826,7 +826,7 @@ class GenerateCustomer extends Base {
     // let fontName = "mi_sans_normal_thin" 
     // 恢复使用方正书宋字体
     let fontUri = path.resolve(__dirname, '../../public/font/fangzheng_shusong_normal.ttf')
-    let fontName = "fangzheng_shusong_normal" 
+    let fontName = "fangzheng_shusong_normal"
     let fontContent = fs.readFileSync(fontUri)
 
     doc.addFileToVFS(`${fontName}.ttf`, fontContent.toString("base64"))
