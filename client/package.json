@@ -14,7 +14,7 @@
     "@umijs/max": "^4.3.26",
     "antd": "^5.21.5",
     "dayjs": "^1.11.13",
-    "immer": "^8.0.1",
+    "immer": "^9.0.6",
     "semver": "^7.3.4"
   },
   "devDependencies": {
