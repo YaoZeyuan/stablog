@@ -16,7 +16,7 @@
 
 # 软件下载
 
-最新版本: 3.5.0
+最新版本: 3.5.1
 
 [点击进入下载页](https://www.yaozeyuan.online/stablog/)
 
