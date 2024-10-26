@@ -16,7 +16,7 @@ export default class Base extends Component {
       version: '3.5.1',
       detail: {
         windows: { version: '3.5.1', url: 'https://wwtd.lanzout.com/iVHMp2dggifg' },
-        mac: { version: '3.5.1', url: 'https://wwtd.lanzout.com/it6pH2dggdpg' },
+        mac: { version: '3.5.1', url: 'https://wwtd.lanzout.com/iTM0b2dgryib' },
       },
     },
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
