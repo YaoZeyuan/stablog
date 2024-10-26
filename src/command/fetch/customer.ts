@@ -375,7 +375,7 @@ class FetchCustomer extends Base {
       await Util.asyncSleep(1000)
       // 处理完毕, 将数据存入数据库中
       if (hydrateBlogRes.isSuccess) {
-        this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项, id:${retryMblogConfig.id}处理完毕, 更新数据库配置, 将错误记录从数据库中移除`)
+        this.log(`第${retryMblogConfigIndex}/${retryMblogConfigList.length}项抓取失败任务, id:${retryMblogConfig.id}处理完毕, 将新数据更新至数据库中, 移除失败记录`)
         await this.asyncReplaceMblogIntoDb(hydrateBlogRes.record)
         // 然后删除旧记录
         await MFetchErrorRecord.asyncRemoveErrorRecord({
