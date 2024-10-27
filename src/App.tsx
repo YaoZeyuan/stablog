@@ -135,7 +135,7 @@ export default class Base extends Component {
           <img
             width="149px"
             height="149px"
-            src="https://cdn.jsdelivr.net/gh/YaoZeyuan/blog@master/source/static/img/fork_me_on_github_right_green.png"
+            src="https://gitee.com/yaozeyuan/blog/raw/master/source/static/img/fork_me_on_github_right_green.png"
             alt="Fork me on GitHub"
           />
         </a>
