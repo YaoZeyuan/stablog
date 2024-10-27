@@ -26,9 +26,9 @@ import { BrowserWindow } from 'electron'
 import CommonUtil from '~/src/library/util/common'
 
 /**
- * 单张页面渲染时间不能超过60秒
+ * 单张页面渲染时间不能超过120秒(降低屏幕高度后, 渲染时间增加, 所以对应的最大等待时间也要增加)
  */
-const Const_Render_Html_Timeout_Second = 60
+const Const_Render_Html_Timeout_Second = 120
 /**
  * 宽为760px的图片, 在电脑端打开正常, 但是pdf中会被拉伸到全屏大小, 成为原先的200%, 导致模糊.
  * 为了保证pdf中图片清晰, 因此需要在截图时, 主动x2. 代价是pdf文件更大, 但可接受
@@ -37,7 +37,7 @@ const Pixel_Zoom_Rate = 2
 /**
  * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
  */
-const Const_Max_Webview_Render_Height_Px = 3000
+const Const_Max_Webview_Render_Height_Px = 2000 * Pixel_Zoom_Rate
 /**
  * webview中, js滚动返回和实际完成滚动时间不一致, 因此需要额外休眠等待. 等待时间过短会截取到错误图片
  */
@@ -642,7 +642,8 @@ class GenerateCustomer extends Base {
 
           while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
             let imgIndex = imgContentList.length;
-            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgIndex
+            // 在页面内滚动时, 需要将实际像素重新转为逻辑像素
+            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px / Pixel_Zoom_Rate * imgIndex
             // 先移动到offset高度
             let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
             await webview.executeJavaScript(command);
@@ -677,7 +678,8 @@ class GenerateCustomer extends Base {
             // 首先调整页面高度
             await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight);
             // 然后走流程, 捕捉界面
-            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgContentList.length
+            // 在页面内滚动时, 需要将实际像素重新转为逻辑像素
+            let currentOffsetHeight = Const_Max_Webview_Render_Height_Px / Pixel_Zoom_Rate * imgContentList.length
             let imgIndex = imgContentList.length;
 
             // 先移动到offset高度
