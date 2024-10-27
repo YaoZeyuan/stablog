@@ -8,8 +8,6 @@ import path from 'path'
 // import { BrowserWindow } from 'electron'
 // import CommonUtil from '~/src/library/util/common'
 // import { TypeTransConfigPackageList } from './generate/trans_config'
-import imageSize from 'image-size'
-import * as mozjpeg from "mozjpeg-js"
 import sharp from "sharp"
 
 // const outputUri = path.resolve('F:/www/share/github/stablog/缓存文件/pdf_debug_1.pdf')
