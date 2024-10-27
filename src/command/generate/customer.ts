@@ -931,40 +931,44 @@ class GenerateCustomer extends Base {
         for (let i = 0; i < weiboRecord.imageUriList.length; i++) {
           let imgUri = weiboRecord.imageUriList[i];
           if (fs.existsSync(imgUri) === false) {
-            // 图片本身不存在, 说明渲染失败
-            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博渲染失败, 自动跳过`)
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博, ${imgUri}渲染失败, 自动跳过`)
             continue
-          } else {
-            let imageBuffer = fs.readFileSync(imgUri)
+          }
+          const fileContent = fs.readFileSync(imgUri)
+          if (fileContent.byteLength === 0) {
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博, ${imgUri}图片体积为0, 为非法文件, 自动跳过`)
+            continue
+          }
 
-            let size = await imageSize.imageSize(imageBuffer)
-            let { width, height } = size
-            if (!width || width <= 0 || !height || height <= 0) {
-              this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
-              continue
-            }
+          let imageBuffer = fs.readFileSync(imgUri)
 
-            doc.addPage([width, height], width > height ? "landscape" : "portrait")
-            doc.addImage(
-              {
-                imageData: imageBuffer,
-                x: 0,
-                y: 0,
-                width: width,
-                height: height,
-              })
-            if (i === 0) {
-              // 只在第一页添加文字
-              doc.setFontSize(0.001)
-              doc.text(weiboRecord.htmlContent, 0, 0, {
-                // align: 'center',
-              })
-            }
-            currentPageNo = currentPageNo + 1
-            if (currentPageNo % 10 === 0) {
-              // 休眠0.1秒, 避免因频繁添加页面导致界面卡死
-              await CommonUtil.asyncSleep(1000 * 0.1)
-            }
+          let size = await imageSize.imageSize(imageBuffer)
+          let { width, height } = size
+          if (!width || width <= 0 || !height || height <= 0) {
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
+            continue
+          }
+
+          doc.addPage([width, height], width > height ? "landscape" : "portrait")
+          doc.addImage(
+            {
+              imageData: imageBuffer,
+              x: 0,
+              y: 0,
+              width: width,
+              height: height,
+            })
+          if (i === 0) {
+            // 只在第一页添加文字
+            doc.setFontSize(0.001)
+            doc.text(weiboRecord.htmlContent, 0, 0, {
+              // align: 'center',
+            })
+          }
+          currentPageNo = currentPageNo + 1
+          if (currentPageNo % 10 === 0) {
+            // 休眠0.1秒, 避免因频繁添加页面导致界面卡死
+            await CommonUtil.asyncSleep(1000 * 0.1)
           }
         }
       }
