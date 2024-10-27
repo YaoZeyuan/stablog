@@ -1,10 +1,9 @@
-利用jsdelivr作为静态资源接口
+利用gitee.com作为静态资源接口
 
 接口api地址:
-- https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json
-- https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json
+- https://gitee.com/yaozeyuan/stablog/raw/master/upgrade_config/version.json
+- https://gitee.com/yaozeyuan/stablog/raw/master/upgrade_config/thank_you/list.json
 
 刷新接口内容:
 
-- https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/thank_you/list.json
-- https://purge.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json
+- https://gitee.com/yaozeyuan/stablog  点击强制同步

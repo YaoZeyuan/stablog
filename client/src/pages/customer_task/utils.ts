@@ -137,7 +137,7 @@ export function startBackupTask() {
 }
 
 export async function asyncCheckNeedUpdate() {
-  let checkUpgradeUri = 'https://cdn.jsdelivr.net/gh/YaoZeyuan/stablog@master/upgrade_config/version.json';
+  let checkUpgradeUri = 'https://gitee.com/yaozeyuan/stablog/raw/master/upgrade_config/version.json';
   let remoteVersionConfig = await http
     .asyncGet(checkUpgradeUri, {
       params: {
