@@ -942,8 +942,14 @@ class GenerateCustomer extends Base {
 
           let imageBuffer = fs.readFileSync(imgUri)
 
-          let size = await imageSize.imageSize(imageBuffer)
-          let { width, height } = size
+          let size: { width: number | undefined, height: number | undefined } = { width: 0, height: 0 }
+          try {
+            size = await imageSize.imageSize(imageBuffer)
+          } catch (e) {
+            this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博, ${imgUri}图片宽高解析失败, 为非法文件, 自动跳过&自动删除图片`)
+            fs.unlinkSync(imgUri)
+          }
+          let { width = 0, height = 0 } = size
           if (!width || width <= 0 || !height || height <= 0) {
             this.log(`第${weiboIndex}/${weiboDayRecord.configList.length}条微博截图捕获失败, 自动跳过`)
             continue
