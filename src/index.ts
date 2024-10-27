@@ -125,13 +125,13 @@ function createWindow() {
 
   async function debugCaputure() {
     let targetSource =
-      'file:///D:/win_www/stablog/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/%E4%BA%8C%E7%BA%A7%E5%B8%82%E5%9C%BA%E6%8D%A1%E8%BE%A3%E9%B8%A1%E5%86%A0%E5%86%9B-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86-(2020-11-06~2023-01-19)/html_to_pdf/2023-01-13%2013%EF%BC%9A54%EF%BC%9A49_4857447900517349.html'
+      'file:///C:/Users/yao/AppData/Local/Programs/stablog/resources/app/%E7%A8%B3%E9%83%A8%E8%90%BD%E8%BE%93%E5%87%BA%E7%9A%84%E7%94%B5%E5%AD%90%E4%B9%A6/ETF%E6%8B%AF%E6%95%91%E4%B8%96%E7%95%8C-%E5%BE%AE%E5%8D%9A%E6%95%B4%E7%90%86-%E7%AC%AC1%EF%BC%8F3%E5%8D%B7-(2015-09-28~2018-11-15)/html_to_pdf/2016-07-01%2011%EF%BC%9A31%EF%BC%9A16_3992391939353203.html'
     let demoUri = path.resolve(__dirname, '../demo.jpg')
 
     // 图片放大系数, 系数越大, pdf越清晰, 文件体积越大
     const Pixel_Zoom_Radio = 2
 
-    const Const_Max_Webview_Render_Height_Px = 5000 * Pixel_Zoom_Radio
+    const Const_Max_Webview_Render_Height_Px = 2000 * Pixel_Zoom_Radio
     const Const_Default_Webview_Width = 760 * Pixel_Zoom_Radio
     const Const_Default_Webview_Height = 10
 
@@ -172,11 +172,14 @@ function createWindow() {
 
       while (remainHeight >= Const_Max_Webview_Render_Height_Px) {
         let imgIndex = imgContentList.length
-        let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgIndex
+        // 将实际像素转回逻辑像素
+        let currentOffsetHeight = Const_Max_Webview_Render_Height_Px / Pixel_Zoom_Radio * imgIndex
+
+        Logger.log(`[${remainHeight}]开始执行页面滚动`)
         // 先移动到offset高度
         let command = `document.children[0].children[1].scrollTop = ${currentOffsetHeight}`
         await webview.executeJavaScript(command)
-
+        Logger.log(`[${remainHeight}]页面滚动执行完毕`)
         // 然后对界面截屏
         // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
         await CommonUtil.asyncSleep(1000 * 0.5)
@@ -196,7 +199,8 @@ function createWindow() {
         // 首先调整页面高度
         await subWindow.setContentSize(Const_Default_Webview_Width, remainHeight)
         // 然后走流程, 捕捉界面
-        let currentOffsetHeight = Const_Max_Webview_Render_Height_Px * imgContentList.length
+        // 将实际像素转回逻辑像素
+        let currentOffsetHeight = Const_Max_Webview_Render_Height_Px / Pixel_Zoom_Radio * imgContentList.length
         let imgIndex = imgContentList.length
 
         // 先移动到offset高度

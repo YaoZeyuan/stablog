@@ -39,8 +39,8 @@ importers:
         specifier: ^10.0.0
         version: 10.1.0
       image-size:
-        specifier: ^0.8.3
-        version: 0.8.3
+        specifier: ^1.1.1
+        version: 1.1.1
       json5:
         specifier: ^2.1.0
         version: 2.2.3
@@ -2923,9 +2923,9 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  image-size@0.8.3:
-    resolution: {integrity: sha512-SMtq1AJ+aqHB45c3FsB4ERK0UCiA2d3H1uq8s+8T0Pf8A3W4teyBQyaFaktH6xvZqh+npwlKU7i4fJo0r7TYTg==}
-    engines: {node: '>=6.9.0'}
+  image-size@1.1.1:
+    resolution: {integrity: sha512-541xKlUw6jr/6gGuk92F+mYM5zaFAc5ahphvkqvNe2bQ6gVBkd6bfrmVJ2t4KDAfikAYZyIqTnktX3i6/aQDrQ==}
+    engines: {node: '>=16.x'}
     hasBin: true
 
   import-fresh@3.3.0:
@@ -3965,8 +3965,8 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
-  queue@6.0.1:
-    resolution: {integrity: sha512-AJBQabRCCNr9ANq8v77RJEv73DPbn55cdTb+Giq4X0AVnNVZvMHlYp7XlQiN+1npCZj1DuSmaA2hYVUUDgxFDg==}
+  queue@6.0.2:
+    resolution: {integrity: sha512-iHZWu+q3IdFZFX36ro/lKBkSvfkztY5Y7HMiPlOUjhupPcG2JMfst2KKEpu5XndviX/3UhFbRngUPNKtgvtZiA==}
 
   quick-lru@5.1.1:
     resolution: {integrity: sha512-WuyALRjWPDGtt/wzJiadO5AXY+8hZ80hVpe6MyivgraREW751X3SbhRvG3eLKOYN+8VEvqLcf3wdnt44Z4S4SA==}
@@ -8216,9 +8216,9 @@ snapshots:
   image-size@0.5.5:
     optional: true
 
-  image-size@0.8.3:
+  image-size@1.1.1:
     dependencies:
-      queue: 6.0.1
+      queue: 6.0.2
 
   import-fresh@3.3.0:
     dependencies:
@@ -9335,7 +9335,7 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  queue@6.0.1:
+  queue@6.0.2:
     dependencies:
       inherits: 2.0.4
 
