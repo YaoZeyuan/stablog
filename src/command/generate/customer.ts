@@ -37,7 +37,11 @@ const Pixel_Zoom_Rate = 2
 /**
  * 渲染webview最大高度(经实验, 当Electron窗口高度超过16380时, 会直接黑屏卡死, 所以需要专门限制下)
  */
-const Const_Max_Webview_Render_Height_Px = 5000
+const Const_Max_Webview_Render_Height_Px = 3000
+/**
+ * webview中, js滚动返回和实际完成滚动时间不一致, 因此需要额外休眠等待. 等待时间过短会截取到错误图片
+ */
+const Const_Webview_Js_Scroll_Sleep_Second = 0.5
 /**
  * 单卷中最多只能有5000条微博
  */
@@ -645,7 +649,7 @@ class GenerateCustomer extends Base {
 
             // 然后对界面截屏
             // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
-            await CommonUtil.asyncSleep(1000 * 0.2)
+            await CommonUtil.asyncSleep(1000 * Const_Webview_Js_Scroll_Sleep_Second)
             let nativeImg = await webview.capturePage();
             let content = await nativeImg.toJPEG(100)
 
@@ -681,7 +685,7 @@ class GenerateCustomer extends Base {
             await webview.executeJavaScript(command);
             // 然后对界面截屏
             // js指令执行后, 滚动到指定位置还需要时间, 所以截屏前需要sleep一下
-            await CommonUtil.asyncSleep(1000 * 0.2)
+            await CommonUtil.asyncSleep(1000 * Const_Webview_Js_Scroll_Sleep_Second)
             let nativeImg = await webview.capturePage();
 
             let content = await nativeImg.toJPEG(100)
