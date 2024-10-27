@@ -15,8 +15,8 @@ export default class Base extends Component {
       releaseNote: '发布3.5.3, 增加重试抓取失败任务能力. Etf save the world',
       version: '3.5.3',
       detail: {
-        windows: { version: '3.5.3', url: 'https://wwtd.lanzout.com/iZ6mG2dj1a8j' },
-        mac: { version: '3.5.3', url: 'https://wwtd.lanzout.com/ikaC42dj1tza' },
+        windows: { version: '3.5.3', url: 'https://wwtd.lanzout.com/idKyQ2dje4dg' },
+        mac: { version: '3.5.3', url: 'https://wwtd.lanzout.com/iefB52dje6oj' },
       },
     },
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
