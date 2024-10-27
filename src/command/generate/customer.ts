@@ -829,7 +829,15 @@ class GenerateCustomer extends Base {
         reslove({ imageUriList, isRenderSuccess: true })
       }
 
-      render()
+      render().catch(e => {
+        const error = e as Error
+
+        this.log(`${htmlUri}转换图片失败. 错误信息:`, {
+          "message": error?.message,
+          "stack": error?.stack,
+        })
+        reslove({ imageUriList: [], isRenderSuccess: false })
+      })
     })
 
   }
