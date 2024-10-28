@@ -12,11 +12,11 @@ export default class Base extends Component {
     config: {
       downloadUrl: 'https://www.yaozeyuan.online/stablog',
       releaseAt: '2024年10月27日',
-      releaseNote: '发布3.5.3, 增加重试抓取失败任务能力. Etf save the world',
-      version: '3.5.3',
+      releaseNote: '发布3.5.4, 增加重试抓取失败任务能力. Etf save the world',
+      version: '3.5.4',
       detail: {
-        windows: { version: '3.5.3', url: 'https://wwtd.lanzout.com/idKyQ2dje4dg' },
-        mac: { version: '3.5.3', url: 'https://wwtd.lanzout.com/iefB52dje6oj' },
+        windows: { version: '3.5.4', url: 'https://wwtd.lanzout.com/iDA1P2djvnrg' },
+        mac: { version: '3.5.4', url: 'https://wwtd.lanzout.com/iz9op2djv08j' },
       },
     },
     thankList: [{ reason: '*明明捐助了25元', time: '2019-10-14 21:34' }],
