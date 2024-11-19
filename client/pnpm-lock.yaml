@@ -24,8 +24,8 @@ importers:
         specifier: ^1.11.13
         version: 1.11.13
       immer:
-        specifier: ^8.0.1
-        version: 8.0.4
+        specifier: ^9.0.6
+        version: 9.0.6
       semver:
         specifier: ^7.3.4
         version: 7.6.3
@@ -3624,6 +3624,9 @@ packages:
 
   immer@8.0.4:
     resolution: {integrity: sha512-jMfL18P+/6P6epANRvRk6q8t+3gGhqsJ9EuJ25AXE+9bNTYtssvzeYbEd0mXRYWCmmXSIbnlpz6vd6iJlmGGGQ==}
+
+  immer@9.0.6:
+    resolution: {integrity: sha512-G95ivKpy+EvVAnAab4fVa4YGYn24J1SpEktnJX7JJ45Bd7xqME/SCplFzYFmTbrkwZbQ4xJK1xMTUYBkN6pWsQ==}
 
   immutable@3.8.2:
     resolution: {integrity: sha512-15gZoQ38eYjEjxkorfbcgBKBL6R7T459OuK+CpcWt7O3KF4uPCx2tD0uFETlUDIyo+1789crbMhTvQBSR5yBMg==}
@@ -11905,6 +11908,8 @@ snapshots:
     optional: true
 
   immer@8.0.4: {}
+
+  immer@9.0.6: {}
 
   immutable@3.8.2: {}
 
