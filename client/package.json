@@ -11,7 +11,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.5.1",
     "@ant-design/pro-layout": "^7.20.2",
-    "@umijs/max": "^4.3.26",
+    "@umijs/max": "^4.6.47",
     "antd": "^5.21.5",
     "dayjs": "^1.11.13",
     "immer": "^8.0.1",
@@ -20,7 +20,6 @@
   "devDependencies": {
     "@types/react": "^17.0.83",
     "@types/react-dom": "^17.0.25",
-    "@umijs/test": "^3.3.7",
     "cross-env": "^7.0.3",
     "lint-staged": "^10.0.7",
     "prettier": "^2.2.0",

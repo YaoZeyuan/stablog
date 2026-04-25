@@ -1,0 +1,9 @@
+packages:
+  - 'packages/*'
+  - 'client'
+allowBuilds:
+  better-sqlite3: true
+  core-js: true
+  electron: true
+  electron-winstaller: true
+  sharp: true
