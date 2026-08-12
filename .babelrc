@@ -4,23 +4,32 @@
       "@babel/env",
       {
         "targets": {
-          "node": "6.10"
-        }
+          "node": "24.0"
+        },
+        "modules": false
       }
     ],
-    ["@babel/preset-react"],
-    "@babel/typescript"
+    [
+      "@babel/typescript",
+      {
+        "onlyRemoveTypeImports": false
+      }
+    ]
+  ],
+  "overrides": [
+    {
+      "test": "./src/**/*.tsx",
+      "presets": ["@babel/preset-react"]
+    }
   ],
   // 不考虑文件体积, 全部编译
   "compact": false,
   "plugins": [
-    "@babel/proposal-class-properties",
-    "@babel/proposal-object-rest-spread",
     [
       "babel-plugin-root-import",
       {
-        "rootPathSuffix": "./",
-        "rootPathPrefix": "~"
+        "rootPathSuffix": "./src",
+        "rootPathPrefix": "~/src"
       }
     ]
   ]

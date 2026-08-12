@@ -1,25 +1,52 @@
-import knex from 'knex'
-import Database from '~/src/config/database'
-/**  knex 方式 */
+import createKnex, { Knex as KnexType } from 'knex'
+import Database from '~/src/config/database.js'
 
-const Knex = knex({
-  client: 'better-sqlite3',
-  connection: {
-    filename: Database.uri
+let activeClient: KnexType | undefined
+let activeDatabaseUri = ''
+
+function createClient(databaseUri: string): KnexType {
+  return createKnex({
+    client: 'better-sqlite3',
+    connection: {
+      filename: databaseUri,
+    },
+    useNullAsDefault: true,
+    pool: {
+      max: 1,
+      min: 0,
+      idleTimeoutMillis: 100,
+      reapIntervalMillis: 150,
+    },
+    acquireConnectionTimeout: 60000,
+  })
+}
+
+function getClient(): KnexType {
+  if (activeClient === undefined || activeDatabaseUri !== Database.uri) {
+    if (activeClient !== undefined) {
+      void activeClient.destroy()
+    }
+    activeDatabaseUri = Database.uri
+    activeClient = createClient(activeDatabaseUri)
+  }
+  return activeClient
+}
+
+const Knex = new Proxy({} as KnexType, {
+  get(_target, property) {
+    if (property === 'destroy') {
+      return async () => {
+        if (activeClient !== undefined) {
+          await activeClient.destroy()
+          activeClient = undefined
+          activeDatabaseUri = ''
+        }
+      }
+    }
+    const client = getClient() as unknown as Record<PropertyKey, unknown>
+    const value = client[property]
+    return typeof value === 'function' ? value.bind(client) : value
   },
-  useNullAsDefault: true,
-  pool: {
-    max: 1, // 不能开多线程去访问同一个sqllite实例, 否则会报SQLITE_BUSY错误
-    min: 0,
-    // 由于存在资源池, 导致句柄不被释放, 程序不能退出
-    // 因此将最小句柄数设为0, 每100ms检查一次是否有超过120ms未被使用的资源
-    // 以便句柄的及时回收
-    // free resouces are destroyed after this many milliseconds
-    idleTimeoutMillis: 100,
-    // how often to check for idle resources to destroy
-    reapIntervalMillis: 150
-  },
-  acquireConnectionTimeout: 60000
 })
 
 export default Knex

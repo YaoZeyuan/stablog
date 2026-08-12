@@ -1,10 +1,11 @@
 import fs from 'fs'
 import path from 'path'
 import shelljs from 'shelljs'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 import _ from 'lodash'
-import OPF from './opf'
-import TOC from './toc'
+import OPF from './opf.js'
+import TOC from './toc.js'
+import { fileURLToPath } from 'node:url'
 
 class Epub {
   opf = new OPF()
@@ -16,7 +17,7 @@ class Epub {
   bookIdentifier = 'stablog-auto-generate' // id, 直接写死
   creator = 'stablog' // 创建者, 直接写死
 
-  get currentPath() { return path.resolve(__dirname) }
+  get currentPath() { return path.dirname(fileURLToPath(import.meta.url)) }
   get resourcePath() { return path.resolve(this.currentPath, 'resource') }
 
   get epubCachePath() { return path.resolve(this.basePath) }
@@ -110,8 +111,8 @@ class Epub {
     fs.writeFileSync(path.resolve(this.epubContentCachePath, 'content.opf'), opfContent)
     let epubWriteStream = fs.createWriteStream(path.resolve(this.epubCachePath, this.bookname + '.epub'))
     console.log('开始制作epub, 压缩为zip需要一定时间, 请等待')
-    await new Promise((resolve, reject) => {
-      let archive = archiver('zip', {
+    await new Promise<void>((resolve, reject) => {
+      let archive = new ZipArchive({
         zlib: { level: 0 } // Sets the compression level.
       })
       // listen for all archive data to be written

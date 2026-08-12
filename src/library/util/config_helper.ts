@@ -1,5 +1,5 @@
-import RequestConfig from '~/src/config/request'
-import CommonUtil from '~/src/library/util/common'
+import RequestConfig from '~/src/config/request.js'
+import CommonUtil from '~/src/library/util/common.js'
 import _ from 'lodash'
 
 class ConfigHelper {

@@ -1,7 +1,7 @@
-import logger from '~/src/library/logger'
+import logger from '~/src/library/logger.js'
 import fs from 'fs'
-import PathConfig from '~/src/config/path'
-import TypeConfig from '~/src/type/namespace/config'
+import PathConfig from '~/src/config/path.js'
+import type TypeConfig from '~/src/type/namespace/config.js'
 class Common {
   static promiseList: Array<Promise<any>> = []
   // 并发数限制到10即可

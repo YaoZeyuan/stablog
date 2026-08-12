@@ -1,68 +1,61 @@
-name: CI-Mac-Total
+name: CI-Mac
 
 on:
+  workflow_dispatch:
   push:
-    # Sequence of patterns matched against refs/tags
     tags:
-      - '*' # Push events to matching any tags
+      - '*'
+
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: macos-latest
-    strategy:
-      matrix:
-        node-version: ['20.18.0']
-
+    runs-on: macos-15-intel
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - name: Use pnpm 11
+        uses: pnpm/action-setup@v4
         with:
-          node-version: ${{ matrix.node-version }}
-      # 获取package.json中的版本号, 方便后续处理
-      - name: Read package.json
-        uses: tyankatsu0105/read-package-version-actions@v1
-        id: package-version
-      - name: Show version number
-        run: echo "current version is ${{ steps.package-version.outputs.version }}"
-      # mac上需要预先安装vips库
-      # - run: brew install vips
-      # - run: brew install vips
-      # 先执行electron的构建, 节约调试时间
-      - uses: pnpm/action-setup@v2
+          version: 11.5.0
+          run_install: false
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
         with:
-          version: 9
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          node-version: '24'
+          cache: pnpm
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install dependencies
-      - run: ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-      - run: pnpm install
-      # 只安装intel版的sharp库即可, m1上可以运行intel的代码
-      - run: pnpm install --platform=darwin --arch=x64 sharp
-      - run: cd ./client && pnpm install && cd ..
-      - run: pnpm build
+        run: pnpm install --frozen-lockfile
+      - name: Rebuild native image dependency
+        run: pnpm rebuild sharp
+      - name: Type-check
+        run: pnpm tsc
+      - name: Run offline tests
+        run: pnpm test
+      - name: Build macOS installer
+        run: pnpm build
         env:
           CI: true
-          CI_ENV: 'Github Action'
-          GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
-      - name: Create Release
-        id: create_release
-        uses: monkeyWie/create-release@master
+          CI_ENV: Github Action
+      - name: Read package version
+        id: package-version
+        run: echo "version=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+      - name: Create draft release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: mac-${{ steps.package-version.outputs.version  }}
-          release_name: ${{ steps.package-version.outputs.version  }}
-          draft: true
-          prerelease: true
-      - name: Upload Release normal mac
-        uses: actions/upload-release-asset@v1.0.1
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_VERSION: ${{ steps.package-version.outputs.version }}
+        run: |
+          tag="mac-${PACKAGE_VERSION}"
+          installer="release/稳部落-${PACKAGE_VERSION}.dmg"
+          test -f "${installer}"
+          gh release create "${tag}" --repo "${GITHUB_REPOSITORY}" --target "${GITHUB_SHA}" --title "${PACKAGE_VERSION}" --draft --prerelease
+      - name: Upload macOS installer
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./release/稳部落-${{ steps.package-version.outputs.version }}.dmg
-          asset_name: stablog-mac-total-${{ steps.package-version.outputs.version }}.dmg
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_VERSION: ${{ steps.package-version.outputs.version }}
+        run: |
+          tag="mac-${PACKAGE_VERSION}"
+          installer="release/稳部落-${PACKAGE_VERSION}.dmg"
+          gh release upload "${tag}" "${installer}" --repo "${GITHUB_REPOSITORY}"

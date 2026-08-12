@@ -13,7 +13,6 @@ export namespace TypeTaskConfig {
     imageQuilty: imageQuilty // 图片质量
     bookTitle: string // 书名
     comment: string // 备注
-    maxBlogInBook: maxBlogInBook // 自动分卷: 单本电子书中最大微博数
     /**
      * 是否启用自动配置(自动配置会将用户配置的起止时间等参数还原, 默认启用)
      */

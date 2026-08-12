@@ -1,6 +1,6 @@
 import _ from 'lodash'
-import Base from '~/src/api/base'
-import * as TypeNewWeiboApi from '~/src/type/namespace/new_weibo_api_com'
+import Base from '~/src/api/base.js'
+import * as TypeNewWeiboApi from '~/src/type/namespace/new_weibo_api_com.js'
 
 // 微博.com的API和.cn的API公用一套cookie(XSRF-TOKEN & SUB 两项), 因此可以直接调用
 export default class WeiboComApi extends Base {
@@ -35,7 +35,7 @@ export default class WeiboComApi extends Base {
           Accept: 'application/json, text/plain, */*',
         },
       })
-      .catch(e => {
+      .catch((_error: unknown) => {
         return undefined
       })
     if (_.isEmpty(weiboResponse?.data?.list)) {

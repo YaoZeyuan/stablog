@@ -1,17 +1,7 @@
-import Base from '~/src/command/base'
-import knex from '~/src/library/knex'
-import fs from 'fs'
-import path from 'path'
-import http from '~/src/library/http'
-import TypeTaskConfig from '~/src/type/namespace/task_config'
-import CommonConfig from '~/src/config/common'
-import shelljs from 'shelljs'
-import DatabaseConfig from '~/src/config/database'
-import PathConfig from '~/src/config/path'
-import InitEnvCommand from '~/src/command/init_env'
-import FetchCustomerCommand from '~/src/command/fetch/customer'
-
-import GenerateCustomerCommand from '~/src/command/generate/customer'
+import RunTaskWorkflow from '~/src/application/workflow/run_task/run_task_workflow.js'
+import Base from '~/src/command/base.js'
+import { ApplicationError } from '~/src/shared/error/application_error.js'
+import { ExecutionStatus } from '~/src/shared/runtime/execution_result.js'
 
 class DispatchCommand extends Base {
   static get signature() {
@@ -25,21 +15,23 @@ class DispatchCommand extends Base {
   }
 
   async execute(args: any, options: any) {
-    // 硬编码传入
-    let { subWindow } = args
-    // 初始化运行环境
-    let initCommand = new InitEnvCommand()
-    await initCommand.handle({}, {})
-    this.log(`创建任务实例`)
-    let fetchCommand = new FetchCustomerCommand()
-    let generateCommand = new GenerateCustomerCommand()
-    this.log(`执行抓取命令`)
-    await fetchCommand.handle({}, {})
-    this.log(`抓取命令执行完毕`)
-    this.log(`执行生成电子书命令`)
-    await generateCommand.handle({ subWindow }, {})
-    this.log(`生成电子书命令执行完毕`)
-    this.log(`所有命令执行完毕`)
+    const workflow = new RunTaskWorkflow()
+    const result = await workflow.run({
+      trigger: args?.trigger ?? (args?.subWindow ? 'gui' : 'cli'),
+      configPath: args?.configPath,
+      localConfigPath: args?.localConfigPath,
+      databasePath: args?.databasePath,
+      cachePath: args?.cachePath,
+      logPath: args?.logPath,
+      outputPath: args?.outputPath,
+      renderWindow: args?.subWindow,
+      rebase: options?.rebase ?? false,
+      skipUpgradeCheck: options?.skipUpgradeCheck ?? false,
+    })
+    if (result.status === ExecutionStatus.FAILURE && result.failures[0]) {
+      throw ApplicationError.fromSerialized(result.failures[0].error)
+    }
+    return result
   }
 }
 

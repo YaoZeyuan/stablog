@@ -1,21 +1,21 @@
-import Base from '~/src/command/fetch/base'
-import TypeTaskConfig from '~/src/type/namespace/task_config'
-import PathConfig from '~/src/config/path'
+import Base from '~/src/command/fetch/base.js'
+import TypeTaskConfig from '~/src/type/namespace/task_config.js'
+import PathConfig from '~/src/config/path.js'
 import fs from 'fs'
 import _ from 'lodash'
 import json5 from 'json5'
 import dayjs from 'dayjs'
 
-import ApiWeibo from '~/src/api/weibo'
-import MMblog from '~/src/model/mblog'
-import MMblogUser from '~/src/model/mblog_user'
-import MFetchErrorRecord from '~/src/model/fetch_error_record'
-import CommonUtil from '~/src/library/util/common'
-import * as TypeWeibo from '~/src/type/namespace/weibo'
-import Util from '~/src/library/util/common'
+import ApiWeibo from '~/src/api/weibo.js'
+import MMblog from '~/src/model/mblog.js'
+import MMblogUser from '~/src/model/mblog_user.js'
+import MFetchErrorRecord from '~/src/model/fetch_error_record.js'
+import CommonUtil from '~/src/library/util/common.js'
+import * as TypeWeibo from '~/src/type/namespace/weibo.js'
+import Util from '~/src/library/util/common.js'
 import querystring from 'query-string'
 // dayjs需要安装插件后, 才能支持识别复杂文本串
-import customParseFormat from 'dayjs/plugin/customParseFormat'
+import customParseFormat from 'dayjs/plugin/customParseFormat.js'
 dayjs.extend(customParseFormat)
 
 /**
@@ -82,8 +82,7 @@ class FetchCustomer extends Base {
       this.log(`抓取用户${uid}信息`)
       let response = await ApiWeibo.asyncGetUserInfoResponseData(uid)
       if (_.isEmpty(response)) {
-        this.log(`用户信息获取失败, 请检查登录状态`)
-        continue
+        throw new Error(`用户${uid}信息获取失败，请检查登录状态`)
       }
       let userInfo = response.userInfo
       this.log(`用户信息获取完毕,待抓取用户为:${userInfo.screen_name},个人简介:${userInfo.description}`)
@@ -95,17 +94,12 @@ class FetchCustomer extends Base {
         }
       }
       if (containerId === '') {
-        this.log(`未能获取到用户${userInfo.screen_name}对应的containerId,自动跳过`)
-        continue
+        throw new Error(`未能获取到用户${userInfo.screen_name}对应的containerId`)
       }
       this.log(`开始抓取用户${userInfo.screen_name}微博记录`)
-      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid).catch((e) => {
-        // 避免crash导致整个进程退出
-        return []
-      })
+      let mblogCardList = await ApiWeibo.asyncGetWeiboList(uid)
       if (_.isEmpty(mblogCardList)) {
-        this.log(`用户${userInfo.screen_name}微博记录为空,跳过抓取流程`)
-        continue
+        throw new Error(`用户${userInfo.screen_name}首屏微博记录为空，无法确认抓取结果完整性`)
       }
       let mblogCard = mblogCardList[0]
       let mblog = mblogCard.mblog
@@ -450,7 +444,7 @@ class FetchCustomer extends Base {
       let newSt = await ApiWeibo.asyncStep2FetchApiConfig(this.requestConfig.st)
       this.requestConfig.st = newSt
       retryCount++
-      Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+      await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
     }
     this.log(`第${page}/${totalPage}页经过${maxRetryCount}次重试后仍失败, 跳过对该页面的抓取, 待后续重试`)
     return {
@@ -495,7 +489,7 @@ class FetchCustomer extends Base {
           // 否则, 增加一次重试次数
           this.log(`第${retryCount + 1}次请求失败, 等待${Const_Retry_Wait_Seconds}s后重试`)
           retryCount++
-          Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
+          await Util.asyncSleep(1000 * Const_Retry_Wait_Seconds)
         }
       }
       if (isSuccess === false) {
@@ -730,7 +724,7 @@ class FetchCustomer extends Base {
    * @param mblog 
    * @returns 
    */
-  private async asyncReplaceMblogIntoDb(mblog: TypeWeibo.TypeMblog) {
+  async asyncReplaceMblogIntoDb(mblog: TypeWeibo.TypeMblog) {
     // 处理完毕, 将数据存入数据库中
     let id = mblog.id
     let author_uid = `${mblog.user.id}`
@@ -750,13 +744,6 @@ class FetchCustomer extends Base {
       is_article,
       raw_json,
       post_publish_at: mblog.created_timestamp_at,
-    }).catch((e: Error) => {
-      this.log('数据库插入出错 => ', {
-        name: e?.name,
-        message: e?.message,
-        stack: e?.stack,
-      })
-      return
     })
     return true
   }

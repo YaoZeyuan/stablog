@@ -9,7 +9,6 @@ export default function IndexPage() {
       <webview
         id="foo"
         src="https://m.weibo.cn/"
-        disablewebsecurity="true"
       ></webview>
     </div>
   );

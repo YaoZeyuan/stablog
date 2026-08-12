@@ -1,29 +1,30 @@
-import Base from '~/src/command/generate/base'
-import { TypeWeiboUserInfo, TypeMblog, TypeWeiboEpub, TypeWeiboListByDay } from '~/src/type/namespace/weibo'
-import TypeTaskConfig from '~/src/type/namespace/task_config'
-import PathConfig from '~/src/config/path'
-import MMblog from '~/src/model/mblog'
-import MMblogUser from '~/src/model/mblog_user'
-import DATE_FORMAT from '~/src/constant/date_format'
+import Base from '~/src/command/generate/base.js'
+import { TypeWeiboUserInfo, TypeMblog, TypeWeiboEpub, TypeWeiboListByDay } from '~/src/type/namespace/weibo.js'
+import TypeTaskConfig from '~/src/type/namespace/task_config.js'
+import PathConfig from '~/src/config/path.js'
+import MMblog from '~/src/model/mblog.js'
+import MMblogUser from '~/src/model/mblog_user.js'
+import DATE_FORMAT from '~/src/constant/date_format.js'
 import imageSize from 'image-size'
 import _ from 'lodash'
 import json5 from 'json5'
-import { TypeTransConfigItem, TypeTransConfigPackageList, TypeTransConfigPackage } from "./trans_config"
+import { TypeTransConfigItem, TypeTransConfigPackageList, TypeTransConfigPackage } from './trans_config.js'
 
-import WeiboView from '~/src/view/weibo'
-import BaseView from '~/src/view/base'
+import WeiboView from '~/src/view/weibo.js'
+import BaseView from '~/src/view/base.js'
 import fs from 'fs'
 import path from 'path'
-import StringUtil from '~/src/library/util/string'
+import { fileURLToPath } from 'node:url'
+import StringUtil from '~/src/library/util/string.js'
 import dayjs from 'dayjs'
 import * as mozjpeg from "mozjpeg-js"
 import sharp from "sharp"
 
 // 将img输出为pdf
-import TaskConfig from '~/src/type/namespace/task_config'
-import jsPDF from '~/src/library/pdf/jspdf.node.js'
+import TaskConfig from '~/src/type/namespace/task_config.js'
+import jsPdfModule from '~/src/library/pdf/jspdf.node.cjs'
 import { BrowserWindow } from 'electron'
-import CommonUtil from '~/src/library/util/common'
+import CommonUtil from '~/src/library/util/common.js'
 
 /**
  * 单张页面渲染时间不能超过120秒(降低屏幕高度后, 渲染时间增加, 所以对应的最大等待时间也要增加)
@@ -65,9 +66,30 @@ let Is_Normal_Display_Rate = true
  */
 const Const_Jpeg_Compress_Rate = 60
 
+type JsPdfInstance = {
+  addFileToVFS(filename: string, content: string): void
+  addFont(filename: string, fontName: string, fontStyle: string): void
+  setFont(fontName: string, fontStyle?: string): void
+  setFontSize(size: number): void
+  text(content: string, x: number, y: number, options?: Record<string, unknown>): void
+  setTextColor(color: string): void
+  textWithLink(content: string, x: number, y: number, options?: Record<string, unknown>): void
+  addImage(...args: unknown[]): void
+  addPage(...args: unknown[]): void
+  outline: {
+    add(parent: unknown, title: string, options: { pageNumber: number }): unknown
+  }
+  save(filename: string, options?: Record<string, unknown>): void | Promise<void>
+}
+
+type JsPdfConstructor = new (options?: Record<string, unknown>) => JsPdfInstance
+const JsPDF = (jsPdfModule as unknown as { jsPDF?: JsPdfConstructor }).jsPDF
+  ?? (jsPdfModule as unknown as JsPdfConstructor)
+const moduleDirectory = path.dirname(fileURLToPath(import.meta.url))
+
 
 // 硬编码传入
-let globalSubWindow: InstanceType<typeof BrowserWindow> = null
+let globalSubWindow: InstanceType<typeof BrowserWindow> | undefined
 // 图片放大后, 页面宽度也要等比例放大
 const Const_Default_Webview_Width = 760 * Pixel_Zoom_Rate;
 const Const_Default_Webview_Height = 10;
@@ -108,6 +130,9 @@ class GenerateCustomer extends Base {
 
   async detectIsNormalScreenRate() {
     // 首先先计算屏幕缩放比
+    if (globalSubWindow === undefined) {
+      throw new Error('缺少用于生成 PDF 的 Electron 渲染窗口')
+    }
     let webview = globalSubWindow.webContents;
     await globalSubWindow.setContentSize(
       Const_Default_Webview_Width,
@@ -123,6 +148,9 @@ class GenerateCustomer extends Base {
 
   async execute(args: any, options: any): Promise<any> {
     let { subWindow } = args
+    if (subWindow === undefined || subWindow === null) {
+      throw new Error('缺少用于生成 PDF 的 Electron 渲染窗口')
+    }
     globalSubWindow = subWindow
 
     await this.detectIsNormalScreenRate()
@@ -593,6 +621,9 @@ class GenerateCustomer extends Base {
    * @param pageConfig 
    */
   async html2Image(htmlUri: string, baseImageUri: string): Promise<{ imageUriList: string[], isRenderSuccess: boolean }> {
+    if (globalSubWindow === undefined) {
+      throw new Error('缺少用于生成 PDF 的 Electron 渲染窗口')
+    }
     let webview = globalSubWindow.webContents;
     let subWindow = globalSubWindow
     if (htmlUri.startsWith("file://") === false && htmlUri.startsWith("http://") === false) {
@@ -603,7 +634,7 @@ class GenerateCustomer extends Base {
     return await new Promise((reslove, reject) => {
       let timmerId = setTimeout(() => {
         // 增加20s超时退出限制
-        globalSubWindow.reload()
+        subWindow.reload()
         reslove({ imageUriList: [], isRenderSuccess: false })
       }, Const_Render_Html_Timeout_Second * 1000)
 
@@ -613,12 +644,12 @@ class GenerateCustomer extends Base {
         await webview.loadURL(htmlUri);
         // this.log("setContentSize -> ", Const_Default_Webview_Width, Const_Default_Webview_Height)
         // 然后设置分辨率, Const_Default_Webview_Width x Const_Default_Webview_Height, 这里是正常的
-        await globalSubWindow.setContentSize(
+        await subWindow.setContentSize(
           Const_Default_Webview_Width,
           Const_Default_Webview_Height,
         );
         // 若希望文件清晰, 分辨率需进行放大
-        globalSubWindow.webContents.setZoomFactor(Pixel_Zoom_Rate)
+        subWindow.webContents.setZoomFactor(Pixel_Zoom_Rate)
 
         // 放大后页面scrollHeight为css值, 需要乘以放大系数后, 才是实际像素值
         // @alert 注意, 在这里有可能卡死, 表现为卡住停止执行. 所以需要在外部加一个超时限制
@@ -744,13 +775,10 @@ class GenerateCustomer extends Base {
               )
               let jpgContent = await mergeImg.toBuffer().catch(e => {
                 this.log("mergeImg error => ", e)
-                return new Buffer("")
+                return Buffer.alloc(0)
               })
-              let out = mozjpeg.encode(jpgContent, {
-                //处理质量 百分比
-                quality: Const_Jpeg_Compress_Rate
-              });
-              jpgContent = out.data
+              let out = mozjpeg.encode(jpgContent as unknown as never, Const_Jpeg_Compress_Rate)
+              jpgContent = Buffer.from(out.data)
               fs.writeFileSync(
                 path.resolve(imgUri),
                 jpgContent,
@@ -779,13 +807,10 @@ class GenerateCustomer extends Base {
             )
             let jpgContent = await mergeImg.toBuffer().catch(e => {
               this.log("mergeImg error => ", e)
-              return new Buffer("")
+              return Buffer.alloc(0)
             })
-            let out = mozjpeg.encode(jpgContent, {
-              //处理质量 百分比
-              quality: Const_Jpeg_Compress_Rate
-            });
-            jpgContent = out.data
+            let out = mozjpeg.encode(jpgContent as unknown as never, Const_Jpeg_Compress_Rate)
+            jpgContent = Buffer.from(out.data)
             fs.writeFileSync(
               path.resolve(imgUri),
               jpgContent,
@@ -808,11 +833,8 @@ class GenerateCustomer extends Base {
             jpgContent = await sharp(jpgContent).resize(Const_Default_Webview_Width).toBuffer()
           }
 
-          let out = mozjpeg.encode(jpgContent, {
-            //处理质量 百分比
-            quality: Const_Jpeg_Compress_Rate
-          });
-          jpgContent = out.data
+          let out = mozjpeg.encode(jpgContent as unknown as never, Const_Jpeg_Compress_Rate)
+          jpgContent = Buffer.from(out.data)
           let imageUri = baseImageUri + '0.jpg'
           fs.writeFileSync(
             path.resolve(imageUri),
@@ -844,7 +866,7 @@ class GenerateCustomer extends Base {
 
   async generatePdf(weiboDayList: TypeTransConfigPackageList) {
 
-    let doc = new jsPDF({
+    let doc = new JsPDF({
       unit: 'px',
       format: [Const_Default_Webview_Width, 700],
       orientation: "landscape"
@@ -854,7 +876,7 @@ class GenerateCustomer extends Base {
     // // !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`abcdefghijklmnopqrstuvwxyz{|}~第卷微博整理该文件由稳部落自动生成项目主页
     // let fontName = "mi_sans_normal_thin" 
     // 恢复使用方正书宋字体
-    let fontUri = path.resolve(__dirname, '../../public/font/fangzheng_shusong_normal.ttf')
+    let fontUri = path.resolve(moduleDirectory, '../../public/font/fangzheng_shusong_normal.ttf')
     let fontName = "fangzheng_shusong_normal"
     let fontContent = fs.readFileSync(fontUri)
 

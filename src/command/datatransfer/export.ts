@@ -1,14 +1,14 @@
-import Base from '~/src/command/base'
-import TypeTaskConfig from '~/src/type/namespace/task_config'
-import PathConfig from '~/src/config/path'
-import MMblog from '~/src/model/mblog'
-import * as TypeWeibo from '~/src/type/namespace/weibo'
-import MMblogUser from '~/src/model/mblog_user'
+import Base from '~/src/command/base.js'
+import TypeTaskConfig from '~/src/type/namespace/task_config.js'
+import PathConfig from '~/src/config/path.js'
+import MMblog from '~/src/model/mblog.js'
+import * as TypeWeibo from '~/src/type/namespace/weibo.js'
+import MMblogUser from '~/src/model/mblog_user.js'
 import _ from 'lodash'
-import CommonUtil from '~/src/library/util/common'
+import CommonUtil from '~/src/library/util/common.js'
 import fs from 'fs-extra'
 import dayjs from 'dayjs'
-import DATE_FORMAT from '~/src/constant/date_format'
+import DATE_FORMAT from '~/src/constant/date_format.js'
 
 type Type_Export = {
     /**

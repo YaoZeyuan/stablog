@@ -1,7 +1,7 @@
 import _ from 'lodash'
-import Base from '~/src/api/base'
-import * as TypeWeibo from '~/src/type/namespace/weibo'
-import Util from '~/src/library/util/common'
+import Base from '~/src/api/base.js'
+import * as TypeWeibo from '~/src/type/namespace/weibo.js'
+import Util from '~/src/library/util/common.js'
 import dayjs from 'dayjs'
 
 /**
@@ -45,7 +45,7 @@ export default class Weibo extends Base {
         'x-requested-with': 'XMLHttpRequest',
         'x-xsrf-token': st,
       },
-    }).catch(e => { return {} })
+    }).catch((_error: unknown) => { return {} })
     let newSt: string = responseConfig?.['data']?.['st'] ?? ''
     return newSt
   }
@@ -132,10 +132,12 @@ export default class Weibo extends Base {
       // page_type: '03',
       // page: page,
     }
-    console.log('url =>', baseUrl)
     const weiboResponse = <TypeWeibo.TypeWeiboListResponse>await Base.http.get(baseUrl, {
       params: config,
-    }).catch(e => { return {} })
+    })
+    if (weiboResponse.ok !== 1 || Array.isArray(weiboResponse.data?.cards) === false) {
+      throw new Error(`微博首屏接口返回异常：${weiboResponse.msg || '缺少 cards 数据'}`)
+    }
     const rawRecordList = weiboResponse?.data?.cards ?? []
     // 需要按cardType进行过滤, 只要id为9的(微博卡片)
     let recordList = rawRecordList.filter((item) => {
@@ -235,16 +237,6 @@ export default class Weibo extends Base {
         'accept': 'application/json, text/plain, */*',
         referer: `https://m.weibo.cn/profile/${author_uid}`,
       },
-    }).catch(e => {
-      this.logger.log(`网络请求失败, 您的账号可能因抓取频繁被认为有风险, 请重新登录账号, 或6小时后再试`)
-      this.logger.log(`错误内容=> message:${e.message}, stack=>${e.stack}`)
-      // 避免由于status不存在导致进程退出
-      let errorStatus = _.get(e, ['response', 'status'], '')
-      if (errorStatus === 404) {
-        return undefined
-      }
-
-      return {}
     })
     const responseData = rawResponse?.data ?? {}
     return responseData?.user?.statuses_count ?? 0

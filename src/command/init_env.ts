@@ -1,13 +1,16 @@
-import Base from '~/src/command/base'
-import knex from '~/src/library/knex'
-import fs from 'fs'
-import path from 'path'
-import http from '~/src/library/http'
-import TypeConfig from '~/src/type/namespace/config'
-import CommonConfig from '~/src/config/common'
+import Base from '~/src/command/base.js'
+import knex from '~/src/library/knex.js'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import http from '~/src/library/http/index.js'
+import TypeConfig from '~/src/type/namespace/config.js'
+import CommonConfig from '~/src/config/common.js'
 import shelljs from 'shelljs'
-import DatabaseConfig from '~/src/config/database'
-import PathConfig from '~/src/config/path'
+import DatabaseConfig from '~/src/config/database.js'
+import PathConfig from '~/src/config/path.js'
+
+const moduleDirectory = path.dirname(fileURLToPath(import.meta.url))
 
 class InitEnv extends Base {
   static get signature() {
@@ -23,7 +26,7 @@ class InitEnv extends Base {
   }
 
   async execute(args: any, options: any) {
-    let { rebase: isRebase } = options
+    const { rebase: isRebase, skipUpgradeCheck = false } = options
 
     this.log('初始化文件夹')
     for (let uri of PathConfig.allPathList) {
@@ -34,11 +37,12 @@ class InitEnv extends Base {
     if (isRebase) {
       this.log('重建数据库')
       this.log('删除旧数据库')
+      await knex.destroy()
       shelljs.rm(DatabaseConfig.uri)
       this.log('旧数据库删除完毕')
     }
     this.log('初始化数据库')
-    const sqlContent = fs.readFileSync(path.resolve(__dirname, './init.sql')).toString()
+    const sqlContent = fs.readFileSync(path.resolve(moduleDirectory, './init.sql')).toString()
     for (let sql of sqlContent.split(';')) {
       // 一次只能执行一行
       sql = sql.trim()
@@ -48,12 +52,16 @@ class InitEnv extends Base {
     }
     this.log('数据库初始化完毕')
 
+    if (skipUpgradeCheck) {
+      this.log('已跳过在线更新检查')
+      return
+    }
     // 最后再检查更新
     this.log(`检查更新`)
     let remoteVersionConfig: TypeConfig.Version = await http
       .get(CommonConfig.checkUpgradeUri, {
         params: {
-          now: new Date().toISOString,
+          now: new Date().toISOString(),
         },
         timeout: 10 * 1000
       })

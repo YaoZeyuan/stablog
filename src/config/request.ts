@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import CommonUtil from '~/src/library/util/common'
+import CommonUtil from '~/src/library/util/common.js'
 
 // 优先使用远程发放的配置
 let config = CommonUtil.getConfig()

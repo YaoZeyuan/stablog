@@ -1,8 +1,6 @@
-import { Command } from '@adonisjs/ace'
-import _ from 'lodash'
-import logger from '~/src/library/logger'
+import logger from '~/src/library/logger.js'
 
-class Base extends Command {
+class Base {
   static get signature() {
     return `
      Parse:Base
@@ -23,13 +21,18 @@ class Base extends Command {
    * @param options
    * @returns {Promise<void>}
    */
-  async handle(args: any, options: any) {
+  async handle(args: any, options: any): Promise<any> {
     this.log('command start')
-    await this.execute(args, options).catch(e => {
+    try {
+      const result = await this.execute(args, options)
+      this.log('command finish')
+      return result
+    } catch (error) {
+      const e = error instanceof Error ? error : new Error(String(error))
       this.log('catch error')
-      this.log(e.stack)
-    })
-    this.log('command finish')
+      this.log(e.stack ?? e.message)
+      throw error
+    }
   }
 
   /**
@@ -44,38 +47,22 @@ class Base extends Command {
    * @param args
    * @param options
    */
-  async execute(args: any, options: any): Promise<any> {}
+  async execute(_args: any, _options: any): Promise<any> {}
 
   /**
    * 简易logger
    * @returns  null
    */
   async log(...argumentList: string[] | any): Promise<any> {
-    let message = ''
-    for (const rawMessage of argumentList) {
-      if (_.isString(rawMessage) === false) {
-        message = message + JSON.stringify(rawMessage)
-      } else {
-        message = message + rawMessage
-      }
-    }
-    logger.log(`[${this.constructor.name}] ` + message)
+    logger.log(`[${this.constructor.name}]`, ...argumentList)
   }
 
   /**
    * 简易logger
    * @returns  null
    */
-  async warn() {
-    let message = ''
-    for (const rawMessage of arguments) {
-      if (_.isString(rawMessage) === false) {
-        message = message + JSON.stringify(rawMessage)
-      } else {
-        message = message + rawMessage
-      }
-    }
-    logger.warn(`[${this.constructor.name}] ` + message)
+  async warn(...argumentList: unknown[]) {
+    logger.warn(`[${this.constructor.name}]`, ...argumentList)
   }
 }
 

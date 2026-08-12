@@ -1,5 +1,5 @@
-import Base from '~/src/command/base'
-import http from '~/src/library/http'
+import Base from '~/src/command/base.js'
+import http from '~/src/library/http/index.js'
 import fs from 'fs'
 
 class CommandDemo extends Base {

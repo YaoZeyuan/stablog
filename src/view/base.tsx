@@ -1,11 +1,12 @@
 import React from 'react'
 import ReactDomServer from 'react-dom/server'
-import TypeWeibo, { TypeWeiboListByDay } from '~/src/type/namespace/weibo'
-import CommonUtil from '~/src/library/util/common'
+import type * as TypeWeibo from '~/src/type/namespace/weibo.js'
+import type { TypeWeiboListByDay } from '~/src/type/namespace/weibo.js'
+import CommonUtil from '~/src/library/util/common.js'
 import dayjs from 'dayjs'
 import _ from 'lodash'
-import DATE_FORMAT from '~/src/constant/date_format'
-import Logger from '~/src/library/logger'
+import DATE_FORMAT from '~/src/constant/date_format.js'
+import Logger from '~/src/library/logger.js'
 
 class CommentCompontent extends React.Component<
   {
@@ -67,7 +68,7 @@ class Base {
 
   static generatePageElement(title: string, contentElementList: Array<React.ReactElement<any>>) {
     return (
-      <html xmlns="http://www.w3.org/1999/xhtml">
+      <html>
         <head>
           <meta charSet="utf-8" />
           <title>{title}</title>

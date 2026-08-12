@@ -1,32 +1,45 @@
 {
   "name": "stablog",
   "version": "3.5.4",
+  "type": "module",
   "description": "稳部落. 专业备份微blog, 老铁, 稳!",
   "repository": {
     "type": "git",
     "url": "https://github.com/YaoZeyuan/stablog"
   },
   "main": "dist/index.js",
+  "bin": {
+    "stablog": "dist/interface/cli/main.js"
+  },
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11 <12"
+  },
   "author": "姚泽源",
   "license": "MIT",
   "scripts": {
     "start": "electron dist/index.js --stablog-debug",
     "start-client": "cd ./client && pnpm start",
     "prod": "electron dist/index.js",
-    "ace": "node dist/ace.js",
-    "watch": "babel src --copy-files --watch --out-dir dist  --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
-    "watch-less": "less-watch-compiler",
-    "build": "npm run rebuild-sqlite3 && npm run build-dist && electron-builder",
-    "debug-build": "npm run build-dist && electron-builder --dir",
-    "build-dist": "node script/build.js",
-    "build-server": "babel src --copy-files -d dist --verbose --extensions \".ts,.tsx,.js,.jsx\" ",
-    "tsc": "tsc",
-    "lint": "tsc && NODE_ENV=production eslint src",
+    "cli": "node dist/interface/cli/main.js",
+    "watch": "pnpm clean:esm-stale && babel src --copy-files --watch --out-dir dist --verbose --source-maps --extensions \".ts,.tsx,.js,.jsx\"",
+    "watch-less": "node script/watch-less.cjs",
+    "clean:esm-stale": "node scripts/build/clean-esm-stale.cjs",
+    "build": "pnpm rebuild-sqlite3 && pnpm build-dist && electron-builder --publish never",
+    "debug-build": "pnpm build-dist && electron-builder --dir",
+    "build-dist": "node script/build.cjs",
+    "build-server": "pnpm clean:esm-stale && babel src --copy-files -d dist --verbose --extensions \".ts,.tsx,.js,.jsx\"",
+    "tsc": "tsc --noEmit && tsc -p client/tsconfig.json --noEmit",
+    "lint": "pnpm tsc && cross-env NODE_ENV=production eslint src",
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
     "eslint": "eslint src",
     "prettier-with-fix": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,less,css}\"",
     "postinstall": "electron-builder install-app-deps",
     "rebuild-sqlite3": "electron-rebuild -f -w better-sqlite3",
-    "build-4-local": "electron-builder"
+    "build-4-local": "electron-builder --publish never"
   },
   "config": {
     "forge": "./forge.config.js"
@@ -36,7 +49,7 @@
     "appId": "stablog",
     "copyright": "@姚泽源",
     "npmRebuild": false,
-    "buildDependenciesFromSource": true,
+    "buildDependenciesFromSource": false,
     "asar": false,
     "directories": {
       "output": "release"
@@ -67,7 +80,8 @@
     }
   },
   "dependencies": {
-    "@adonisjs/ace": "^14.1.0",
+    "@optique/core": "^1.2.0",
+    "@optique/run": "^1.2.0",
     "archiver": "^8.0.0",
     "axios": "^1.19.0",
     "better-sqlite3": "^13.0.3",
@@ -95,7 +109,6 @@
   "devDependencies": {
     "@babel/cli": "^8.0.4",
     "@babel/core": "^8.0.1",
-    "@babel/plugin-proposal-object-rest-spread": "^7.20.7",
     "@babel/preset-env": "^8.0.2",
     "@babel/preset-react": "^8.0.1",
     "@babel/preset-typescript": "^8.0.1",
@@ -106,7 +119,6 @@
     "@types/dotenv": "^8.2.3",
     "@types/fs-extra": "^11.0.4",
     "@types/image-size": "^0.8.0",
-    "@types/jest": "^30.0.0",
     "@types/jquery": "^4.0.1",
     "@types/json5": "2.2.0",
     "@types/knex": "^0.16.1",
@@ -120,6 +132,7 @@
     "@types/request-promise": "^4.1.51",
     "@types/sharp": "^0.32.0",
     "@types/shelljs": "^0.10.0",
+    "@vitest/coverage-v8": "^4.1.10",
     "atob": "^2.1.2",
     "babel-plugin-root-import": "^6.6.0",
     "btoa": "^1.2.1",
@@ -132,11 +145,14 @@
     "eslint-config-react-app": "^7.0.1",
     "eslint-plugin-prettier": "^5.5.6",
     "html2canvas": "^1.4.1",
+    "jsdom": "^30.0.1",
     "less": "^4.8.1",
     "less-watch-compiler": "^1.19.9",
     "node-gyp": "^13.0.1",
     "prettier": "^3.9.6",
     "typescript": "^7.0.2",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10",
     "watch": "^1.0.2"
   }
 }

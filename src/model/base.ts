@@ -1,5 +1,5 @@
-import Knex from '~/src/library/knex'
-import TypeKnex from 'knex'
+import Knex from '~/src/library/knex.js'
+import type { Knex as TypeKnex } from 'knex'
 import _ from 'lodash'
 
 class Base {

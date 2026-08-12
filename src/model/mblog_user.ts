@@ -1,8 +1,8 @@
-import Base from '~/src/model/base'
-import TypeWeibo from '~/src/type/namespace/weibo'
+import Base from '~/src/model/base.js'
+import type * as TypeWeibo from '~/src/type/namespace/weibo.js'
 import _ from 'lodash'
-import DATE_FORMAT from '~/src/constant/date_format'
-import Mblog from '~/src/model/mblog'
+import DATE_FORMAT from '~/src/constant/date_format.js'
+import Mblog from '~/src/model/mblog.js'
 
 type TypeMblogUserRecord = {
   author_uid: string

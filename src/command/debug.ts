@@ -1,6 +1,6 @@
-import Base from '~/src/command/base'
-import MBlog from '~/src/model/mblog'
-import MblogUser from '~/src/model/mblog_user'
+import Base from '~/src/command/base.js'
+import MBlog from '~/src/model/mblog.js'
+import MblogUser from '~/src/model/mblog_user.js'
 import fs from 'fs'
 import path from 'path'
 // import path from 'path'
@@ -73,7 +73,7 @@ class CommandDebug extends Base {
 
     let pngContent = await mergeImg.toBuffer().catch(e => {
       this.log("mergeImg error => ", e)
-      return new Buffer("")
+      return Buffer.alloc(0)
     })
 
     let outputPngImage = baseUri + 'output_all_png.png'

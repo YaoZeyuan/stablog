@@ -2,6 +2,7 @@ import { defineConfig } from '@umijs/max';
 import path from 'path'
 
 export default defineConfig({
+  esbuildMinifyIIFE: true,
   // 使用hash模式, 解决基于文件进行浏览时的白屏问题
   history: { type: 'hash' },
   base: "/",

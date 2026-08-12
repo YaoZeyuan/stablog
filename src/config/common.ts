@@ -1,4 +1,4 @@
-import CommonUtil from '~/src/library/util/common'
+import CommonUtil from '~/src/library/util/common.js'
 
 let packageJson = CommonUtil.getPackageJsonConfig()
 let version = parseFloat(packageJson.version)

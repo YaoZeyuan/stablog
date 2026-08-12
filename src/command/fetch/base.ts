@@ -1,4 +1,4 @@
-import Base from '~/src/command/base'
+import Base from '~/src/command/base.js'
 
 class FetchBase extends Base {
   max = 20

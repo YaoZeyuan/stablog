@@ -25,6 +25,7 @@ coverage
 # Dependency directory
 node_modules
 bower_components
+.pnpm-store
 
 # Editors
 .idea
@@ -38,6 +39,8 @@ Thumbs.db
 dist/**/*
 release
 build
+!scripts/build/
+!scripts/build/*.cjs
 
 #   输出的电子书
 知乎助手输出的电子书/**/*

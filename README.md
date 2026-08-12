@@ -16,7 +16,7 @@
 
 # 软件下载
 
-最新版本: 3.5.1
+最新版本: 3.5.4
 
 [点击进入下载页](https://www.yaozeyuan.online/stablog/)
 
@@ -81,7 +81,7 @@
 
 欢迎通过[issue](https://github.com/YaoZeyuan/stablog/issues)提建议
 
-[开发说明](./doc/开发说明.md)
+[开发说明](./doc/开发说明.md) · [第一阶段架构/IPC/日志/测试/发布文档](./doc/dev/README.md)
 
 ## Stargazers over time
 

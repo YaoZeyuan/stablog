@@ -1,15 +1,14 @@
-const electron = require('electron');
-const ipcRenderer = electron.ipcRenderer;
+import { invokeDesktop } from './desktop'
 
 class Util {
-  static getFileContent(uri: string) {
-    return ipcRenderer.sendSync('getFileContent', {
+  static async getFileContent(uri: string) {
+    return invokeDesktop<string>('get-file-content', {
       uri
     })
   }
 
-  static writeFileContent(uri: string, content: string) {
-    return ipcRenderer.sendSync('writeFileContent', {
+  static async writeFileContent(uri: string, content: string) {
+    return invokeDesktop<boolean>('write-file-content', {
       uri,
       content
     })

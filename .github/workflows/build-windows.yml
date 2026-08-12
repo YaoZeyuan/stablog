@@ -1,69 +1,66 @@
 name: CI-Windows
 
 on:
+  workflow_dispatch:
   push:
-    # Sequence of patterns matched against refs/tags
     tags:
-      - '*' # Push events to matching any tags
+      - '*'
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        node-version: ['20.18.0']
-
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v4
+      - name: Use pnpm 11
+        uses: pnpm/action-setup@v4
         with:
-          node-version: ${{ matrix.node-version }}
-      # 获取package.json中的版本号, 方便后续处理
-      - name: Read package.json
-        uses: tyankatsu0105/read-package-version-actions@v1
-        id: package-version
-      - name: Show version number
-        run: echo "current version is ${{ steps.package-version.outputs.version }}"
-      - uses: pnpm/action-setup@v2
+          version: 11.5.0
+          run_install: false
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
         with:
-          version: 9
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
-      - name: init ssh key
-        run: ssh-keyscan -t rsa github.com > %USERPROFILE%/.ssh/known_hosts
-      # 先执行electron的构建, 节约调试时间
+          node-version: '24'
+          cache: pnpm
+      - name: Enable Corepack
+        run: corepack enable
       - name: Install dependencies
-        run: pnpm install
-      # sharp需要单独安装
-      # - run: npm install --platform=win32 --arch=x64 sharp
-      # - run: npm rebuild --platform=win32 --arch=ia32 sharp
-      # - run: npm rebuild --platform=win32 --arch=arm sharp
-      # - run: npm rebuild --platform=win32 --arch=arm64 sharp
-      - run: cd ./client ; pnpm install ; cd ..
-      - run: pnpm build
+        run: pnpm install --frozen-lockfile
+      - name: Type-check
+        run: pnpm tsc
+      - name: Run offline tests
+        run: pnpm test
+      - name: Build Windows installer
+        run: pnpm build
         env:
           CI: true
-          CI_ENV: 'Github Action'
-          GH_TOKEN: ${{ secrets.GH_TOKEN }} # 在setting中配置自定义环境变量, 参考[此处](https://help.github.com/cn/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets)
-      - name: Create Release
-        id: create_release
-        uses: monkeyWie/create-release@master
+          CI_ENV: Github Action
+      - name: Read package version
+        id: package-version
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+      - name: Create draft release
+        shell: pwsh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: win-${{ steps.package-version.outputs.version  }}
-          release_name: ${{ steps.package-version.outputs.version  }}
-          draft: true
-          prerelease: true
-      - name: Upload Release normal windows
-        uses: actions/upload-release-asset@v1.0.1
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_VERSION: ${{ steps.package-version.outputs.version }}
+        run: |
+          $tag = "win-$env:PACKAGE_VERSION"
+          $installer = "release/稳部落 Setup $env:PACKAGE_VERSION.exe"
+          if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
+            throw "Release installer is missing: $installer"
+          }
+          gh release create $tag --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title $env:PACKAGE_VERSION --draft --prerelease
+      - name: Upload Windows installer
+        shell: pwsh
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./release/稳部落 Setup ${{ steps.package-version.outputs.version }}.exe
-          asset_name: stablog-win64-${{ steps.package-version.outputs.version }}.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_VERSION: ${{ steps.package-version.outputs.version }}
+        run: |
+          $tag = "win-$env:PACKAGE_VERSION"
+          $installer = "release/稳部落 Setup $env:PACKAGE_VERSION.exe"
+          gh release upload $tag $installer --repo $env:GITHUB_REPOSITORY

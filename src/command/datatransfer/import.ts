@@ -1,14 +1,14 @@
-import Base from '~/src/command/base'
-import TypeTaskConfig from '~/src/type/namespace/task_config'
-import PathConfig from '~/src/config/path'
-import MMblog from '~/src/model/mblog'
-import * as TypeWeibo from '~/src/type/namespace/weibo'
-import MMblogUser from '~/src/model/mblog_user'
+import Base from '~/src/command/base.js'
+import TypeTaskConfig from '~/src/type/namespace/task_config.js'
+import PathConfig from '~/src/config/path.js'
+import MMblog from '~/src/model/mblog.js'
+import * as TypeWeibo from '~/src/type/namespace/weibo.js'
+import MMblogUser from '~/src/model/mblog_user.js'
 import _ from 'lodash'
-import CommonUtil from '~/src/library/util/common'
+import CommonUtil from '~/src/library/util/common.js'
 import fs from 'fs-extra'
 import dayjs from 'dayjs'
-import DATE_FORMAT from '~/src/constant/date_format'
+import DATE_FORMAT from '~/src/constant/date_format.js'
 
 type Type_Export = {
     /**
@@ -60,8 +60,7 @@ class DataTransferImport extends Base {
 
         let content: Type_Export = fs.readJsonSync(importUri);
         if (content?.version !== DataTransferImport.export_format_version) {
-            this.log(`导入数据库版本不为${DataTransferImport.export_format_version}, 无法导入, 自动退出`)
-            return
+            throw new Error(`导入数据库版本不为${DataTransferImport.export_format_version}`)
         }
         for (let db of Object.values(content.export_data)) {
             let userInfo = db.info
@@ -90,13 +89,6 @@ class DataTransferImport extends Base {
                     is_article,
                     raw_json,
                     post_publish_at: record.created_timestamp_at,
-                }).catch((e: Error) => {
-                    this.log("数据库插入出错 => ", {
-                        name: e?.name,
-                        message: e?.message,
-                        stack: e?.stack
-                    })
-                    return
                 })
                 if (counter % 100 === 0) {
                     this.log(`已成功导入${counter}/${record_list.length}条记录`)

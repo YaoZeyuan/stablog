@@ -3,18 +3,14 @@ import TypeWeibo from '@/../../src/type/namespace/weibo'
 import { useState, useEffect } from 'react'
 import { enableMapSet } from 'immer'
 enableMapSet()
-import produce from 'immer'
+import { produce } from 'immer'
 import { Table, Card, Select, Button } from 'antd'
 import { PlusCircleOutlined } from '@ant-design/icons'
 import Util from '@/library/util'
 import dayjs from 'dayjs'
-import path from 'path'
+import { invokeDesktop } from '@/library/desktop'
 
 let Option = Select.Option
-const electron = require('electron')
-let shell = electron.shell
-let ipcRenderer = electron.ipcRenderer
-
 type BlogDistributionItem = {
   date: string
   key: string
@@ -66,7 +62,7 @@ export default function IndexPage() {
    * 获取用户信息列表
    */
   async function asyncFetchUserInfoList() {
-    let userInfoList: TypeWeibo.TypeWeiboUserInfo[] = await ipcRenderer.sendSync('MUser_asyncGetUserList')
+    let userInfoList = await invokeDesktop<TypeWeibo.TypeWeiboUserInfo[]>('get-user-list')
     for (let record of userInfoList) {
       set$$UserDatabase(($$oldDatabase) => {
         return produce($$oldDatabase, (raw) => {
@@ -77,7 +73,7 @@ export default function IndexPage() {
   }
   async function asyncGetDistribute() {
     setIsLoading(true)
-    let distributionObj: BlogDistributionObj = await ipcRenderer.sendSync('MBlog_asyncGetWeiboDistribution', [
+    let distributionObj = await invokeDesktop<BlogDistributionObj>('get-weibo-distribution', [
       selectUserId,
     ])
     setIsLoading(false)
@@ -94,7 +90,7 @@ export default function IndexPage() {
    * 获取当天微博数据列表
    */
   async function asyncGetBlogListInRange(startAt: number, endAt: number) {
-    let blogList = (await ipcRenderer.sendSync('MBlog_asyncGetMblogList', [
+    let blogList = (await invokeDesktop<TypeWeibo.TypeMblog[]>('get-mblog-list', [
       selectUserId,
       startAt,
       endAt,
@@ -190,7 +186,7 @@ export default function IndexPage() {
     let exportEndAtStr = dayjs.unix(exportEndAt).format('YYYY-MM')
     let exportRangeStr = `从${exportStartAtStr}到${exportEndAtStr}`
 
-    let saveUri = await ipcRenderer.sendSync('Dialog_showSaveDialogSync', {
+    let saveUri = await invokeDesktop<string | undefined>('show-save-dialog', {
       title: '文件保存地址',
       filters: [
         {
@@ -209,11 +205,11 @@ export default function IndexPage() {
       uid: config.uid,
       exportStartAt: config.exportStartAt,
       exportEndAt: config.exportEndAt,
-      exportUri: path.resolve(saveUri),
+      exportUri: saveUri,
     }
     setIsLoading(true)
     await Util.asyncSleepMs(500)
-    ipcRenderer.sendSync('dataTransferExport', finalConfig)
+    await invokeDesktop('data-transfer-export', finalConfig)
     setIsLoading(false)
   }
 
@@ -221,7 +217,7 @@ export default function IndexPage() {
    * 导入数据
    */
   async function asyncDataTransferImport() {
-    let importUriList = ipcRenderer.sendSync('Dialog_showOpenDialogSync', {
+    let importUriList = await invokeDesktop<string[]>('show-open-dialog', {
       title: '选择导入文件',
       filters: [
         {
@@ -243,7 +239,7 @@ export default function IndexPage() {
     }
     setIsLoading(true)
     await Util.asyncSleepMs(500)
-    ipcRenderer.sendSync('dataTransferImport', finalConfig)
+    await invokeDesktop('data-transfer-import', finalConfig)
     await asyncRefreshData()
     setIsLoading(false)
   }

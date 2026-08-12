@@ -1,6 +1,13 @@
+packages:
+  - client
+
+overrides:
+  "app-builder-lib>@electron/get": 3.1.0
+
 allowBuilds:
   better-sqlite3: true
   core-js: true
-  electron: set this to true or false
+  electron: true
   electron-winstaller: true
-  sharp: set this to true or false
+  esbuild: true
+  sharp: true

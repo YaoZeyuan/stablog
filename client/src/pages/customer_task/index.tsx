@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import produce from 'immer'
+import { produce } from 'immer'
 import {
   Form,
   Input,
@@ -22,23 +22,15 @@ import './index.less'
 
 import _ from 'lodash'
 import dayjs from 'dayjs'
-import http from '@/library/http'
-import util from '@/library/util'
 import querystring from 'query-string'
 import packageConfig from '@/../../package.json'
 import { TypeTaskConfig } from './task_type'
 import * as TaskUtils from './utils'
+import { invokeDesktop } from '@/library/desktop'
 
 let currentVersion = parseFloat(packageConfig.version)
 
 let TaskConfigType = TypeTaskConfig
-
-const electron = require('electron')
-const shell = electron.shell
-const ipcRenderer = electron.ipcRenderer
-
-let pathConfigStr = ipcRenderer.sendSync('getPathConfig')
-let pathConfig = JSON.parse(pathConfigStr)
 
 const { RangePicker } = DatePicker
 const { Option } = Select
@@ -48,7 +40,7 @@ type TypeState = {
   showLoginModel: boolean
   showUpgradeInfo: boolean
   remoteVersionConfig: {
-    version: number
+    version: string
     downloadUrl: string
     releaseAt: string
     releaseNote: string
@@ -102,7 +94,6 @@ const Const_Volume_Split_By: { [key: string]: string } = {
 let taskConfig: TypeTaskConfig.Customer = {
   configList: [_.clone(defaultConfigItem)],
   imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
-  maxBlogInBook: 100000,
   postAtOrderBy: TaskConfigType.CONST_Order_Asc,
   bookTitle: '',
   comment: '',
@@ -126,22 +117,10 @@ if (taskConfig.configList.length === 0) {
 }
 
 // 基于配置文件作为初始值
-let jsonContent = util.getFileContent(pathConfig.customerTaskConfigUri)
-try {
-  taskConfig = JSON.parse(jsonContent)
-} catch (e) {}
-if (taskConfig.enableAutoConfig) {
-  // 仅在启用自动生成配置时, 才自动重置输出时间
-
-  // 输出时间始终重置为次日
-  taskConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
-}
-if (taskConfig.configList.length === 0) {
-  taskConfig.configList.push(_.clone(defaultConfigItem))
-}
-
 export default function IndexPage(props: { changeTabKey: Function }) {
   const [form] = Form.useForm()
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false)
+  const [configLoadError, setConfigLoadError] = useState<string>('')
   const [$$status, set$$Status] = useState<TypeState>(
     produce(
       {
@@ -149,7 +128,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
         showLoginModel: false,
         showUpgradeInfo: false,
         remoteVersionConfig: {
-          version: 1.0,
+          version: '1.0.0',
           downloadUrl: '',
           releaseAt: '',
           releaseNote: '',
@@ -177,10 +156,34 @@ export default function IndexPage(props: { changeTabKey: Function }) {
       (e) => e,
     ),
   )
+  // 首次加载时从主进程读取经过 schema 校验的任务配置。
+  useEffect(() => {
+    invokeDesktop<TypeTaskConfig.Customer>('get-task-config')
+      .then((savedConfig) => {
+        if (savedConfig.enableAutoConfig) {
+          savedConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
+        }
+        if (savedConfig.configList.length === 0) {
+          savedConfig.configList.push(_.clone(defaultConfigItem))
+        }
+        set$$Database((current) => produce(current, (raw) => {
+          raw.taskConfig = savedConfig
+        }))
+        form.setFieldsValue(savedConfig)
+      })
+      .catch((error) => {
+        console.warn(error)
+        setConfigLoadError(error instanceof Error ? error.message : String(error))
+      })
+      .then(() => setIsConfigLoaded(true))
+  }, [])
+
   // 每次database更新后, 重写 taskConfig 配置
   useEffect(() => {
-    TaskUtils.saveConfig($$database.taskConfig)
-  }, [$$database])
+    if (isConfigLoaded && configLoadError === '') {
+      TaskUtils.saveConfig($$database.taskConfig).catch(console.error)
+    }
+  }, [$$database, isConfigLoaded, configLoadError])
 
   // 初始化时检查是否已登录
   useEffect(() => {
@@ -233,7 +236,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
     }
 
     // 获取数据库中的抓取错误记录
-    const errorDistributionList = await ipcRenderer.sendSync('MFetchErrorRecord_asyncGetErrorDistributionCount', {
+    const errorDistributionList = await invokeDesktop<any[]>('get-fetch-error-distribution', {
       author_uid: uid,
     })
     set$$Database(
@@ -309,6 +312,15 @@ export default function IndexPage(props: { changeTabKey: Function }) {
   return (
     <div className="customer-task">
       <Modal
+        title="任务配置读取失败"
+        visible={configLoadError !== ''}
+        footer={null}
+        closable={false}
+      >
+        <p>为避免覆盖损坏或不兼容的配置，已停止自动保存和任务启动。</p>
+        <pre>{configLoadError}</pre>
+      </Modal>
+      <Modal
         title="发现新版本"
         visible={$$status.showUpgradeInfo}
         onOk={() => {
@@ -383,7 +395,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                   raw.taskConfig['volumeSplitBy'] = changedValues['volumeSplitBy']
                   break
                 default:
-                  raw.taskConfig[updateKey] = changedValues[updateKey]
+                  ;(raw.taskConfig as unknown as Record<string, unknown>)[updateKey] = changedValues[updateKey]
               }
             }),
           )
@@ -666,6 +678,7 @@ export default function IndexPage(props: { changeTabKey: Function }) {
 
         <Form.Item label={' '} colon={false}>
           <Button
+            disabled={isConfigLoaded === false || configLoadError !== ''}
             onClick={async () => {
               // 先同步信息(期间会检查登录状态)
               let isSyncSuccess = await asyncSyncUserInfo(false)
@@ -673,11 +686,11 @@ export default function IndexPage(props: { changeTabKey: Function }) {
                 return false
               }
               // 保存日志
-              TaskUtils.saveConfig($$database.taskConfig)
+              await TaskUtils.saveConfig($$database.taskConfig)
               // 然后将tab切换到日志栏
               props.changeTabKey('log')
               // 启动任务进程
-              TaskUtils.startBackupTask()
+              await TaskUtils.startBackupTask($$database.taskConfig)
             }}
             type="primary"
           >

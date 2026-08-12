@@ -1,8 +1,8 @@
-import Base from '~/src/model/base'
-import * as TypeWeibo from '~/src/type/namespace/weibo'
+import Base from '~/src/model/base.js'
+import * as TypeWeibo from '~/src/type/namespace/weibo.js'
 import _ from 'lodash'
 import dayjs from 'dayjs'
-import DATE_FORMAT from '~/src/constant/date_format'
+import DATE_FORMAT from '~/src/constant/date_format.js'
 
 type TypeFetchErrorRecord = {
   id: number;

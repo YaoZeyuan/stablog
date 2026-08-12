@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios'
-import RequestConfig from '~/src/config/request'
-import logger from '~/src/library/logger'
+import RequestConfig from '~/src/config/request.js'
+import logger from '~/src/library/logger.js'
 import request from 'request-promise'
 import _ from 'lodash'
 
