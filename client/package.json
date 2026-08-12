@@ -9,24 +9,24 @@
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.5.1",
-    "@ant-design/pro-layout": "^7.20.2",
-    "@umijs/max": "^4.3.26",
-    "antd": "^5.21.5",
-    "dayjs": "^1.11.13",
-    "immer": "^8.0.1",
-    "semver": "^7.3.4"
+    "@ant-design/icons": "^6.3.2",
+    "@ant-design/pro-layout": "^7.22.7",
+    "@umijs/max": "^4.7.4",
+    "antd": "^6.6.0",
+    "dayjs": "^1.11.21",
+    "immer": "^11.1.16",
+    "semver": "^7.8.5"
   },
   "devDependencies": {
-    "@types/react": "^17.0.83",
-    "@types/react-dom": "^17.0.25",
-    "@umijs/test": "^3.3.7",
-    "cross-env": "^7.0.3",
-    "lint-staged": "^10.0.7",
-    "prettier": "^2.2.0",
-    "react": "~17.0.2",
-    "react-dom": "~17.0.2",
-    "typescript": "^5.6.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@umijs/test": "^4.7.4",
+    "cross-env": "^10.1.0",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "react": "~19.2.8",
+    "react-dom": "~19.2.8",
+    "typescript": "^7.0.2",
     "yorkie": "^2.0.0"
   }
 }

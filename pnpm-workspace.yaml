@@ -1,0 +1,6 @@
+allowBuilds:
+  better-sqlite3: true
+  core-js: true
+  electron: set this to true or false
+  electron-winstaller: true
+  sharp: set this to true or false
