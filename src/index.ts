@@ -246,6 +246,10 @@ async function createWindow() {
 
   // IPC must exist before the renderer loads, otherwise first-screen calls can race startup.
   if (isDebug) {
+    // Clear a response left by a previous development server before loading Vite.
+    // Clear only the HTTP cache so a restarted dev server cannot reuse an obsolete frontend runtime;
+    // cookies and other login storage must remain intact.
+    await mainWindow.webContents.session.clearCache()
     await mainWindow.loadURL('http://127.0.0.1:8000')
     mainWindow.webContents.openDevTools()
   } else {

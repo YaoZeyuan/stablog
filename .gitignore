@@ -50,6 +50,7 @@ build
 缓存文件/**/*
 #   运行日志
 runtime.log
+/log/*.jsonl
 
 
 #   配置文件

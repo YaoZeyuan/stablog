@@ -14,13 +14,16 @@
 
 GUI 同时只运行一个 workflow。收到 `{status: "running", runId}` 表示已有任务，不要重复点击；若进程异常退出，重新启动即可清除内存锁。
 
+## 前端白屏或资源加载失败
+
+前端使用 Vite，开发服务器固定监听 `127.0.0.1:8000`。先确认 `pnpm start-client` 启动成功，再运行 `pnpm start`；端口被占用时 Vite 会立即报错，不会静默切换端口。安全渲染进程不提供 Node `global`，不要通过开启 `nodeIntegration` 或在 preload 中暴露整个全局对象规避第三方包错误。生产构建后检查 `client/dist/index.html` 中的 JS/CSS 地址应以 `./` 开头。
+
 ## 测试误触业务数据
 
 立即停止测试并检查是否绕过 `createTestSandbox`。所有测试路径必须位于系统临时目录；网络访问会由 offline guard 抛错。日志中不得出现 cookie/token，若出现应先补脱敏测试再修实现。
 
 ## 构建
 
-- Umi 报 Immer default export：使用 `import { produce } from 'immer'`。
-- Umi 报 esbuild helper 冲突：保留 `.umirc.ts` 的 `esbuildMinifyIIFE: true`。
+- Vite 启动报 8000 端口被占用：停止旧前端进程后重启，不要修改为随机端口。
 - Electron Builder 报网络 EACCES/超时：确认代理/防火墙后重试；`pnpm build-dist` 可先独立验证源码和前端。
 - native module ABI 错误：重新执行根目录 `pnpm install --frozen-lockfile`，必要时运行 `pnpm rebuild-sqlite3`；不要在 client 单独安装。

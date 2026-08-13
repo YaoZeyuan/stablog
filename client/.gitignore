@@ -13,8 +13,5 @@
 # misc
 .DS_Store
 
-# umi
-/src/.umi
-/src/.umi-production
-/src/.umi-test
+# local environment overrides
 /.env.local

@@ -1,32 +1,37 @@
 {
+  "name": "stablog-client",
+  "version": "3.5.4",
   "private": true,
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=11 <12"
+  },
   "scripts": {
-    "start": "max  dev",
-    "dev": "npm run start",
-    "build": "max  build",
-    "debug-build": "cross-env COMPRESS=none max  build ",
-    "postinstall": "max setup",
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "debug-build": "vite build --minify=false",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
-    "@ant-design/pro-layout": "^7.22.7",
-    "@umijs/max": "^4.7.4",
-    "antd": "^6.6.0",
+    "antd": "^6.5.4",
     "dayjs": "^1.11.21",
     "immer": "^11.1.16",
+    "lodash": "^4.18.1",
+    "react": "~19.2.8",
+    "react-dom": "~19.2.8",
     "semver": "^7.8.5"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.25",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
-    "@umijs/test": "^4.7.4",
-    "cross-env": "^10.1.0",
     "lint-staged": "^17.3.0",
+    "less": "^4.8.1",
     "prettier": "^3.9.6",
-    "react": "~19.2.8",
-    "react-dom": "~19.2.8",
     "typescript": "^7.0.2",
-    "yorkie": "^2.0.0"
+    "vite": "^8.2.1"
   }
 }

@@ -3,24 +3,22 @@
     "target": "ES2024",
     "module": "preserve",
     "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["vite/client"],
     "importHelpers": true,
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "sourceMap": true,
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@@/*": ["./src/.umi/*"]
+      "@/*": ["./src/*"]
     },
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
   "include": [
-    "mock/**/*",
     "src/**/*",
-    "config/**/*",
-    ".umirc.ts",
     "typings.d.ts"
   ],
   "exclude": [
@@ -32,7 +30,6 @@
     "**/__test__",
     "test",
     "docs",
-    "tests",
-    "src/.umi"
+    "tests"
   ]
 }

@@ -22,7 +22,6 @@ import './index.less'
 
 import _ from 'lodash'
 import dayjs from 'dayjs'
-import querystring from 'query-string'
 import packageConfig from '@/../../package.json'
 import { TypeTaskConfig } from './task_type'
 import * as TaskUtils from './utils'

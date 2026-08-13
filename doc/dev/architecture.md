@@ -4,6 +4,8 @@
 
 `src/interface` 是入口适配层：Electron IPC 与 Optique CLI 只校验输入、提供运行能力并调用 application。`src/application/bootstrap` 是可离线测试的应用启动边界，按“初始化目录/数据库 → 创建窗口并注册 IPC → 加载页面”执行；`src/application/workflow/run_task` 是 GUI/CLI 共用的唯一任务编排入口。`src/application/legacy` 暂时适配旧 command；`src/shared` 提供配置、IPC、错误、执行结果、日志和运行上下文契约。
 
+Electron 渲染进程按纯 Web 环境运行，启用 `contextIsolation` 并禁用 Node 集成。前端使用 React + Ant Design + Vite 构建；页面只能通过 preload 暴露的有限 `window.stablog` 能力访问主进程，不依赖 Node 的 `global`、`process` 或 `require`。Vite 的 `base` 固定为 `./`，使生产产物可由 Electron `loadFile` 加载；开发服务器启用严格文件访问，只允许读取当前仓库。现有功能页由根页面的 Tabs 管理，不引入额外前端路由状态。
+
 `RunTaskWorkflow` 提供 `init`、`fetch`、`generate`、`run`。完整 `run` 按 `init → fetch → generate` 执行；某阶段返回 failure 后不再执行后续阶段。每次运行生成不可变 `traceId`、`runId` 和路径快照，返回 `success | partial_success | failure` 结果。
 
 ## 现有链路与等级
