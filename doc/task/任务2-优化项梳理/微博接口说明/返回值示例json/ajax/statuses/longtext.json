@@ -1,0 +1,64 @@
+{
+    "ok": 1,
+    "data": {
+        "longTextContent": "中国再发野生动物园老虎伤人事件，有传言称“南非野生动物园极少有动物袭击人，因猛兽一旦开始撕咬人，保安会开枪把游客打死让游客免受痛苦，南非法律规定在任何情况下都不允许射杀野生动物”。针对这个传言，敝球曾去南非考证，事实并非如此，保安打的还是袭击人的动物。南非野生动物园的真正游客规定见敝球当年的报道。http://t.cn/RxlaENw",
+        "url_struct": [
+            {
+                "url_title": "网页链接",
+                "url_type_pic": "http://h5.sinaimg.cn/upload/2015/09/25/3/timeline_card_small_web.png",
+                "ori_url": "https://weibo.cn/sinaurl?toasturl=http%3A%2F%2Fgo.huanqiu.com%2Fafrica%2F2008-10%2F261943.html",
+                "short_url": "http://t.cn/RxlaENw",
+                "long_url": "http://go.huanqiu.com/africa/2008-10/261943.html",
+                "url_type": 0,
+                "result": true,
+                "actionlog": {
+                    "act_type": 1,
+                    "act_code": 300,
+                    "oid": "",
+                    "uuid": "",
+                    "cardid": "",
+                    "lcardid": "",
+                    "uicode": "",
+                    "luicode": "",
+                    "fid": "",
+                    "lfid": "",
+                    "ext": "mid:4069372986738497|rid:0_0_0_5058581016299868687_0_0_0|short_url:http://t.cn/RxlaENw|long_url:http://go.huanqiu.com/africa/2008-10/261943.html|comment_id:|miduid:1974576991|rootmid:4069372986738497|rootuid:1974576991|authorid:|uuid:|is_ad_weibo:0|oid:|analysis_card:url_struct"
+                },
+                "storage_type": "",
+                "hide": 0,
+                "position": 2,
+                "need_save_obj": 1,
+                "log": "su=RxlaENw&mark=&mid=4069372986738497"
+            },
+            {
+                "url_title": "网页链接",
+                "url_type_pic": "http://h5.sinaimg.cn/upload/2015/09/25/3/timeline_card_small_web.png",
+                "ori_url": "https://weibo.cn/sinaurl?toasturl=http%3A%2F%2Fgo.huanqiu.com%2Fafrica%2F2008-10%2F261943.html",
+                "short_url": "http://t.cn/RxlaENw",
+                "long_url": "http://go.huanqiu.com/africa/2008-10/261943.html",
+                "url_type": 0,
+                "result": true,
+                "actionlog": {
+                    "act_type": 1,
+                    "act_code": 300,
+                    "oid": "",
+                    "uuid": "",
+                    "cardid": "",
+                    "lcardid": "",
+                    "uicode": "",
+                    "luicode": "",
+                    "fid": "",
+                    "lfid": "",
+                    "ext": "mid:4069372986738497|rid:|short_url:http://t.cn/RxlaENw|long_url:http://go.huanqiu.com/africa/2008-10/261943.html|comment_id:|miduid:1974576991|rootmid:4069372986738497|rootuid:1974576991|authorid:|uuid:|is_ad_weibo:0|oid:|analysis_card:url_struct"
+                },
+                "storage_type": "",
+                "hide": 0,
+                "position": 2,
+                "need_save_obj": 1,
+                "log": "su=RxlaENw&mark=&mid=4069372986738497"
+            }
+        ],
+        "isMarkdown": false,
+        "longTextContent_raw": "中国再发野生动物园老虎伤人事件，有传言称“南非野生动物园极少有动物袭击人，因猛兽一旦开始撕咬人，保安会开枪把游客打死让游客免受痛苦，南非法律规定在任何情况下都不允许射杀野生动物”。针对这个传言，敝球曾去南非考证，事实并非如此，保安打的还是袭击人的动物。南非野生动物园的真正游客规定见敝球当年的报道。http://t.cn/RxlaENw"
+    }
+}

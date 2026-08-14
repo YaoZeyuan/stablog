@@ -1,0 +1,94 @@
+{
+    "ok": 1,
+    "data": {
+        "user": {
+            "id": 1959830294,
+            "idstr": "1959830294",
+            "pc_new": 7,
+            "screen_name": "汪有",
+            "profile_image_url": "https://tva3.sinaimg.cn/crop.0.0.180.180.50/74d0a316jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1786736107&ssig=hw69y9%2FrRo",
+            "profile_url": "/u/1959830294",
+            "verified": true,
+            "verified_type": 0,
+            "domain": "",
+            "weihao": "",
+            "verified_type_ext": 1,
+            "status_total_counter": {
+                "total_cnt_format": "3050.9万",
+                "comment_cnt": "1,566,726",
+                "repost_cnt": "2,496,143",
+                "like_cnt": "26,446,005",
+                "total_cnt": "30,508,874"
+            },
+            "avatar_large": "https://tva3.sinaimg.cn/crop.0.0.180.180.180/74d0a316jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1786736107&ssig=oz%2FmbxfHLL",
+            "avatar_hd": "https://tva3.sinaimg.cn/crop.0.0.180.180.1024/74d0a316jw1e8qgp5bmzyj2050050aa8.jpg?KID=imgbed,tva&Expires=1786736107&ssig=3huni2WhuL",
+            "follow_me": false,
+            "following": true,
+            "mbrank": 3,
+            "mbtype": 12,
+            "v_plus": 0,
+            "user_ability": -2145123832,
+            "planet_video": false,
+            "verified_reason": "2025微博年度新知博主 科学科普博主",
+            "description": "汪有，啥都有",
+            "location": "广东 广州",
+            "gender": "m",
+            "followers_count": 1520885,
+            "followers_count_str": "152.1万",
+            "friends_count": 834,
+            "statuses_count": 16538,
+            "url": "http://hi.baidu.com/ciyuanjiao",
+            "svip": 1,
+            "vvip": 1,
+            "cover_image_phone": "https://ww1.sinaimg.cn/crop.0.0.640.640.640/549d0121tw1egm1kjly3jj20hs0hsq4f.jpg",
+            "icon_list": [
+                {
+                    "type": "vip",
+                    "data": {
+                        "mbrank": 3,
+                        "mbtype": 12,
+                        "svip": 1,
+                        "vvip": 1
+                    }
+                },
+                {
+                    "type": "icon",
+                    "data": {
+                        "value": "1",
+                        "icon_img": "https://d.sinaimg.cn/prd/106/1683/2026/06/05/feed_icon_yijuduokui2x.png",
+                        "title": "一举夺魁",
+                        "url": "http://s.weibo.com/weibo?q=%23高考加油%23"
+                    }
+                }
+            ],
+            "top_user": 1,
+            "user_type": 0,
+            "is_star": "0",
+            "is_muteuser": false,
+            "special_follow": false
+        },
+        "tabList": [
+            {
+                "name": "home",
+                "tabName": "精选"
+            },
+            {
+                "name": "feed",
+                "tabName": "微博"
+            },
+            {
+                "name": "newVideo",
+                "tabName": "视频"
+            },
+            {
+                "name": "audio",
+                "tabName": "音频"
+            },
+            {
+                "name": "album",
+                "tabName": "相册"
+            }
+        ],
+        "blockText": ""
+    }
+}
