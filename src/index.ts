@@ -5,6 +5,8 @@ import Logger from '~/src/library/logger.js'
 import InitEnvCommand from '~/src/command/init_env.js'
 import { registerIpcHandlers } from '~/src/interface/electron/ipc_handlers.js'
 import { bootstrapApplication } from '~/src/application/bootstrap/application_bootstrap.js'
+import { recoverInterruptedFetchTasks } from '~/src/application/fetch/customer_task_run_manager.js'
+import DatabaseConfig from '~/src/config/database.js'
 import { LogEventCode, LogLevel, LogStage, LogStatus } from '~/src/shared/logging/log_contract.js'
 import fs from 'fs'
 import sharp from 'sharp'
@@ -18,9 +20,16 @@ let argv = process.argv
 let isDebug = argv.includes('--stablog-debug')
 const isMacOS = os.platform() === 'darwin'
 let { app, BrowserWindow, ipcMain, session, shell, dialog } = Electron
+const isPrimaryInstance = app.requestSingleInstanceLock()
+if (isPrimaryInstance === false) app.quit()
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow: Electron.BrowserWindow | null = null
+
+app.on('second-instance', () => {
+  if (mainWindow?.isMinimized()) mainWindow.restore()
+  mainWindow?.focus()
+})
 
 // 解除node.js内存限制
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192')
@@ -264,10 +273,11 @@ async function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => bootstrapApplication({
+if (isPrimaryInstance) app.whenReady().then(() => bootstrapApplication({
   initialize: async () => {
     const initCommand = new InitEnvCommand()
     await initCommand.handle({}, {})
+    await recoverInterruptedFetchTasks(DatabaseConfig.uri)
   },
   createWindow,
   eventSink: Logger,

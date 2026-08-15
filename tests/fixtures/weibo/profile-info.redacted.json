@@ -1,0 +1,15 @@
+{
+  "ok": 1,
+  "data": {
+    "user": {
+      "id": 1000000001,
+      "idstr": "1000000001",
+      "screen_name": "fixture-user",
+      "profile_image_url": "https://example.invalid/avatar-small.jpg",
+      "profile_url": "/u/1000000001",
+      "avatar_hd": "https://example.invalid/avatar-hd.jpg",
+      "statuses_count": 42,
+      "new_vendor_field": true
+    }
+  }
+}

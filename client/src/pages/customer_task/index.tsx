@@ -1,723 +1,778 @@
-import React, { useEffect, useState } from 'react'
-import { produce } from 'immer'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import {
+  Alert,
+  Button,
+  Card,
+  Collapse,
+  DatePicker,
+  Descriptions,
+  Divider,
   Form,
   Input,
   InputNumber,
-  Button,
-  Checkbox,
-  Descriptions,
-  Slider,
-  Divider,
-  Radio,
-  DatePicker,
-  Select,
-  Switch,
+  message,
   Modal,
+  Radio,
+  Select,
+  Space,
+  Switch,
+  Tag,
   Tooltip,
-  Collapse,
+  Typography,
 } from 'antd'
-import { QuestionOutlined, QuestionCircleOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import {
+  DeleteOutlined,
+  PlusOutlined,
+  QuestionCircleOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons'
+import type { WeiboUserSummary } from '@/library/desktop'
 import './index.less'
-
-import _ from 'lodash'
-import dayjs from 'dayjs'
-import packageConfig from '@/../../package.json'
-import { TypeTaskConfig } from './task_type'
 import * as TaskUtils from './utils'
-import { invokeDesktop } from '@/library/desktop'
-
-let currentVersion = parseFloat(packageConfig.version)
-
-let TaskConfigType = TypeTaskConfig
+import {
+  DEFAULT_CUSTOMER_TASK_CONFIG,
+  IMAGE_QUALITY,
+  VOLUME_SPLIT_BY,
+  type CustomerTaskConfig,
+  type CustomerTaskRecord,
+  type TaskCommandAck,
+} from './task_type'
+import type { TaskDashboardController } from './use_task_dashboard'
+import {
+  requiresWeiboLoginForNewTask,
+  resolveLocalWeiboTargetUid,
+} from './execution_policy'
 
 const { RangePicker } = DatePicker
-const { Option } = Select
+const MIN_FETCH_DATE = dayjs('2009-09-01')
 
-type TypeState = {
-  isLogin: boolean
-  showLoginModel: boolean
-  showUpgradeInfo: boolean
-  remoteVersionConfig: {
-    version: string
-    downloadUrl: string
-    releaseAt: string
-    releaseNote: string
+function shanghaiToday(): Dayjs {
+  const date = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+  return dayjs(date)
+}
+
+type CustomerTaskFormValues = Omit<
+  CustomerTaskConfig,
+  'fetchStartDate' | 'fetchEndDate' | 'outputStartAtMs' | 'outputEndAtMs'
+> & {
+  fetchDateRange: [Dayjs, Dayjs]
+  outputTimeRange: [Dayjs, Dayjs]
+}
+
+type Props = {
+  changeTabKey: (tab: string) => void
+  taskDashboard: TaskDashboardController
+}
+
+function createDefaultConfig(): CustomerTaskConfig {
+  const today = shanghaiToday()
+  return {
+    ...DEFAULT_CUSTOMER_TASK_CONFIG,
+    configList: DEFAULT_CUSTOMER_TASK_CONFIG.configList.map((item) => ({ ...item })),
+    fetchEndDate: today.format('YYYY-MM-DD'),
+    outputStartAtMs: dayjs('2009-09-01').startOf('day').valueOf(),
+    outputEndAtMs: today.endOf('day').valueOf(),
   }
 }
 
-type TypeDatabase = {
-  taskConfig: TypeTaskConfig.Customer
-  currentUserInfo: {
-    screen_name: string
-    statuses_count: number
-    total_page_count: number
-    followers_count: number
-  }
-  fetchErrorDistribution: {
-    weibo_page: number
-    long_text_weibo: number
-    article: number
-  }
-}
-
-const Order: {
-  由旧到新: 'asc'
-  由新到旧: 'desc'
-} = {
-  由旧到新: 'asc',
-  由新到旧: 'desc',
-}
-const ImageQuilty = {
-  无图: 'none',
-  默认: 'default',
-}
-
-const Translate_Image_Quilty = {
-  [TaskConfigType.CONST_Image_Quilty_默认]: '默认',
-  [TaskConfigType.CONST_Image_Quilty_无图]: '无图',
-}
-
-const defaultConfigItem = {
-  uid: '',
-  rawInputText: '',
-  comment: '',
-}
-const Const_Volume_Split_By: { [key: string]: string } = {
-  ['不拆分']: 'single',
-  ['年']: 'year',
-  ['月']: 'month',
-  ['微博条数']: 'count',
-}
-
-let taskConfig: TypeTaskConfig.Customer = {
-  configList: [_.clone(defaultConfigItem)],
-  imageQuilty: TaskConfigType.CONST_Image_Quilty_默认,
-  postAtOrderBy: TaskConfigType.CONST_Order_Asc,
-  bookTitle: '',
-  comment: '',
-  volumeSplitBy: TaskConfigType.CONST_Volume_Split_By_不拆分,
-  volumeSplitCount: 10000,
-  fetchStartAtPageNo: 0,
-  fetchEndAtPageNo: 100000,
-  outputStartAtMs: dayjs('2010-01-01 00:00:00').unix() * 1000,
-  outputEndAtMs: dayjs().add(1, 'year').unix() * 1000,
-  enableAutoConfig: true,
-  onlyRetry: false,
-  isSkipFetch: false,
-  isSkipGeneratePdf: false,
-  isRegenerateHtml2PdfImage: false,
-  isOnlyOriginal: false,
-  isOnlyArticle: false,
-}
-if (taskConfig.configList.length === 0) {
-  // 如果没有数据, 就要手工补上一个, 确保数据完整
-  taskConfig.configList.push(_.clone(defaultConfigItem))
-}
-
-// 基于配置文件作为初始值
-export default function IndexPage(props: { changeTabKey: Function }) {
-  const [form] = Form.useForm()
-  const [isConfigLoaded, setIsConfigLoaded] = useState(false)
-  const [configLoadError, setConfigLoadError] = useState<string>('')
-  const [$$status, set$$Status] = useState<TypeState>(
-    produce(
-      {
-        isLogin: false,
-        showLoginModel: false,
-        showUpgradeInfo: false,
-        remoteVersionConfig: {
-          version: '1.0.0',
-          downloadUrl: '',
-          releaseAt: '',
-          releaseNote: '',
-        },
-      },
-      (e) => e,
-    ),
-  )
-  const [$$database, set$$Database] = useState<TypeDatabase>(
-    produce(
-      {
-        taskConfig: taskConfig,
-        currentUserInfo: {
-          screen_name: '',
-          statuses_count: 0,
-          total_page_count: 0,
-          followers_count: 0,
-        },
-        fetchErrorDistribution: {
-          article: 0,
-          long_text_weibo: 0,
-          weibo_page: 0,
-        },
-      },
-      (e) => e,
-    ),
-  )
-  // 首次加载时从主进程读取经过 schema 校验的任务配置。
-  useEffect(() => {
-    invokeDesktop<TypeTaskConfig.Customer>('get-task-config')
-      .then((savedConfig) => {
-        if (savedConfig.enableAutoConfig) {
-          savedConfig.outputEndAtMs = dayjs().add(1, 'day').unix() * 1000
-        }
-        if (savedConfig.configList.length === 0) {
-          savedConfig.configList.push(_.clone(defaultConfigItem))
-        }
-        set$$Database((current) => produce(current, (raw) => {
-          raw.taskConfig = savedConfig
-        }))
-        form.setFieldsValue(savedConfig)
-      })
-      .catch((error) => {
-        console.warn(error)
-        setConfigLoadError(error instanceof Error ? error.message : String(error))
-      })
-      .then(() => setIsConfigLoaded(true))
-  }, [])
-
-  // 每次database更新后, 重写 taskConfig 配置
-  useEffect(() => {
-    if (isConfigLoaded && configLoadError === '') {
-      TaskUtils.saveConfig($$database.taskConfig).catch(console.error)
-    }
-  }, [$$database, isConfigLoaded, configLoadError])
-
-  // 初始化时检查是否已登录
-  useEffect(() => {
-    let a = async () => {
-      await asyncCheckIsLogin()
-      // 同步用户信息
-      await asyncSyncUserInfo(false)
-    }
-    a()
-  }, [])
-
-  async function asyncCheckIsLogin() {
-    let isLogin = await TaskUtils.asyncCheckIsLogin()
-    if (isLogin !== true) {
-      set$$Status(
-        produce($$status, (raw) => {
-          raw.isLogin = false
-          raw.showLoginModel = true
-        }),
-      )
-    } else {
-      set$$Status(
-        produce($$status, (raw) => {
-          raw.isLogin = true
-          raw.showLoginModel = false
-        }),
-      )
-    }
-    return isLogin
-  }
-
-  async function asyncSyncUserInfo(updatePageRange = false) {
-    // 先检查是否登录
-    let isLogin = await asyncCheckIsLogin()
-    if (isLogin !== true) {
-      return false
-    }
-    // 获取uid
-    // let uid = $$database.taskConfig.configList[0].uid;
-    let uid = await TaskUtils.asyncGetUid($$database.taskConfig.configList[0].rawInputText)
-    console.log('uid =>', uid)
-    if (uid === '') {
-      return
-    }
-    // 然后更新用户信息
-    let userInfo = await TaskUtils.asyncGetUserInfo(uid)
-    if (userInfo.screen_name === '') {
-      // 说明请求失败
-      return
-    }
-
-    // 获取数据库中的抓取错误记录
-    const errorDistributionList = await invokeDesktop<any[]>('get-fetch-error-distribution', {
-      author_uid: uid,
-    })
-    set$$Database(
-      produce($$database, (raw) => {
-        // 更新错误数据分布
-        for (let record of errorDistributionList) {
-          switch (record.resource_type) {
-            case 'weibo_page':
-              raw.fetchErrorDistribution.weibo_page = record.count
-              break
-            case 'long_text_weibo':
-              raw.fetchErrorDistribution.long_text_weibo = record.count
-              break
-            case 'article':
-              raw.fetchErrorDistribution.article = record.count
-              break
-            default:
-          }
-        }
-
-        raw.taskConfig.configList[0].uid = uid
-        raw.currentUserInfo = userInfo
-        if (updatePageRange) {
-          // 当启动任务时, 不需要更新页面列表
-          if (raw.taskConfig.enableAutoConfig) {
-            // 仅在启用自动生成配置时, 才更新配置内容
-            raw.taskConfig.fetchStartAtPageNo = 0
-            raw.taskConfig.fetchEndAtPageNo = userInfo?.total_page_count || 1000
-          }
-        }
-        form.setFieldsValue({
-          fetchEndAtPageNo: raw.taskConfig.fetchEndAtPageNo,
-          fetchStartAtPageNo: 0,
-          fetchPageNoRange: [0, raw.taskConfig.fetchEndAtPageNo],
-        })
-      }),
-    )
-    return true
-  }
-
-  let initValue = {
-    ...$$database.taskConfig,
-    rawInputText: $$database.taskConfig.configList[0].rawInputText,
-    fetchPageNoRange: [$$database.taskConfig.fetchStartAtPageNo, $$database.taskConfig.fetchEndAtPageNo],
+function toFormValues(config: CustomerTaskConfig): CustomerTaskFormValues {
+  const defaults = createDefaultConfig()
+  return {
+    ...config,
+    configList: config.configList.length > 0
+      ? config.configList.map((item) => ({ ...item }))
+      : defaults.configList,
+    fetchDateRange: [
+      dayjs(config.fetchStartDate || defaults.fetchStartDate),
+      dayjs(config.fetchEndDate || defaults.fetchEndDate),
+    ],
     outputTimeRange: [
-      dayjs.unix($$database.taskConfig.outputStartAtMs / 1000),
-      dayjs.unix($$database.taskConfig.outputEndAtMs / 1000),
+      dayjs(config.outputStartAtMs ?? defaults.outputStartAtMs),
+      dayjs(config.outputEndAtMs ?? defaults.outputEndAtMs),
     ],
   }
+}
 
-  console.log('initValue =>', initValue)
-
-  // 总需要生成的微博数量
-  let needGenerateWeiboCount = $$database?.currentUserInfo?.statuses_count || 0
-
-  // 总需要备份的微博页数
-  let needBackupWeiboPageCount = $$database?.currentUserInfo?.statuses_count || 0
-  needBackupWeiboPageCount = $$database?.taskConfig.fetchEndAtPageNo - $$database?.taskConfig.fetchStartAtPageNo
-  if ($$database.taskConfig.isSkipFetch) {
-    needBackupWeiboPageCount = 0
+function toTaskConfig(values: CustomerTaskFormValues): CustomerTaskConfig {
+  const [fetchStartDate, fetchEndDate] = values.fetchDateRange
+  const [outputStartAt, outputEndAt] = values.outputTimeRange
+  return {
+    configList: values.configList.map((item) => ({
+      uid: (item.uid ?? '').trim(),
+      rawInputText: (item.rawInputText ?? '').trim(),
+      comment: item.comment ?? '',
+    })),
+    imageQuilty: values.imageQuilty,
+    bookTitle: values.bookTitle ?? '',
+    comment: values.comment ?? '',
+    postAtOrderBy: values.postAtOrderBy,
+    fetchStartDate: fetchStartDate.format('YYYY-MM-DD'),
+    fetchEndDate: fetchEndDate.format('YYYY-MM-DD'),
+    requestIntervalSeconds: values.requestIntervalSeconds,
+    cacheReadMode: values.cacheReadMode,
+    outputStartAtMs: outputStartAt.startOf('day').valueOf(),
+    outputEndAtMs: outputEndAt.endOf('day').valueOf(),
+    isSkipFetch: values.isSkipFetch,
+    isSkipGeneratePdf: values.isSkipGeneratePdf,
+    isRegenerateHtml2PdfImage: values.isRegenerateHtml2PdfImage,
+    isOnlyArticle: values.isOnlyArticle,
+    isOnlyOriginal: values.isOnlyOriginal,
+    volumeSplitBy: values.volumeSplitBy,
+    volumeSplitCount: values.volumeSplitCount,
   }
-  if ($$database.taskConfig.isSkipGeneratePdf) {
-    needGenerateWeiboCount = 0
+}
+
+function formatDuration(totalSeconds: number): string {
+  if (totalSeconds < 60) {
+    return `${totalSeconds} 秒`
   }
-  console.log('needBackupWeiboPageCount => ', needBackupWeiboPageCount)
-  // 总需要等待的时长(秒)
-  let needWaitSecond = needBackupWeiboPageCount * 30 + needGenerateWeiboCount * 2
-  let 备份微博耗时_分钟 = Math.floor((needBackupWeiboPageCount * 30) / 60)
-  let 导出微博耗时_分钟 = Math.floor((needGenerateWeiboCount * 2) / 60)
-  let needWaitMinute = Math.floor(needWaitSecond / 60)
-  let needWaitHour = Math.round((needWaitSecond / 60 / 60) * 100) / 100
+  const totalMinutes = Math.ceil(totalSeconds / 60)
+  if (totalMinutes < 60) {
+    return `${totalMinutes} 分钟`
+  }
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${hours} 小时${minutes === 0 ? '' : ` ${minutes} 分钟`}`
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+export default function CustomerTaskPage({ changeTabKey, taskDashboard }: Props) {
+  const [form] = Form.useForm<CustomerTaskFormValues>()
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false)
+  const [configLoadError, setConfigLoadError] = useState('')
+  const [isCommandPending, setIsCommandPending] = useState(false)
+  const [syncingIndex, setSyncingIndex] = useState<number>()
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [showUpgradeInfo, setShowUpgradeInfo] = useState(false)
+  const [remoteVersionConfig, setRemoteVersionConfig] = useState({
+    version: '',
+    downloadUrl: '',
+    releaseAt: '',
+    releaseNote: '',
+  })
+  const [userInfoByIndex, setUserInfoByIndex] = useState<Record<number, WeiboUserSummary>>({})
+  const saveTimerRef = useRef<number | undefined>(undefined)
+
+  const watchedConfigList = Form.useWatch('configList', form) ?? []
+  const watchedFetchRange = Form.useWatch('fetchDateRange', form)
+  const watchedRequestInterval = Form.useWatch('requestIntervalSeconds', form) ?? 10
+  const watchedSkipFetch = Form.useWatch('isSkipFetch', form) ?? false
+  const watchedSkipPdf = Form.useWatch('isSkipGeneratePdf', form) ?? false
+  const watchedVolumeSplitBy = Form.useWatch('volumeSplitBy', form)
+  const watchedAllValues = Form.useWatch([], form) as CustomerTaskFormValues | undefined
+
+  useEffect(() => {
+    let alive = true
+    TaskUtils.getConfig()
+      .then((savedConfig) => {
+        if (!alive) return
+        form.setFieldsValue(toFormValues(savedConfig))
+        setConfigLoadError('')
+      })
+      .catch((loadError) => {
+        if (!alive) return
+        setConfigLoadError(errorMessage(loadError))
+      })
+      .finally(() => {
+        if (alive) setIsConfigLoaded(true)
+      })
+    return () => {
+      alive = false
+      if (saveTimerRef.current !== undefined) {
+        window.clearTimeout(saveTimerRef.current)
+      }
+    }
+  }, [form])
+
+  useEffect(() => {
+    if ((taskDashboard.isActive || isCommandPending) && saveTimerRef.current !== undefined) {
+      window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = undefined
+    }
+  }, [isCommandPending, taskDashboard.isActive])
+
+  const roughEstimate = useMemo(() => {
+    if (!watchedFetchRange || watchedConfigList.length === 0) {
+      return { requests: 0, seconds: 0, statuses: 0 }
+    }
+    const [start, end] = watchedFetchRange
+    const userCount = watchedConfigList.length
+    const dayCount = Math.max(1, end.startOf('day').diff(start.startOf('day'), 'day') + 1)
+    const monthCount = Math.max(1, (end.year() - start.year()) * 12 + end.month() - start.month() + 1)
+    const yearCount = Math.max(1, end.year() - start.year() + 1)
+    const statuses = Object.values(userInfoByIndex)
+      .reduce((sum, userInfo) => sum + userInfo.statuses_count, 0)
+    const planningRequests = (yearCount + monthCount + Math.ceil(dayCount / 7)) * userCount
+    const pageRequests = Math.ceil(statuses / 50)
+    const requests = watchedSkipFetch ? 0 : planningRequests + pageRequests
+    const renderSeconds = watchedSkipPdf ? 0 : statuses * 2
+    return {
+      requests,
+      statuses,
+      seconds: Math.ceil((requests * Math.max(10, watchedRequestInterval) + renderSeconds) * 1.5),
+    }
+  }, [userInfoByIndex, watchedConfigList, watchedFetchRange, watchedRequestInterval, watchedSkipFetch, watchedSkipPdf])
+
+  const previewConfig = useMemo(() => {
+    if (!watchedAllValues?.fetchDateRange || !watchedAllValues.outputTimeRange) {
+      return null
+    }
+    try {
+      return toTaskConfig(watchedAllValues)
+    } catch {
+      return null
+    }
+  }, [watchedAllValues])
+
+  function scheduleSave(values: CustomerTaskFormValues) {
+    if (!isConfigLoaded || configLoadError !== '' || taskDashboard.isActive || isCommandPending) {
+      return
+    }
+    if (saveTimerRef.current !== undefined) {
+      window.clearTimeout(saveTimerRef.current)
+    }
+    saveTimerRef.current = window.setTimeout(() => {
+      try {
+        void TaskUtils.saveConfig(toTaskConfig(values)).catch((saveError) => {
+          message.error(`保存任务配置失败：${errorMessage(saveError)}`)
+        })
+      } catch {
+        // 表单填写到一半时暂不保存，正式启动仍会执行完整校验。
+      }
+    }, 500)
+  }
+
+  async function ensureLoggedIn(): Promise<boolean> {
+    try {
+      const isLogin = await TaskUtils.asyncCheckIsLogin()
+      if (!isLogin) {
+        setShowLoginModal(true)
+      }
+      return isLogin
+    } catch (loginError) {
+      message.error(`检查微博登录状态失败：${errorMessage(loginError)}`)
+      return false
+    }
+  }
+
+  async function resolveUser(
+    index: number,
+    fetchSummary: boolean,
+    allowRemoteResolution = true,
+  ): Promise<CustomerTaskRecord> {
+    const record = form.getFieldValue(['configList', index]) as CustomerTaskRecord | undefined
+    if (record === undefined) {
+      throw new Error(`第 ${index + 1} 个用户尚未填写个人主页`)
+    }
+    let uid = resolveLocalWeiboTargetUid(record)
+    if (uid === '' && !record.rawInputText?.trim()) {
+      throw new Error(`第 ${index + 1} 个用户尚未填写 UID 或个人主页`)
+    }
+    if (uid === '' && allowRemoteResolution) {
+      uid = await TaskUtils.asyncGetUid(record.rawInputText)
+    }
+    if (!/^\d{1,32}$/.test(uid)) {
+      if (allowRemoteResolution === false) {
+        throw new Error(
+          `跳过抓取时无法离线解析第 ${index + 1} 个用户的 UID，请输入数字 UID 或包含数字 UID 的微博主页地址`,
+        )
+      }
+      throw new Error(`无法解析第 ${index + 1} 个用户的 UID`)
+    }
+    form.setFieldValue(['configList', index, 'uid'], uid)
+    if (fetchSummary) {
+      const userInfo = await TaskUtils.asyncGetUserInfo(uid)
+      if (!userInfo.screen_name) {
+        throw new Error(`无法读取 UID ${uid} 的用户信息`)
+      }
+      setUserInfoByIndex((current) => ({ ...current, [index]: userInfo }))
+    }
+    return { ...record, uid }
+  }
+
+  async function syncUser(index: number) {
+    if (taskDashboard.isActive || isCommandPending) return
+    setSyncingIndex(index)
+    try {
+      if (!(await ensureLoggedIn())) return
+      const user = await resolveUser(index, true)
+      const info = userInfoByIndex[index]
+      message.success(info?.screen_name ? `已同步 ${info.screen_name}` : `已同步 UID ${user.uid}`)
+    } catch (syncError) {
+      message.error(errorMessage(syncError))
+    } finally {
+      setSyncingIndex(undefined)
+    }
+  }
+
+  async function ensureAllUsersResolved(values: CustomerTaskFormValues): Promise<CustomerTaskConfig> {
+    const needsWeiboLogin = requiresWeiboLoginForNewTask(values)
+    if (needsWeiboLogin && !(await ensureLoggedIn())) {
+      throw new Error('请先登录微博账号')
+    }
+    const resolvedList: CustomerTaskRecord[] = []
+    for (let index = 0; index < values.configList.length; index += 1) {
+      resolvedList.push(await resolveUser(index, false, needsWeiboLogin))
+    }
+    form.setFieldValue('configList', resolvedList)
+    return toTaskConfig({ ...values, configList: resolvedList })
+  }
+
+  function handleCommandAck(ack: TaskCommandAck) {
+    taskDashboard.selectBatch(ack.batchId)
+    changeTabKey('log')
+    if (ack.outcome === 'already_running') {
+      message.info('已有备份任务正在运行，已切换到任务进度')
+    } else {
+      message.success('任务已启动')
+    }
+    window.setTimeout(() => void taskDashboard.refresh(), 0)
+  }
+
+  async function startNewTask() {
+    if (saveTimerRef.current !== undefined) {
+      window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = undefined
+    }
+    setIsCommandPending(true)
+    try {
+      const values = await form.validateFields()
+      const config = await ensureAllUsersResolved(values)
+      handleCommandAck(await TaskUtils.startBackupTask(config))
+    } catch (startError) {
+      message.error(`启动任务失败：${errorMessage(startError)}`)
+    } finally {
+      setIsCommandPending(false)
+    }
+  }
+
+  async function continueTask() {
+    const batchId = taskDashboard.dashboard.batch?.batchId
+    if (!batchId) return
+    setIsCommandPending(true)
+    try {
+      handleCommandAck(await TaskUtils.continueBackupTask(batchId))
+    } catch (continueError) {
+      message.error(`继续任务失败：${errorMessage(continueError)}`)
+    } finally {
+      setIsCommandPending(false)
+    }
+  }
+
+  function confirmRestart() {
+    Modal.confirm({
+      title: '确认重新抓取？',
+      content: '将创建新的任务批次，不复用旧批次的成功状态；是否读取 HTTP 缓存由当前缓存策略决定。',
+      okText: '重新抓取',
+      cancelText: '取消',
+      onOk: startNewTask,
+    })
+  }
+
+  function confirmClearCache(index: number) {
+    const record = form.getFieldValue(['configList', index]) as CustomerTaskRecord | undefined
+    if (!record?.uid) {
+      message.warning('请先同步用户信息')
+      return
+    }
+    Modal.confirm({
+      title: '清除目标用户接口缓存？',
+      content: `仅删除 UID ${record.uid} 的微博检索 JSON 缓存，不会删除微博数据、图片或任务历史。`,
+      okText: '清除缓存',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: async () => {
+        await TaskUtils.clearWeiboRequestCache(record.uid)
+        message.success('已清除该用户的接口缓存')
+      },
+    })
+  }
+
+  async function resetConfig() {
+    setIsCommandPending(true)
+    try {
+      if (saveTimerRef.current !== undefined) {
+        window.clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = undefined
+      }
+      const resetConfigValue = await TaskUtils.resetTaskConfig()
+      form.setFieldsValue(toFormValues(resetConfigValue))
+      setUserInfoByIndex({})
+      setConfigLoadError('')
+      setIsConfigLoaded(true)
+      message.success('已重置为新版任务配置')
+    } catch (resetError) {
+      message.error(`重置配置失败：${errorMessage(resetError)}`)
+    } finally {
+      setIsCommandPending(false)
+    }
+  }
+
+  const currentBatch = taskDashboard.dashboard.batch
+  const hasPreviousBatch = currentBatch !== null
 
   return (
     <div className="customer-task">
       <Modal
         title="任务配置读取失败"
-        visible={configLoadError !== ''}
-        footer={null}
+        open={configLoadError !== ''}
         closable={false}
+        footer={[
+          <Button
+            key="reset"
+            danger
+            disabled={taskDashboard.isActive || isCommandPending}
+            loading={isCommandPending}
+            onClick={() => void resetConfig()}
+          >
+            重置为新版配置
+          </Button>,
+        ]}
       >
-        <p>为避免覆盖损坏或不兼容的配置，已停止自动保存和任务启动。</p>
+        <p>旧版配置不再兼容。重置只会替换任务配置，不会删除微博数据、缓存或任务历史。</p>
         <pre>{configLoadError}</pre>
       </Modal>
-      <Modal
-        title="发现新版本"
-        visible={$$status.showUpgradeInfo}
-        onOk={() => {
-          set$$Status(
-            produce($$status, (raw) => {
-              raw.showUpgradeInfo = false
-            }),
-          )
-          TaskUtils.jumpToUpgrade($$status.remoteVersionConfig.downloadUrl)
-        }}
-        okText="更新"
-        onCancel={() => {
-          set$$Status(
-            produce($$status, (raw) => {
-              raw.showUpgradeInfo = false
-            }),
-          )
-        }}
-      >
-        <p>最新版本:{$$status.remoteVersionConfig.version}</p>
-        <p>更新内容:{$$status.remoteVersionConfig.releaseNote}</p>
-        <p>更新时间:{$$status.remoteVersionConfig.releaseAt}</p>
-      </Modal>
+
       <Modal
         title="未登录"
-        visible={$$status.showLoginModel}
-        onOk={() => {
-          set$$Status(
-            produce($$status, (raw) => {
-              raw.showLoginModel = false
-            }),
-          )
-          props.changeTabKey('login')
-        }}
-        onCancel={() => {
-          set$$Status(
-            produce($$status, (raw) => {
-              raw.showLoginModel = false
-            }),
-          )
-        }}
+        open={showLoginModal}
         okText="去登录"
-      >
-        <p>检查到尚未登录, 请先登录微博账号</p>
-      </Modal>
-      <Form
-        labelCol={{ span: 4 }}
-        wrapperCol={{ span: 16 }}
-        name="basic"
-        form={form}
-        onValuesChange={(changedValues, values) => {
-          set$$Database(
-            produce($$database, (raw: TypeDatabase) => {
-              let updateKey = Object.keys(changedValues)[0]
-              switch (updateKey) {
-                case 'rawInputText':
-                  let rawInput = changedValues['rawInputText']
-                  // 先记录数据, 待点击同步按钮后再更新uid信息
-                  raw.taskConfig.configList[0].rawInputText = rawInput
-                  raw.taskConfig.configList[0].uid = ''
-                  raw.taskConfig.configList[0].comment = ''
-                  break
-                case 'fetchPageNoRange':
-                  raw.taskConfig['fetchStartAtPageNo'] = changedValues[updateKey][0]
-                  raw.taskConfig['fetchEndAtPageNo'] = changedValues[updateKey][1]
-                  break
-                case 'outputTimeRange':
-                  raw.taskConfig['outputStartAtMs'] = changedValues[updateKey][0].unix() * 1000
-                  raw.taskConfig['outputEndAtMs'] = changedValues[updateKey][1].unix() * 1000
-                  break
-                case 'volumeSplitBy':
-                  raw.taskConfig['volumeSplitBy'] = changedValues['volumeSplitBy']
-                  break
-                default:
-                  ;(raw.taskConfig as unknown as Record<string, unknown>)[updateKey] = changedValues[updateKey]
-              }
-            }),
-          )
+        onOk={() => {
+          setShowLoginModal(false)
+          changeTabKey('login')
         }}
-        initialValues={initValue}
+        onCancel={() => setShowLoginModal(false)}
       >
-        <Form.Item
-          label={
-            <span>
-              个人主页&nbsp;
-              <Tooltip title="在浏览器中进入用户首页, 将链接粘贴至此处. 主页地址类似于:https://weibo.com/u/5659598386 或 https://weibo.com/n/八大山债人 或 https://m.weibo.cn/u/5659598386 或 https://m.weibo.cn/profile/2291429207">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
-        >
-          <div className="flex-container">
-            <Form.Item name="rawInputText" className="flex-container-item-w100">
-              <Input placeholder="请输入用户个人主页url.示例:https://weibo.com/u/5390490281" />
-            </Form.Item>
-            <Button
-              onClick={() => {
-                asyncSyncUserInfo(true)
-              }}
-            >
-              同步用户信息
-            </Button>
-          </div>
-        </Form.Item>
+        <p>请先登录微博账号，再同步用户或启动备份。</p>
+      </Modal>
 
-        <Form.Item label="用户信息">
-          {$$database.currentUserInfo.screen_name === '' ? (
-            '数据待同步'
-          ) : (
-            <Descriptions bordered column={1}>
-              <Descriptions.Item label="用户名">{$$database.currentUserInfo.screen_name}</Descriptions.Item>
-              <Descriptions.Item label="微博总数">{$$database.currentUserInfo.statuses_count}</Descriptions.Item>
-              <Descriptions.Item label="微博总页面数">{$$database.currentUserInfo.total_page_count}</Descriptions.Item>
-              <Descriptions.Item label="待抓取页面范围[从0开始计数]">
-                从{$$database.taskConfig.fetchStartAtPageNo}~{$$database.taskConfig.fetchEndAtPageNo}页, 共
-                {$$database.taskConfig.fetchEndAtPageNo - $$database.taskConfig.fetchStartAtPageNo + 1}页
-              </Descriptions.Item>
-              <Descriptions.Item
-                label={
-                  <span>
-                    预计耗时&nbsp;
-                    <Tooltip title="计算公式:总耗时=(待抓取微博总数/10 * 30 + 微博总数 * 2)秒. 每10条微博一页, 抓取一页微博数据需要间隔30s. 抓取完成, 生成pdf时, 每条微博需要用2s将其渲染为图片. 故有此公式">
-                      <QuestionCircleOutlined />
-                    </Tooltip>
-                  </span>
-                }
+      <Modal
+        title="发现新版本"
+        open={showUpgradeInfo}
+        okText="更新"
+        onOk={() => {
+          setShowUpgradeInfo(false)
+          void TaskUtils.jumpToUpgrade(remoteVersionConfig.downloadUrl)
+        }}
+        onCancel={() => setShowUpgradeInfo(false)}
+      >
+        <p>最新版本：{remoteVersionConfig.version}</p>
+        <p>更新内容：{remoteVersionConfig.releaseNote}</p>
+        <p>更新时间：{remoteVersionConfig.releaseAt}</p>
+      </Modal>
+
+      {taskDashboard.error && (
+        <Alert className="task-alert" type="warning" showIcon title="任务状态暂时无法刷新" description={taskDashboard.error} />
+      )}
+      {taskDashboard.isActive && (
+        <Alert
+          className="task-alert"
+          type="info"
+          showIcon
+          title="备份任务正在运行"
+          description="运行期间配置、登录、重抓和缓存清理操作已锁定。关闭应用会中断当前执行，重启后可继续。"
+          action={<Button onClick={() => changeTabKey('log')}>查看进度</Button>}
+        />
+      )}
+      {!taskDashboard.isActive && currentBatch?.resumable && (
+        <Alert
+          className="task-alert"
+          type="warning"
+          showIcon
+          title="发现未完成任务"
+          description={`批次 ${currentBatch.batchId} 可以继续，已成功的页面会自动跳过。`}
+        />
+      )}
+
+      <Form<CustomerTaskFormValues>
+        form={form}
+        disabled={taskDashboard.isActive || isCommandPending}
+        labelCol={{ span: 5 }}
+        wrapperCol={{ span: 17 }}
+        initialValues={toFormValues(createDefaultConfig())}
+        onValuesChange={(_, values) => scheduleSave(values)}
+      >
+        <Divider>备份用户</Divider>
+        <Form.List name="configList">
+          {(fields, { add, remove }) => (
+            <Space orientation="vertical" size="middle" className="full-width">
+              {fields.map((field, index) => {
+                const userInfo = userInfoByIndex[index]
+                const uid = watchedConfigList[index]?.uid
+                return (
+                  <Card
+                    key={field.key}
+                    size="small"
+                    title={`用户 ${index + 1}`}
+                    extra={fields.length > 1 ? (
+                      <Button
+                        danger
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        onClick={() => remove(field.name)}
+                      >
+                        删除
+                      </Button>
+                    ) : null}
+                  >
+                    <Form.Item
+                      label="个人主页"
+                      name={[field.name, 'rawInputText']}
+                      rules={[{
+                        validator: async (_, value: unknown) => {
+                          const storedUid = form.getFieldValue(['configList', field.name, 'uid'])
+                          if (
+                            (typeof value === 'string' && value.trim() !== '') ||
+                            (typeof storedUid === 'string' && /^\d{1,32}$/.test(storedUid))
+                          ) {
+                            return
+                          }
+                          throw new Error('请输入微博 UID 或个人主页地址')
+                        },
+                      }]}
+                    >
+                      <Input
+                        placeholder="https://weibo.com/u/5390490281"
+                        onChange={() => {
+                          form.setFieldValue(['configList', field.name, 'uid'], '')
+                          setUserInfoByIndex((current) => {
+                            const next = { ...current }
+                            delete next[index]
+                            return next
+                          })
+                        }}
+                      />
+                    </Form.Item>
+                    <Form.Item name={[field.name, 'uid']} hidden><Input /></Form.Item>
+                    <Form.Item label="备注" name={[field.name, 'comment']}><Input /></Form.Item>
+                    <Form.Item label="用户状态">
+                      <Space wrap>
+                        {userInfo ? (
+                          <>
+                            <Tag color="green">{userInfo.screen_name}</Tag>
+                            <span>UID {uid}</span>
+                            <span>{userInfo.statuses_count} 条微博</span>
+                            <span>{userInfo.followers_count} 位粉丝</span>
+                          </>
+                        ) : uid ? <Tag color="blue">UID {uid}</Tag> : <Tag>待同步</Tag>}
+                        <Button loading={syncingIndex === index} onClick={() => void syncUser(index)}>
+                          同步用户信息
+                        </Button>
+                        <Button
+                          danger
+                          disabled={taskDashboard.isActive || !uid}
+                          onClick={() => confirmClearCache(index)}
+                        >
+                          清除该用户接口缓存
+                        </Button>
+                      </Space>
+                    </Form.Item>
+                  </Card>
+                )
+              })}
+              <Button
+                type="dashed"
+                block
+                icon={<PlusOutlined />}
+                onClick={() => add({ uid: '', rawInputText: '', comment: '' })}
               >
-                预计累计耗时{needWaitMinute}分钟 / {needWaitHour}小时
-              </Descriptions.Item>
-              <Descriptions.Item label={<span>- 抓取耗时&nbsp;</span>}>
-                {$$database.taskConfig.isSkipFetch
-                  ? `已勾选跳过抓取流程选项, 不需要执行抓取, 耗时为0`
-                  : `预计共需备份${needBackupWeiboPageCount}张页面, 耗时${备份微博耗时_分钟}分钟`}
-              </Descriptions.Item>
-              <Descriptions.Item label={<span>- 输出pdf耗时&nbsp;</span>}>
-                {$$database.taskConfig.isSkipGeneratePdf
-                  ? '已勾选跳过pdf输出选项, 不需要渲染pdf, 耗时为0'
-                  : `预计共需渲染${needGenerateWeiboCount}条微博, 耗时${导出微博耗时_分钟}分钟`}
-              </Descriptions.Item>
-              <Descriptions.Item label="粉丝数">{$$database.currentUserInfo.followers_count}</Descriptions.Item>
-            </Descriptions>
+                添加备份用户
+              </Button>
+            </Space>
           )}
-        </Form.Item>
-        <Form.Item label="待重试记录数">
-          <div className="flex-container">
-            <Descriptions bordered column={1}>
-              <Descriptions.Item label="微博页面">{$$database.fetchErrorDistribution.weibo_page}页</Descriptions.Item>
-              <Descriptions.Item label="长微博">
-                {$$database.fetchErrorDistribution.long_text_weibo}条
-              </Descriptions.Item>
-              <Descriptions.Item label="微博文章">{$$database.fetchErrorDistribution.article}篇</Descriptions.Item>
-            </Descriptions>
-          </div>
-        </Form.Item>
-        <Form.Item label="ℹ️Tip">
-          <div className="flex-container">
-            若频繁提示抓取失败, 请重新点击下方`退出当前账号`按钮后重登, 或者6小时后再来即可
-          </div>
-        </Form.Item>
-        <Divider>备份配置</Divider>
+        </Form.List>
 
+        <Divider>抓取配置</Divider>
         <Form.Item
-          label={
-            <span>
-              备份范围&nbsp;
-              <Tooltip title="可通过配置备份页面范围, 实现断点续传/只备份指定范围内的微博">
-                <QuestionCircleOutlined />
-              </Tooltip>
-            </span>
-          }
+          label="抓取日期范围"
+          name="fetchDateRange"
+          rules={[{ required: true, message: '请选择抓取日期范围' }]}
         >
-          <div className="flex-container">
-            <span>从第&nbsp;</span>
-            <Form.Item name="fetchStartAtPageNo" noStyle>
-              <InputNumber step={1} min={0} />
-            </Form.Item>
-            <span>&nbsp;页备份到第&nbsp;</span>
-            <Form.Item name="fetchEndAtPageNo" noStyle>
-              <InputNumber step={1} max={$$database.currentUserInfo.total_page_count || 0} />
-            </Form.Item>
-            <span>&nbsp;页&nbsp;</span>
-          </div>
+          <RangePicker
+            allowClear={false}
+            disabledDate={(current) => current.startOf('day').isBefore(MIN_FETCH_DATE) || current.startOf('day').isAfter(shanghaiToday())}
+          />
         </Form.Item>
         <Form.Item
           label={
             <span>
-              仅重试失败记录&nbsp;
-              <Tooltip title="跳过全量抓取, 只对之前抓取失败的页面记录进行重试. 重试成功后自动删除对应记录(正常抓取完成后, 默认重试失败页面, 不需要专门勾选. 如果本身没有失败记录, 相当于跳过抓取流程)">
+              请求最小间隔&nbsp;
+              <Tooltip title="所有微博抓取 API 共用一个全局限流器；不得低于 10 秒。">
                 <QuestionCircleOutlined />
               </Tooltip>
             </span>
           }
-          name="onlyRetry"
-          valuePropName="checked"
+          name="requestIntervalSeconds"
+          rules={[{ required: true, type: 'number', min: 10, message: '请求间隔不得低于 10 秒' }]}
         >
-          <Switch></Switch>
+          <InputNumber min={10} max={3600} step={1} suffix="秒" />
+        </Form.Item>
+        <Form.Item
+          label="接口缓存策略"
+          name="cacheReadMode"
+          tooltip="刷新模式不读取已有缓存，但成功请求仍会刷新符合缓存条件的响应。"
+        >
+          <Radio.Group optionType="button" buttonStyle="solid">
+            <Radio.Button value="prefer-cache">优先使用缓存</Radio.Button>
+            <Radio.Button value="refresh">忽略缓存并刷新</Radio.Button>
+          </Radio.Group>
         </Form.Item>
 
-        <Collapse>
-          <Collapse.Panel header="[高级选项]输出规则" key="output-config">
-            <Form.Item
-              label={
-                <span>
-                  只导出原创微博&nbsp;
-                  <Tooltip title="只导出原创微博, 跳过转发的微博">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="isOnlyOriginal"
-              valuePropName="checked"
-            >
-              <Switch></Switch>
-            </Form.Item>
-            <Form.Item
-              label={
-                <span>
-                  只导出微博文章&nbsp;
-                  <Tooltip title="只导出原创的微博文章">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="isOnlyArticle"
-              valuePropName="checked"
-            >
-              <Switch></Switch>
-            </Form.Item>
+        <Form.Item label="启动前粗略估算">
+          <Descriptions bordered size="small" column={1}>
+            <Descriptions.Item label="预计请求任务">{roughEstimate.requests} 个</Descriptions.Item>
+            <Descriptions.Item label="已同步微博数">{roughEstimate.statuses} 条</Descriptions.Item>
+            <Descriptions.Item label="预计总耗时">
+              {formatDuration(roughEstimate.seconds)}
+              <Typography.Text type="secondary">（按当前间隔及 1.5 倍余量估算，运行后会动态修正）</Typography.Text>
+            </Descriptions.Item>
+          </Descriptions>
+        </Form.Item>
+
+        <Collapse
+          items={[{
+            key: 'output-config',
+            label: '输出规则',
+            children: (
+              <>
+            <Form.Item label="电子书书名" name="bookTitle"><Input /></Form.Item>
+            <Form.Item label="任务备注" name="comment"><Input /></Form.Item>
+            <Form.Item label="只导出原创微博" name="isOnlyOriginal" valuePropName="checked"><Switch /></Form.Item>
+            <Form.Item label="只导出微博文章" name="isOnlyArticle" valuePropName="checked"><Switch /></Form.Item>
             <Form.Item label="微博排序" name="postAtOrderBy">
-              <Radio.Group buttonStyle="solid">
-                <Radio.Button value={Order.由旧到新}>由旧到新</Radio.Button>
-                <Radio.Button value={Order.由新到旧}>由新到旧</Radio.Button>
+              <Radio.Group optionType="button" buttonStyle="solid">
+                <Radio.Button value="asc">由旧到新</Radio.Button>
+                <Radio.Button value="desc">由新到旧</Radio.Button>
               </Radio.Group>
             </Form.Item>
             <Form.Item label="图片配置" name="imageQuilty">
-              <Radio.Group buttonStyle="solid">
-                <Radio.Button value={ImageQuilty.无图}>无图</Radio.Button>
-                <Radio.Button value={ImageQuilty.默认}>有图</Radio.Button>
+              <Radio.Group optionType="button" buttonStyle="solid">
+                <Radio.Button value={IMAGE_QUALITY.NONE}>无图</Radio.Button>
+                <Radio.Button value={IMAGE_QUALITY.DEFAULT}>有图</Radio.Button>
               </Radio.Group>
             </Form.Item>
-            <Form.Item label="时间范围">
-              <div className="flex-container">
-                <span>只输出从</span>
-                &nbsp;
-                <Form.Item name="outputTimeRange" noStyle>
-                  <RangePicker picker="date" />
-                </Form.Item>
-                &nbsp;
-                <span>间发布的微博</span>
-              </div>
-            </Form.Item>
-
-            <Form.Item label="电子书拆分规则">
-              <div className="flex-container">
-                <Form.Item name="volumeSplitBy" noStyle>
-                  <Select labelInValue={false} style={{ width: 180 }}>
-                    <Option value={Const_Volume_Split_By.不拆分}>不拆分</Option>
-                    <Option value={Const_Volume_Split_By.年}>按年拆分</Option>
-                    <Option value={Const_Volume_Split_By.月}>按月拆分</Option>
-                    <Option value={Const_Volume_Split_By.微博条数}>按微博条数拆分</Option>
-                  </Select>
-                </Form.Item>
-                {$$database.taskConfig.volumeSplitBy === Const_Volume_Split_By.微博条数 ? (
-                  <span>, 每&nbsp;</span>
-                ) : null}
-                {$$database.taskConfig.volumeSplitBy === Const_Volume_Split_By.微博条数 ? (
-                  <Form.Item name="volumeSplitCount" noStyle>
-                    <InputNumber
-                      // placeholder="每n条微博拆分为一卷"
-                      min={1000}
-                      step={1000}
-                      // 每本电子书最多只能有10000条微博
-                      max={10000}
-                      style={{ width: 120 }}
-                    ></InputNumber>
-                  </Form.Item>
-                ) : null}
-                {$$database.taskConfig.volumeSplitBy === Const_Volume_Split_By.微博条数 ? (
-                  <span>&nbsp;条微博一卷</span>
-                ) : null}
-              </div>
-            </Form.Item>
-          </Collapse.Panel>
-        </Collapse>
-
-        <Collapse>
-          <Collapse.Panel header="[高级选项]开发调试" key="develop-config">
             <Form.Item
-              label={
-                <span>
-                  自动更新抓取/导出范围&nbsp;
-                  <Tooltip title="自动更新抓取范围和导出范围,默认启用,仅在调试时推荐关闭">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="enableAutoConfig"
-              valuePropName="checked"
+              label="输出时间范围"
+              name="outputTimeRange"
+              rules={[{ required: true, message: '请选择输出时间范围' }]}
             >
-              <Switch></Switch>
+              <RangePicker allowClear={false} />
             </Form.Item>
+            <Form.Item label="电子书拆分规则" name="volumeSplitBy">
+              <Select
+                options={[
+                  { value: VOLUME_SPLIT_BY.SINGLE, label: '不拆分' },
+                  { value: VOLUME_SPLIT_BY.YEAR, label: '按年拆分' },
+                  { value: VOLUME_SPLIT_BY.MONTH, label: '按月拆分' },
+                  { value: VOLUME_SPLIT_BY.COUNT, label: '按微博条数拆分' },
+                ]}
+              />
+            </Form.Item>
+            {watchedVolumeSplitBy === VOLUME_SPLIT_BY.COUNT && (
+              <Form.Item label="单卷微博数" name="volumeSplitCount">
+                <InputNumber min={1000} max={10000} step={1000} />
+              </Form.Item>
+            )}
+              </>
+            ),
+          }]}
+        />
 
-            <Form.Item
-              label={
-                <span>
-                  跳过抓取&nbsp;
-                  <Tooltip title="若之前已抓取, 数据库中已有记录, 可以跳过抓取流程, 直接输出">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="isSkipFetch"
-              valuePropName="checked"
-            >
-              <Switch></Switch>
-            </Form.Item>
-            <Form.Item
-              label={
-                <span>
-                  跳过输出pdf&nbsp;
-                  <Tooltip title="pdf文件输出时需要将每一条微博渲染为图片, 速度较慢, 关闭该选项可以加快输出速度, 便于调试">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="isSkipGeneratePdf"
-              valuePropName="checked"
-            >
-              <Switch></Switch>
-            </Form.Item>
-            <Form.Item
-              label={
-                <span>
-                  生成pdf时重新渲染&nbsp;
-                  <Tooltip title="生成pdf需要先将每条微博渲染为图片, 时间较慢(1s/条).因此启用了缓存.若微博之前被渲染过, 则会利用已经渲染好的图片, 以加快生成速度. 如果旧渲染图片有误, 可以直接删除缓存中的该张图片. 不建议勾选此项">
-                    <QuestionCircleOutlined />
-                  </Tooltip>
-                </span>
-              }
-              name="isRegenerateHtml2PdfImage"
-              valuePropName="checked"
-            >
-              <Switch></Switch>
-            </Form.Item>
-            <Collapse>
-              <Collapse.Panel header="最终生成配置内容" key="config-content">
-                <div>
-                  <pre>{JSON.stringify($$database.taskConfig, null, 4)}</pre>
-                </div>
-              </Collapse.Panel>
-            </Collapse>
-          </Collapse.Panel>
-        </Collapse>
-        <p>&nbsp;</p>
-
-        <Form.Item label={' '} colon={false}>
-          <Button
-            disabled={isConfigLoaded === false || configLoadError !== ''}
-            onClick={async () => {
-              // 先同步信息(期间会检查登录状态)
-              let isSyncSuccess = await asyncSyncUserInfo(false)
-              if (isSyncSuccess !== true) {
-                return false
-              }
-              // 保存日志
-              await TaskUtils.saveConfig($$database.taskConfig)
-              // 然后将tab切换到日志栏
-              props.changeTabKey('log')
-              // 启动任务进程
-              await TaskUtils.startBackupTask($$database.taskConfig)
-            }}
-            type="primary"
-          >
-            开始备份
-          </Button>
-          &nbsp;
-          <Button onClick={TaskUtils.openOutputDir}>打开电子书所在目录</Button>
-          &nbsp;
-          <Button
-            onClick={async () => {
-              let remoteConfig = await TaskUtils.asyncCheckNeedUpdate()
-              if (remoteConfig === false) {
-                return
-              }
-              set$$Status(
-                produce($$status, (raw) => {
-                  raw.showUpgradeInfo = true
-                  raw.remoteVersionConfig = remoteConfig
-                }),
-              )
-            }}
-          >
-            检查更新
-          </Button>
-          <Button onClick={TaskUtils.resetSession}>退出当前登录账号</Button>
-          <Button onClick={TaskUtils.debugOpenDevTools}>打开调试面板</Button>
-        </Form.Item>
+        <Collapse
+          items={[{
+            key: 'develop-config',
+            label: '[高级选项]开发调试',
+            children: (
+              <>
+                <Form.Item label="跳过抓取" name="isSkipFetch" valuePropName="checked"><Switch /></Form.Item>
+                <Form.Item label="跳过输出 PDF" name="isSkipGeneratePdf" valuePropName="checked"><Switch /></Form.Item>
+                <Form.Item label="重新生成 PDF 图片" name="isRegenerateHtml2PdfImage" valuePropName="checked"><Switch /></Form.Item>
+                <Collapse
+                  items={[{
+                    key: 'config-content',
+                    label: '最终任务配置',
+                    children: <pre>{JSON.stringify(previewConfig, null, 2)}</pre>,
+                  }]}
+                />
+              </>
+            ),
+          }]}
+        />
       </Form>
+
+      <div className="task-actions">
+        {taskDashboard.isActive ? (
+          <Button type="primary" onClick={() => changeTabKey('log')}>查看任务进度</Button>
+        ) : currentBatch?.resumable ? (
+          <>
+            <Button
+              type="primary"
+              disabled={isCommandPending}
+              loading={isCommandPending}
+              onClick={() => void continueTask()}
+            >
+              继续上次任务
+            </Button>
+            <Button disabled={isCommandPending} loading={isCommandPending} onClick={confirmRestart}>重新抓取</Button>
+          </>
+        ) : (
+          <Button
+            type="primary"
+            loading={isCommandPending}
+            disabled={isCommandPending || !isConfigLoaded || configLoadError !== ''}
+            onClick={hasPreviousBatch ? confirmRestart : () => void startNewTask()}
+          >
+            {hasPreviousBatch ? '重新抓取' : '开始备份'}
+          </Button>
+        )}
+        <Button onClick={() => void TaskUtils.openOutputDir()}>打开电子书所在目录</Button>
+        <Button
+          onClick={async () => {
+            const remoteConfig = await TaskUtils.asyncCheckNeedUpdate()
+            if (remoteConfig) {
+              setRemoteVersionConfig(remoteConfig)
+              setShowUpgradeInfo(true)
+            } else {
+              message.success('当前已是最新版本')
+            }
+          }}
+        >
+          检查更新
+        </Button>
+        <Button
+          disabled={taskDashboard.isActive || isCommandPending}
+          onClick={() => void TaskUtils.resetSession()}
+        >
+          退出当前登录账号
+        </Button>
+        <Button onClick={() => void TaskUtils.debugOpenDevTools()}>打开调试面板</Button>
+        <Button
+          icon={<ReloadOutlined />}
+          disabled={taskDashboard.isActive || isCommandPending}
+          loading={isCommandPending}
+          onClick={() => {
+            Modal.confirm({
+              title: '重置任务配置？',
+              content: '不会删除微博数据、缓存或任务历史。',
+              okText: '重置',
+              cancelText: '取消',
+              onOk: resetConfig,
+            })
+          }}
+        >
+          重置配置
+        </Button>
+      </div>
     </div>
   )
 }

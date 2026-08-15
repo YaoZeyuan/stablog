@@ -1,4 +1,14 @@
 .customer-task {
+  padding-bottom: 24px;
+
+  .full-width {
+    width: 100%;
+  }
+
+  .task-alert {
+    margin-bottom: 16px;
+  }
+
   .flex-container {
     display: flex;
     align-items: baseline;
@@ -6,5 +16,22 @@
       // 占满宽度
       flex: 1;
     }
+  }
+
+  .task-actions {
+    position: sticky;
+    z-index: 5;
+    bottom: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+    padding: 12px 0;
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid #f0f0f0;
+  }
+
+  .ant-typography-secondary {
+    margin-left: 8px;
   }
 }

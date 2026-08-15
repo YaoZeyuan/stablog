@@ -1,0 +1,13 @@
+{
+  "code": 100000,
+  "data": {
+    "object_id": "1022:2309404080000000000001",
+    "title": "Fixture article",
+    "content": "<p>Fixture article body</p>",
+    "cover_img": {
+      "image": {
+        "url": "https://example.invalid/article.jpg"
+      }
+    }
+  }
+}

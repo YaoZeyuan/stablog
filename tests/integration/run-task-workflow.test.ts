@@ -5,6 +5,7 @@ import type {
   WorkflowStageInput,
 } from '../../src/application/workflow/run_task/contracts.js'
 import RunTaskWorkflow from '../../src/application/workflow/run_task/run_task_workflow.js'
+import { BackupExecutionLeaseHandle } from '../../src/application/workflow/backup_execution_lease.js'
 import { createTestSandbox, TestSandbox } from '../helpers/sandbox.js'
 import {
   AppErrorCode,
@@ -22,13 +23,13 @@ const validConfig = {
   imageQuilty: 'default' as const,
   bookTitle: '',
   comment: '',
-  enableAutoConfig: true,
   postAtOrderBy: 'asc' as const,
-  fetchStartAtPageNo: 0,
-  fetchEndAtPageNo: 2,
+  fetchStartDate: '2020-01-01',
+  fetchEndDate: '2020-01-02',
+  requestIntervalSeconds: 10,
+  cacheReadMode: 'prefer-cache' as const,
   outputStartAtMs: 0,
   outputEndAtMs: 10,
-  onlyRetry: false,
   isSkipFetch: false,
   isSkipGeneratePdf: true,
   isRegenerateHtml2PdfImage: false,
@@ -137,5 +138,40 @@ describe('RunTaskWorkflow 离线集成', () => {
     expect(calls).toEqual(['fetch'])
     expect(result.value?.context.databasePath).toBe(sandbox.databasePath)
     expect(result.value?.context.outputPath).toBe(sandbox.outputPath)
+  })
+
+  it('rejects a CLI workflow while another run owns the lease but leaves ordinary init available', async () => {
+    const sandbox = createTestSandbox('workflow-lease-conflict')
+    sandboxList.push(sandbox)
+    const calls: string[] = []
+    const { workflow } = createWorkflow(sandbox, calls)
+    const externalLease = await BackupExecutionLeaseHandle.acquire(
+      sandbox.databasePath,
+      'run-external',
+      { ownerKind: 'gui-manager' },
+    )
+    try {
+      const blocked = await workflow.fetch({
+        configPath: sandbox.customerTaskConfigPath,
+        runId: 'run-cli-contender',
+      })
+      expect(blocked.status).toBe(ExecutionStatus.FAILURE)
+      expect(blocked.failures[0]?.error).toMatchObject({
+        code: AppErrorCode.WORKFLOW_FAILED,
+        stage: 'workflow-lease',
+        retryable: true,
+      })
+      expect(calls).toEqual([])
+
+      const ordinaryInit = await workflow.init({ runId: 'run-init' })
+      expect(ordinaryInit.status).toBe(ExecutionStatus.SUCCESS)
+      expect(calls).toEqual(['init'])
+
+      const destructiveInit = await workflow.init({ runId: 'run-rebase', rebase: true })
+      expect(destructiveInit.status).toBe(ExecutionStatus.FAILURE)
+      expect(calls).toEqual(['init'])
+    } finally {
+      await externalLease.release()
+    }
   })
 })

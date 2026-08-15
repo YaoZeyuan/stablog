@@ -1,0 +1,9 @@
+{
+  "ok": 1,
+  "data": {
+    "longTextContent": "# Fixture title\n\n- first\n- second",
+    "longTextContent_raw": "# Fixture title\n\n- first\n- second",
+    "isMarkdown": true,
+    "url_struct": []
+  }
+}

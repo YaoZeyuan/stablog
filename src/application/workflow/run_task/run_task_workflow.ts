@@ -1,16 +1,20 @@
 import type { BrowserWindow } from 'electron'
 import Logger from '~/src/library/logger.js'
 import {
-  LegacyFetchAdapter,
-  LegacyGenerateAdapter,
   LegacyInitAdapter,
 } from '~/src/application/legacy/legacy_workflow_adapters.js'
+import {
+  DateRangeFetchAdapter,
+  DateRangeGenerateAdapter,
+} from '~/src/application/fetch/date_range_fetch_adapter.js'
+import { BackupExecutionLeaseHandle } from '~/src/application/workflow/backup_execution_lease.js'
 import {
   RunTaskWorkflowOutput,
   WorkflowAction,
   WorkflowEventSink,
   WorkflowStage,
   WorkflowStageAdapter,
+  WorkflowStageInput,
   WorkflowStageSummary,
 } from '~/src/application/workflow/run_task/contracts.js'
 import { readCustomerTaskConfig } from '~/src/shared/config/task_config.js'
@@ -49,6 +53,15 @@ export type RunTaskWorkflowOptions = Omit<RunContextOptions, 'configPath' | 'cus
   rebase?: boolean
   skipUpgradeCheck?: boolean
   renderWindow?: BrowserWindow | null
+  /** GUI 会在后台 workflow 启动前创建批次，以便立即把稳定 batchId 回传给 renderer。 */
+  batchId?: string
+  /** 会话凭据仅保存在当前调用内，不写入任务配置、SQLite、缓存或日志。 */
+  fetchSession?: {
+    cookie?: string
+    loginUid?: string
+  }
+  /** GUI manager already owns the same runId lease and releases it after background completion. */
+  executionLeaseManagedExternally?: boolean
   onRunCreated?: (runId: string) => void
 }
 
@@ -67,8 +80,8 @@ const defaultDependencies: RunTaskWorkflowDependencies = {
   readConfig: readCustomerTaskConfig,
   eventSink: Logger,
   initAdapter: new LegacyInitAdapter(),
-  fetchAdapter: new LegacyFetchAdapter(),
-  generateAdapter: new LegacyGenerateAdapter(),
+  fetchAdapter: new DateRangeFetchAdapter(),
+  generateAdapter: new DateRangeGenerateAdapter(),
   now: Date.now,
 }
 
@@ -138,20 +151,42 @@ export default class RunTaskWorkflow {
         details: { action },
       })
 
+      let executionLease: BackupExecutionLeaseHandle | undefined
       try {
+        const needsExecutionLease = action !== 'init' || options.rebase === true
+        if (needsExecutionLease && options.executionLeaseManagedExternally !== true) {
+          executionLease = await BackupExecutionLeaseHandle.acquire(
+            context.databasePath,
+            context.runId,
+            { ownerKind: context.trigger === 'gui' ? 'gui-workflow' : 'cli-workflow' },
+          )
+        }
         const config = action === 'init'
           ? undefined
           : this.dependencies.readConfig(context.customerTaskConfigPath)
         const stageList = this.getStageList(action)
         const summaries: WorkflowStageSummary[] = []
+        const runtimeState: WorkflowStageInput['runtimeState'] = {
+          batchId: options.batchId,
+        }
 
         for (const stage of stageList) {
-          const result = await this.runStage(stage, context, options, config)
+          executionLease?.assertHealthy()
+          const result = await this.runStage(
+            stage,
+            action,
+            stageList.includes('generate'),
+            runtimeState,
+            context,
+            options,
+            config,
+          )
           summaries.push({ stage, result })
           if (result.status === ExecutionStatus.FAILURE) {
             return this.completeFailure(action, context, startedAt, summaries, result)
           }
         }
+        executionLease?.assertHealthy()
 
         const output: RunTaskWorkflowOutput = { context, action, stages: summaries }
         const failures = summaries.flatMap((summary) => summary.result.failures)
@@ -187,6 +222,8 @@ export default class RunTaskWorkflow {
         const result = createExecutionFailure<RunTaskWorkflowOutput>(appError)
         this.emitFailure(context, action, startedAt, appError)
         return result
+      } finally {
+        await executionLease?.release()
       }
     })
   }
@@ -202,6 +239,9 @@ export default class RunTaskWorkflow {
 
   private async runStage(
     stage: WorkflowStage,
+    action: WorkflowAction,
+    willGenerate: boolean,
+    runtimeState: WorkflowStageInput['runtimeState'],
     context: RunContext,
     options: RunTaskWorkflowOptions,
     config: ReturnType<typeof readCustomerTaskConfig> | undefined,
@@ -221,6 +261,10 @@ export default class RunTaskWorkflow {
       const result = await adapter.execute({
         context,
         config,
+        action,
+        willGenerate,
+        runtimeState,
+        fetchSession: options.fetchSession,
         rebase: options.rebase ?? false,
         skipUpgradeCheck: options.skipUpgradeCheck ?? false,
         renderWindow: options.renderWindow,

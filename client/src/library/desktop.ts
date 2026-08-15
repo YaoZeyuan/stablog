@@ -1,6 +1,24 @@
 export type DesktopResult<T> =
   | { ok: true; value: T }
-  | { ok: false; error: { code: string; message: string; serviceLevel: string } }
+  | {
+      ok: false
+      error: {
+        name: 'ApplicationError'
+        code: string
+        message: string
+        serviceLevel: 'S0' | 'S1' | 'S2' | 'S3'
+        stage: string
+        retryable: boolean
+        stack?: string
+        details?: Record<string, unknown>
+        cause?: {
+          name: string
+          message: string
+          code?: string
+          stack?: string
+        }
+      }
+    }
 
 type DesktopBridge = {
   invoke<T>(channel: string, payload?: unknown, metadata?: { traceId?: string }): Promise<DesktopResult<T>>
@@ -37,8 +55,15 @@ export async function invokeDesktop<T>(channel: string, payload?: unknown): Prom
   if (result.ok) {
     return result.value
   }
-  const error = new Error(result.error.message) as Error & { code?: string; serviceLevel?: string }
+  const error = new Error(result.error.message) as Error & {
+    code?: string
+    serviceLevel?: string
+    stage?: string
+    retryable?: boolean
+  }
   error.code = result.error.code
   error.serviceLevel = result.error.serviceLevel
+  error.stage = result.error.stage
+  error.retryable = result.error.retryable
   throw error
 }

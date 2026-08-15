@@ -13,6 +13,12 @@
 
 ## 结构化日志
 
-每条 JSONL 记录至少包含 `schemaVersion`、`triggerAt`、`level`、`eventCode`、`source`、`message`；workflow 事件还带 `traceId`、`runId`、stage、status、durationMs，失败事件带 serviceLevel、errorCode 和序列化 error/cause。启动边界实际记录 `APP_START` 的 start/success，失败记录含 `INITIALIZATION_FAILED/S0` 的 `APP_ERROR`。日志同时写可读 `.log` 和 `.jsonl`；单个目的地失败时会尝试另一路并写 stderr，同时保留 `LOG_WRITE_FAILED/S3` 诊断对象，不覆盖原业务错误。
+每条 JSONL 记录至少包含 `schemaVersion`、`triggerAt`、`level`、`eventCode`、`source`、`message`；workflow 事件还带 `traceId`、`runId`、stage、status、durationMs，失败事件带 serviceLevel、errorCode 和序列化 error/cause。抓取和 workflow 均有独立的 `partial_success` 事件，局部任务失败不会被记录成整体成功。启动边界实际记录 `APP_START` 的 start/success，失败记录含 `INITIALIZATION_FAILED/S0` 的 `APP_ERROR`。日志同时写可读 `.log` 和 `.jsonl`；单个目的地失败时会尝试另一路并写 stderr，同时保留 `LOG_WRITE_FAILED/S3` 诊断对象，不覆盖原业务错误。
 
 日志递归脱敏 cookie、authorization、token、secret、请求/响应 header、正文/HTML/原始 JSON，并限制字符串、数组、对象键、堆栈和递归深度。旧 command 的 `Base.log/warn` 也把原始对象参数交给 Logger 后再脱敏，不得先 stringify；业务代码不得主动把 cookie 或完整响应放入 message。
+
+## 日期任务诊断边界
+
+日期任务进度的真相源是 SQLite 的 `fetch_batch`、`fetch_target` 和 `fetch_task`，不是文本日志。批次通过 `active_run_id` 关联本次 workflow 的 `runId`；任务失败只持久化受限的 `code`、`message`、`retryable` 诊断，并由失败列表 IPC 返回脱敏摘要。微博 Cookie 只存在于当前运行调用中，不写入任务配置、SQLite、缓存或日志。
+
+日志页同时显示原始运行日志和独立的 SQLite dashboard。清空或删除 `.log/.jsonl` 不得改变批次、进度、失败项或继续/重试能力；反过来，清理指定目标的微博 HTTP 缓存也不得清理日志或任务历史。

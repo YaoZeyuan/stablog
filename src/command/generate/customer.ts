@@ -183,7 +183,7 @@ class GenerateCustomer extends Base {
       let userInfo = await MMblogUser.asyncGetUserInfo(author_uid)
       if (_.isEmpty(userInfo)) {
         this.log(`未抓取到对应的用户数据, 自动跳过`)
-        return
+        continue
       }
       let screenName = userInfo.screen_name
       this.log(`开始输出用户${screenName}的微博备份数据`)

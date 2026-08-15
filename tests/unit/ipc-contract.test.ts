@@ -8,6 +8,11 @@ import {
   parseFileReadRequest,
   parseFileWriteRequest,
   parseIpcTraceMetadata,
+  parseContinueCustomerTaskRequest,
+  parseRetryCustomerTaskItemsRequest,
+  parseCustomerTaskDashboardRequest,
+  parseCustomerTaskFailuresRequest,
+  parseClearWeiboRequestCacheRequest,
   parseResolveWeiboUidRequest,
   parseStartCustomerTaskRequest,
   parseWeiboUserInfoRequest,
@@ -20,13 +25,13 @@ function validTaskConfig(): Record<string, unknown> {
     imageQuilty: 'none',
     bookTitle: '',
     comment: '',
-    enableAutoConfig: false,
     postAtOrderBy: 'desc',
-    fetchStartAtPageNo: 0,
-    fetchEndAtPageNo: 1,
+    fetchStartDate: '2020-01-01',
+    fetchEndDate: '2020-01-02',
+    requestIntervalSeconds: 10,
+    cacheReadMode: 'prefer-cache',
     outputStartAtMs: 0,
     outputEndAtMs: 1,
-    onlyRetry: false,
     isSkipFetch: false,
     isSkipGeneratePdf: false,
     isRegenerateHtml2PdfImage: false,
@@ -46,6 +51,25 @@ describe('IPC schema 与结果封包', () => {
       uri: 'config.json',
       content: '{}',
     })
+  })
+
+  it('校验可恢复任务、失败分页与缓存清理请求', () => {
+    expect(parseContinueCustomerTaskRequest({ batchId: 'batch-1' })).toEqual({ batchId: 'batch-1' })
+    expect(parseRetryCustomerTaskItemsRequest({
+      batchId: 'batch-1',
+      taskIds: ['task-1', 'task-1', 'task-2'],
+    })).toEqual({ batchId: 'batch-1', taskIds: ['task-1', 'task-2'] })
+    expect(parseCustomerTaskDashboardRequest({})).toEqual({})
+    expect(parseCustomerTaskFailuresRequest({ batchId: 'batch-1' }))
+      .toEqual({ batchId: 'batch-1', offset: 0, limit: 50 })
+    expect(parseClearWeiboRequestCacheRequest({ targetUid: '10001' }))
+      .toEqual({ targetUid: '10001' })
+    expect(() => parseRetryCustomerTaskItemsRequest({ batchId: 'batch-1', taskIds: [] }))
+      .toThrowError(ApplicationError)
+    expect(() => parseCustomerTaskFailuresRequest({ batchId: 'batch-1', limit: 101 }))
+      .toThrowError(ApplicationError)
+    expect(() => parseClearWeiboRequestCacheRequest({ targetUid: '../10001' }))
+      .toThrowError(ApplicationError)
   })
 
   it('拒绝不完整请求并标记 IPC 错误码', () => {

@@ -54,7 +54,12 @@ class FetchCustomer extends Base {
     this.log(`从${PathConfig.customerTaskConfigUri}中读取配置文件`)
     let fetchConfigJSON = fs.readFileSync(PathConfig.customerTaskConfigUri).toString()
     this.log('content =>', fetchConfigJSON)
-    let customerTaskConfig: TypeTaskConfig.Customer = json5.parse(fetchConfigJSON)
+    // 旧页码抓取器已退出 workflow，仅保留给历史调试入口编译使用。
+    let customerTaskConfig = json5.parse(fetchConfigJSON) as TypeTaskConfig.Customer & {
+      fetchStartAtPageNo?: number
+      fetchEndAtPageNo?: number
+      onlyRetry?: boolean
+    }
     this.fetchStartAtPageNo = customerTaskConfig.fetchStartAtPageNo || this.fetchStartAtPageNo
     this.fetchEndAtPageNo = customerTaskConfig.fetchEndAtPageNo || this.fetchEndAtPageNo
     if (customerTaskConfig.isSkipFetch) {

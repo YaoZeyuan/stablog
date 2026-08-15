@@ -10,14 +10,22 @@ import type {
 } from 'electron'
 import DataTransferExport from '~/src/command/datatransfer/export.js'
 import DataTransferImport from '~/src/command/datatransfer/import.js'
-import ConfigHelperUtil from '~/src/library/util/config_helper.js'
 import PathConfig from '~/src/config/path.js'
+import DatabaseConfig from '~/src/config/database.js'
 import Logger from '~/src/library/logger.js'
 import MBlog from '~/src/model/mblog.js'
 import MUser from '~/src/model/mblog_user.js'
 import MFetchErrorRecord from '~/src/model/fetch_error_record.js'
-import RunTaskWorkflow from '~/src/application/workflow/run_task/run_task_workflow.js'
-import { readCustomerTaskConfig, writeCustomerTaskConfig } from '~/src/shared/config/task_config.js'
+import {
+  createDefaultCustomerTaskConfig,
+  readCustomerTaskConfig,
+  writeCustomerTaskConfig,
+} from '~/src/shared/config/task_config.js'
+import CustomerTaskRunManager from '~/src/application/fetch/customer_task_run_manager.js'
+import WeiboApiClient, { resolveWeiboLoginUid } from '~/src/api/weibo_api_client.js'
+import { globalWeiboRequestLimiter } from '~/src/application/fetch/weibo_request_limiter.js'
+import { WeiboResponseCache } from '~/src/application/fetch/weibo_response_cache.js'
+import { adaptProfileInfoUser } from '~/src/application/fetch/weibo_canonical_adapter.js'
 import {
   parseFileReadRequest,
   parseFileWriteRequest,
@@ -26,6 +34,11 @@ import {
   parseDataTransferImportRequest,
   parseResolveWeiboUidRequest,
   parseStartCustomerTaskRequest,
+  parseContinueCustomerTaskRequest,
+  parseRetryCustomerTaskItemsRequest,
+  parseCustomerTaskDashboardRequest,
+  parseCustomerTaskFailuresRequest,
+  parseClearWeiboRequestCacheRequest,
   parseWeiboUserInfoRequest,
   assertAllowedIpcPath,
   type WeiboLoginStatus,
@@ -93,7 +106,14 @@ function assertSamePath(actualPath: string, expectedPath: string, operation: str
 }
 
 function errorDefaultsForChannel(channel: string) {
-  if (channel === 'start-customer-task') {
+  if (
+    channel === 'start-customer-task' ||
+    channel === 'continue-customer-task' ||
+    channel === 'retry-customer-task-items' ||
+    channel === 'get-customer-task-dashboard' ||
+    channel === 'get-customer-task-failures' ||
+    channel === 'clear-weibo-request-cache'
+  ) {
     return { code: AppErrorCode.WORKFLOW_FAILED, serviceLevel: ServiceLevel.S1, stage: 'workflow' }
   }
   if (channel.startsWith('get-') && (channel.includes('user') || channel.includes('mblog') || channel.includes('distribution'))) {
@@ -116,7 +136,10 @@ async function getWeiboCookie(session: Session): Promise<string> {
       cookieMap.set(cookie.name, cookie.value)
     }
   }
-  return [...cookieMap].map(([name, value]) => `${name}=${value}`).join('; ')
+  return [...cookieMap]
+    .sort(([leftName], [rightName]) => leftName.localeCompare(rightName))
+    .map(([name, value]) => `${name}=${value}`)
+    .join('; ')
 }
 
 function directUidFromWeiboUrl(rawInputUrl: string): string {
@@ -127,9 +150,38 @@ function directUidFromWeiboUrl(rawInputUrl: string): string {
 
 export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   const { ipcMain, session, shell, dialog, mainWindow } = options
-  let activeRunId: string | undefined
+  const taskRunManager = new CustomerTaskRunManager({
+    databasePath: DatabaseConfig.uri,
+    localConfigPath: PathConfig.configUri,
+    customerTaskConfigPath: PathConfig.customerTaskConfigUri,
+    cachePath: PathConfig.cachePath,
+    logPath: PathConfig.logPath,
+    outputPath: PathConfig.outputPath,
+    getRenderWindow: options.getRenderWindow,
+    async onCompleted(outputPath) {
+      const errorMessage = await shell.openPath(outputPath)
+      if (errorMessage !== '') Logger.warn(`无法自动打开输出目录：${errorMessage}`)
+    },
+  })
   let approvedExportPath: string | undefined
   let approvedImportPath: string | undefined
+  let cachedLoginIdentity: { cookie: string; uid: string; expiresAt: number } | undefined
+
+  const getCachedLoginUid = (cookie: string): string | undefined => (
+    cachedLoginIdentity !== undefined &&
+    cachedLoginIdentity.cookie === cookie &&
+    cachedLoginIdentity.expiresAt > Date.now()
+      ? cachedLoginIdentity.uid
+      : undefined
+  )
+
+  const getLoginUid = async (cookie: string): Promise<string> => {
+    const cachedUid = getCachedLoginUid(cookie)
+    if (cachedUid !== undefined) return cachedUid
+    const uid = await resolveWeiboLoginUid({ cookie })
+    cachedLoginIdentity = { cookie, uid, expiresAt: Date.now() + 60_000 }
+    return uid
+  }
 
   const handle = <T>(
     channel: string,
@@ -189,27 +241,48 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     outputPath: PathConfig.outputPath,
     runtimeLogUri: PathConfig.runtimeLogUri,
   }))
-  handle('get-task-config', () => readCustomerTaskConfig(PathConfig.customerTaskConfigUri))
-  handle('save-task-config', (payload) => {
+  handle('get-task-config', async () => {
+    if (fs.existsSync(PathConfig.customerTaskConfigUri) === false) {
+      return taskRunManager.runMaintenance(async () => writeCustomerTaskConfig(
+          PathConfig.customerTaskConfigUri,
+          createDefaultCustomerTaskConfig(),
+        ), '其他进程正在执行备份，不能创建任务配置')
+    }
+    return readCustomerTaskConfig(PathConfig.customerTaskConfigUri)
+  })
+  handle('save-task-config', async (payload) => {
     if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) {
       throw new TypeError('save-task-config payload必须是对象')
     }
-    return writeCustomerTaskConfig(
-      PathConfig.customerTaskConfigUri,
-      (payload as { taskConfig?: unknown }).taskConfig,
-    )
+    return taskRunManager.runMaintenance(async () => writeCustomerTaskConfig(
+        PathConfig.customerTaskConfigUri,
+        (payload as { taskConfig?: unknown }).taskConfig,
+      ), '活动任务期间不能修改任务配置')
+  })
+  handle('reset-task-config', async () => {
+    return taskRunManager.runMaintenance(async () => writeCustomerTaskConfig(
+        PathConfig.customerTaskConfigUri,
+        createDefaultCustomerTaskConfig(),
+      ), '活动任务期间不能重置任务配置')
   })
   handle('get-file-content', (payload) => {
     const { uri } = parseFileReadRequest(payload)
     const safePath = assertAllowedDataPath(uri)
     return fs.existsSync(safePath) ? fs.readFileSync(safePath, 'utf8') : ''
   })
-  handle('write-file-content', (payload) => {
+  handle('write-file-content', async (payload) => {
     const { uri, content } = parseFileWriteRequest(payload)
     const safePath = assertAllowedDataPath(uri)
-    fs.mkdirSync(path.dirname(safePath), { recursive: true })
-    fs.writeFileSync(safePath, content, 'utf8')
-    return true
+    const writeFile = async () => {
+      fs.mkdirSync(path.dirname(safePath), { recursive: true })
+      fs.writeFileSync(safePath, content, 'utf8')
+      return true
+    }
+    const protectedConfigFiles = [PathConfig.configUri, PathConfig.customerTaskConfigUri]
+      .map((value) => path.resolve(value))
+    return protectedConfigFiles.includes(path.resolve(safePath))
+      ? taskRunManager.runMaintenance(writeFile, '活动任务期间不能修改运行配置')
+      : writeFile()
   })
   handle('open-output-dir', async () => {
     const errorMessage = await shell.openPath(PathConfig.outputPath)
@@ -232,10 +305,13 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     return true
   })
   handle('reset-session', async () => {
-    await session.clearCache()
-    await session.clearStorageData()
-    await session.clearHostResolverCache()
-    return true
+    return taskRunManager.runMaintenance(async () => {
+      await session.clearCache()
+      await session.clearStorageData()
+      await session.clearHostResolverCache()
+      cachedLoginIdentity = undefined
+      return true
+    }, '活动任务期间不能退出微博登录')
   })
   handle('open-devtools', () => {
     mainWindow.webContents.openDevTools()
@@ -253,14 +329,10 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   })
   handle('get-weibo-login-status', async (): Promise<WeiboLoginStatus> => {
     const cookie = await getWeiboCookie(session)
-    const response = await axios.get('https://m.weibo.cn/api/config', {
-      timeout: 10_000,
-      headers: { cookie, accept: 'application/json, text/plain, */*' },
-    })
-    const data = response.data?.data
-    return {
-      isLogin: data?.login === true,
-      uid: data?.uid === undefined ? '' : String(data.uid),
+    try {
+      return { isLogin: true, uid: await getLoginUid(cookie) }
+    } catch {
+      return { isLogin: false, uid: '' }
     }
   })
   handle('resolve-weibo-uid', async (payload) => {
@@ -270,11 +342,11 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
       return directUid
     }
     const cookie = await getWeiboCookie(session)
-    const response = await axios.get(rawInputUrl, {
+    const response = await globalWeiboRequestLimiter.schedule(() => axios.get(rawInputUrl, {
       timeout: 10_000,
       maxRedirects: 5,
       headers: { cookie },
-    })
+    }))
     const finalUrl = response.request?.res?.responseUrl ?? response.request?.responseURL ?? ''
     const finalUid = typeof finalUrl === 'string' && finalUrl !== '' ? directUidFromWeiboUrl(finalUrl) : ''
     const htmlMatch = typeof response.data === 'string'
@@ -285,17 +357,19 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
   handle('get-weibo-user-info', async (payload): Promise<WeiboUserSummary> => {
     const { uid } = parseWeiboUserInfoRequest(payload)
     const cookie = await getWeiboCookie(session)
-    const response = await axios.get('https://m.weibo.cn/api/container/getIndex', {
-      timeout: 10_000,
-      params: { type: 'uid', value: uid, containerid: `100505${uid}` },
-      headers: { cookie, accept: 'application/json, text/plain, */*' },
-    })
-    const userInfo = response.data?.data?.userInfo ?? {}
+    const loginUid = await getLoginUid(cookie)
+    const response = await new WeiboApiClient({
+      cookie,
+      loginUid,
+      limiter: globalWeiboRequestLimiter,
+      cache: new WeiboResponseCache(PathConfig.cachePath),
+    }).getProfileInfo(uid)
+    const userInfo = adaptProfileInfoUser(response.data) as unknown as Record<string, unknown>
     const statusesCount = Number(userInfo.statuses_count) || 0
     return {
       screen_name: typeof userInfo.screen_name === 'string' ? userInfo.screen_name : '',
       statuses_count: statusesCount,
-      total_page_count: Math.floor(statusesCount / 10),
+      total_page_count: Math.ceil(statusesCount / 50),
       followers_count: Number(userInfo.followers_count) || 0,
     }
   })
@@ -339,52 +413,35 @@ export function registerIpcHandlers(options: RegisterIpcHandlersOptions): void {
     return true
   })
   handle('start-customer-task', async (payload, metadata) => {
-    if (activeRunId !== undefined) {
-      return { status: 'running', runId: activeRunId }
-    }
     const { config } = parseStartCustomerTaskRequest(payload)
     const traceId = parseIpcTraceMetadata(metadata).traceId
-    // Reserve synchronously before reading cookies so concurrent requests cannot both start.
-    activeRunId = traceId ?? 'pending'
-    try {
-      const cookie = await getWeiboCookie(session)
-      const localConfig = JSON.parse(fs.readFileSync(PathConfig.configUri, 'utf8')) as Record<string, unknown>
-      const requestConfig = (localConfig.request ?? {}) as Record<string, unknown>
-      requestConfig.cookie = cookie
-      localConfig.request = requestConfig
-      fs.writeFileSync(PathConfig.configUri, `${JSON.stringify(localConfig, null, 2)}\n`, 'utf8')
-      writeCustomerTaskConfig(PathConfig.customerTaskConfigUri, config)
-      ConfigHelperUtil.reloadConfig()
-      const renderWindow = options.getRenderWindow()
-      const workflow = new RunTaskWorkflow()
-      const result = await workflow.run({
-        trigger: 'gui',
-        traceId,
-        configPath: PathConfig.customerTaskConfigUri,
-        renderWindow,
-        onRunCreated(runId) {
-          activeRunId = runId
-        },
-      })
-      if (result.status === 'failure') {
-        const serialized = result.failures[0]?.error
-        throw serialized
-          ? ApplicationError.fromSerialized(serialized)
-          : new ApplicationError({
-              code: AppErrorCode.WORKFLOW_FAILED,
-              message: 'GUI 备份 workflow 执行失败',
-              serviceLevel: ServiceLevel.S1,
-              stage: 'ipc',
-              retryable: false,
-            })
-      }
-      const openError = await shell.openPath(result.value?.context.outputPath ?? PathConfig.outputPath)
-      if (openError) {
-        Logger.warn(`无法自动打开输出目录：${openError}`)
-      }
-      return result
-    } finally {
-      activeRunId = undefined
-    }
+    const cookie = await getWeiboCookie(session)
+    return taskRunManager.start(config, cookie, traceId, getCachedLoginUid(cookie))
+  })
+  handle('continue-customer-task', async (payload, metadata) => {
+    const { batchId } = parseContinueCustomerTaskRequest(payload)
+    const traceId = parseIpcTraceMetadata(metadata).traceId
+    const cookie = await getWeiboCookie(session)
+    return taskRunManager.continue(batchId, cookie, traceId, getCachedLoginUid(cookie))
+  })
+  handle('retry-customer-task-items', async (payload, metadata) => {
+    const { batchId, taskIds } = parseRetryCustomerTaskItemsRequest(payload)
+    const traceId = parseIpcTraceMetadata(metadata).traceId
+    const cookie = await getWeiboCookie(session)
+    return taskRunManager.retry(batchId, taskIds, cookie, traceId, getCachedLoginUid(cookie))
+  })
+  handle('get-customer-task-dashboard', (payload) => {
+    const { batchId } = parseCustomerTaskDashboardRequest(payload)
+    return taskRunManager.getDashboard(batchId)
+  })
+  handle('get-customer-task-failures', (payload) => {
+    const { batchId, offset, limit } = parseCustomerTaskFailuresRequest(payload)
+    return taskRunManager.listFailures(batchId, { offset, limit })
+  })
+  handle('clear-weibo-request-cache', async (payload) => {
+    const { targetUid } = parseClearWeiboRequestCacheRequest(payload)
+    const cookie = await getWeiboCookie(session)
+    await taskRunManager.clearResponseCache(targetUid, cookie, getCachedLoginUid(cookie))
+    return true
   })
 }

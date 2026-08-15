@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
+  assertRunnableCustomerTaskConfig,
   parseCustomerTaskConfig,
   readCustomerTaskConfig,
   writeCustomerTaskConfig,
@@ -14,13 +15,13 @@ function validTaskConfig(): Record<string, unknown> {
     imageQuilty: 'default',
     bookTitle: '测试任务',
     comment: '',
-    enableAutoConfig: false,
     postAtOrderBy: 'asc',
-    fetchStartAtPageNo: 0,
-    fetchEndAtPageNo: 10,
+    fetchStartDate: '2020-01-01',
+    fetchEndDate: '2020-01-31',
+    requestIntervalSeconds: 10,
+    cacheReadMode: 'prefer-cache',
     outputStartAtMs: 0,
     outputEndAtMs: 100,
-    onlyRetry: false,
     isSkipFetch: false,
     isSkipGeneratePdf: false,
     isRegenerateHtml2PdfImage: false,
@@ -43,19 +44,37 @@ describe('任务配置 schema', () => {
     expect(parseCustomerTaskConfig(validTaskConfig())).toMatchObject({
       configList: [{ uid: '10001' }],
       imageQuilty: 'default',
-      fetchEndAtPageNo: 10,
+      fetchEndDate: '2020-01-31',
+      requestIntervalSeconds: 10,
       volumeSplitBy: 'single',
     })
   })
 
-  it('将无效页码范围转换为稳定的配置错误', () => {
-    const input = { ...validTaskConfig(), fetchStartAtPageNo: 5, fetchEndAtPageNo: 4 }
+  it('将无效日期范围转换为稳定的配置错误', () => {
+    const input = { ...validTaskConfig(), fetchStartDate: '2020-02-01', fetchEndDate: '2020-01-31' }
     expect(() => parseCustomerTaskConfig(input)).toThrowError(ApplicationError)
     try {
       parseCustomerTaskConfig(input)
     } catch (error) {
       expect(error).toMatchObject({ code: AppErrorCode.CONFIG_SCHEMA_INVALID, stage: 'config' })
     }
+  })
+
+  it('运行配置拒绝重复目标用户', () => {
+    const input = validTaskConfig()
+    input.configList = [
+      { uid: '10001', rawInputText: '', comment: '' },
+      { uid: '10001', rawInputText: '', comment: '重复' },
+    ]
+    expect(() => assertRunnableCustomerTaskConfig(parseCustomerTaskConfig(input)))
+      .toThrowError(ApplicationError)
+  })
+
+  it('运行配置拒绝带空白、无法直接用于接口和缓存身份的 UID', () => {
+    const input = validTaskConfig()
+    input.configList = [{ uid: ' 10001 ', rawInputText: '', comment: '' }]
+    expect(() => assertRunnableCustomerTaskConfig(parseCustomerTaskConfig(input)))
+      .toThrowError(ApplicationError)
   })
 
   it('只在临时沙箱读写配置', () => {

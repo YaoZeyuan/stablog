@@ -1,0 +1,11 @@
+{
+  "data": {
+    "title": "Legacy fixture article",
+    "article": "<p>Legacy article body</p>",
+    "config": {
+      "image": "https://example.invalid/legacy.jpg",
+      "uid": "1000000001",
+      "author": "fixture-user"
+    }
+  }
+}

@@ -10,6 +10,15 @@ export type WorkflowStage = 'init' | 'fetch' | 'generate'
 export type WorkflowStageInput = {
   context: RunContext
   config?: CustomerTaskConfig
+  action: WorkflowAction
+  willGenerate: boolean
+  runtimeState: {
+    batchId?: string
+  }
+  fetchSession?: {
+    cookie?: string
+    loginUid?: string
+  }
   rebase: boolean
   skipUpgradeCheck: boolean
   renderWindow?: BrowserWindow | null

@@ -1,0 +1,10 @@
+{
+  "ok": 1,
+  "data": {
+    "longTextContent": "<p>fixture long text</p>",
+    "longTextContent_raw": "fixture long text",
+    "isMarkdown": false,
+    "url_struct": [],
+    "new_vendor_field": "kept"
+  }
+}

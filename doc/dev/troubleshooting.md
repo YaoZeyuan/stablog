@@ -12,7 +12,7 @@
 
 在 `log/runtime.YYYY-MM-DD.jsonl` 按 `runId` 聚合，再看最后一个 failure 的 stage、errorCode、serviceLevel、cause。`CONFIG_SCHEMA_INVALID` 先检查任务配置；`INITIALIZATION_FAILED` 检查目录写权限/SQLite；`FETCH_FAILED` 检查登录状态、频率和网络；`GENERATE_FAILED` 检查缓存、图片、渲染窗口和磁盘空间。
 
-GUI 同时只运行一个 workflow。收到 `{status: "running", runId}` 表示已有任务，不要重复点击；若进程异常退出，重新启动即可清除内存锁。
+GUI、CLI 通过业务数据库同目录的 `.stablog-execution-lock.sqlite` 同时只运行一个备份 workflow。冲突时会提示已有备份流程；同一 GUI 内重复点击返回当前活动 run。若持有进程异常退出，新进程会根据 owner PID 立即接管；无法识别 PID 的旧记录在 heartbeat 超过 5 分钟后可接管，不要手工删除协调库。
 
 ## 前端白屏或资源加载失败
 

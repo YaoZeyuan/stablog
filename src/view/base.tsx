@@ -208,6 +208,21 @@ class Base {
       )
       return mblogEle
     }
+
+    // searchProfile can retain a deleted/hidden top-level record whose user is
+    // null. The old fetcher filtered those records before persistence, while
+    // the canonical adapter deliberately keeps the visible placeholder text.
+    // Reuse the guarded retweet renderer so one such record cannot abort the
+    // whole user's HTML/PDF generation.
+    if (mblog.state === 7 || mblog.state === 8 || _.isEmpty(mblog.user) === true) {
+      return (
+        <div key={CommonUtil.getUuid()} className="mblog-container">
+          {generateMlogRecord(mblog)}
+          <hr />
+        </div>
+      )
+    }
+
     let retweetEle = null
     if (_.isEmpty(mblog.retweeted_status) === false) {
       retweetEle = generateMlogRecord(mblog.retweeted_status!)

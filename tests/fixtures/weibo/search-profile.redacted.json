@@ -1,0 +1,71 @@
+{
+  "ok": 1,
+  "request_id": "redacted-fixture",
+  "data": {
+    "total": "1",
+    "list": [
+      {
+        "created_at": "Wed Feb 01 12:34:56 +0800 2017",
+        "id": 4080266096000001,
+        "idstr": "4080266096000001",
+        "mid": "4080266096000001",
+        "mblogid": "EtFixture01",
+        "text": "fixture summary",
+        "text_raw": "fixture raw text",
+        "pic_ids": ["fixture-picture"],
+        "pic_infos": {
+          "fixture-picture": {
+            "bmiddle": {
+              "url": "https://example.invalid/preview.jpg",
+              "width": 360,
+              "height": 240
+            },
+            "largest": {
+              "url": "https://example.invalid/original.jpg",
+              "width": "1080",
+              "height": "720"
+            },
+            "pic_id": "fixture-picture"
+          }
+        },
+        "user": {
+          "id": 1000000001,
+          "idstr": "1000000001",
+          "screen_name": "fixture-user",
+          "profile_image_url": "https://example.invalid/avatar-small.jpg",
+          "profile_url": "/u/1000000001",
+          "avatar_large": "https://example.invalid/avatar.jpg"
+        },
+        "isLongText": false,
+        "reposts_count": 2,
+        "comments_count": 3,
+        "attitudes_count": 4,
+        "vendor_added_field": "kept",
+        "retweeted_status": {
+          "created_at": "Tue Jan 31 08:00:00 +0800 2017",
+          "id": "4080000000000001",
+          "idstr": "4080000000000001",
+          "mid": "4080000000000001",
+          "mblogid": "EtFixture00",
+          "text": "nested long summary",
+          "user": {
+            "id": "1000000002",
+            "idstr": "1000000002",
+            "screen_name": "nested-user",
+            "profile_image_url": "https://example.invalid/nested-small.jpg",
+            "profile_url": "/u/1000000002"
+          },
+          "isLongText": true,
+          "page_info": {
+            "type": "24",
+            "object_type": "article",
+            "source_type": "article",
+            "page_pic": "https://example.invalid/article-card.jpg",
+            "page_url": "sinaweibo://articlebrowser?object_id=1022%3A2309404080000000000001",
+            "object_id": "1022:2309404080000000000001"
+          }
+        }
+      }
+    ]
+  }
+}

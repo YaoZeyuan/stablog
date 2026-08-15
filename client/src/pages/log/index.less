@@ -1,4 +1,25 @@
 .log-container {
+  .task-progress-card {
+    margin-bottom: 16px;
+  }
+
+  .task-statistics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .failure-actions {
+    display: flex;
+    margin-bottom: 12px;
+  }
+
+  .failure-pagination {
+    margin-top: 12px;
+    text-align: right;
+  }
+
   #log-dashboard {
     width: 100%;
     height: 50vh;
@@ -10,5 +31,12 @@
       // height: 50vh;
       background-color: #fdf6ec;
     }
+  }
+
+  .log-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
   }
 }

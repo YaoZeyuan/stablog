@@ -15,6 +15,66 @@ export type StartCustomerTaskRequest = {
   config: CustomerTaskConfig
 }
 
+export type TaskCommandAck = {
+  outcome: 'started' | 'already_running'
+  batchId: string
+  runId: string
+}
+
+export type TaskProgressCounts = {
+  total: number
+  pending: number
+  running: number
+  succeeded: number
+  failed: number
+  cacheHits: number
+}
+
+export type CustomerTaskDashboard = {
+  activeRun: null | { batchId: string; runId: string }
+  batch: null | {
+    batchId: string
+    status: 'pending' | 'running' | 'succeeded' | 'partial_success' | 'failed'
+    resumable: boolean
+    phase: 'planning' | 'fetching' | 'generating' | 'done'
+    createdAt: number
+    startedAt?: number
+    finishedAt?: number
+    estimatedRemainingSeconds: number | null
+    current?: {
+      uid: string
+      screenName?: string
+      year?: number
+      month?: number
+      segmentStartDate?: string
+      segmentEndDate?: string
+      page?: number
+      pageCount?: number
+    }
+    counts: TaskProgressCounts
+    users: Array<{
+      uid: string
+      screenName?: string
+      status: 'pending' | 'running' | 'succeeded' | 'partial_success' | 'failed'
+      counts: TaskProgressCounts
+    }>
+  }
+}
+
+export type CustomerTaskFailureSummary = {
+  taskId: string
+  taskType: 'year_probe' | 'month_probe' | 'segment_probe' | 'page' | 'long_text' | 'article'
+  uid: string
+  screenName?: string
+  segmentStartDate?: string
+  segmentEndDate?: string
+  page?: number
+  attempts: number
+  errorCode?: string
+  errorMessage?: string
+  updatedAt?: number
+}
+
 export type PathConfigResponse = {
   configUri: string
   customerTaskConfigUri: string
@@ -115,6 +175,67 @@ export function parseIpcTraceMetadata(input: unknown): IpcTraceMetadata {
 export function parseStartCustomerTaskRequest(input: unknown): StartCustomerTaskRequest {
   const record = requireRecord(input, 'startCustomerTask请求')
   return { config: assertRunnableCustomerTaskConfig(parseCustomerTaskConfig(record.config)) }
+}
+
+function requireIdentifier(value: unknown, label: string): string {
+  if (typeof value !== 'string' || /^[a-zA-Z0-9_-]{1,128}$/.test(value) === false) {
+    throw invalidPayload(`${label}格式无效`)
+  }
+  return value
+}
+
+function requireNonNegativeInteger(value: unknown, label: string): number {
+  if (typeof value !== 'number' || Number.isInteger(value) === false || value < 0) {
+    throw invalidPayload(`${label}必须是非负整数`)
+  }
+  return value
+}
+
+export function parseContinueCustomerTaskRequest(input: unknown): { batchId: string } {
+  const record = requireRecord(input, 'continueCustomerTask请求')
+  return { batchId: requireIdentifier(record.batchId, 'batchId') }
+}
+
+export function parseRetryCustomerTaskItemsRequest(input: unknown): { batchId: string; taskIds?: string[] } {
+  const record = requireRecord(input, 'retryCustomerTaskItems请求')
+  let taskIds: string[] | undefined
+  if (record.taskIds !== undefined) {
+    if (Array.isArray(record.taskIds) === false || record.taskIds.length === 0 || record.taskIds.length > 100) {
+      throw invalidPayload('taskIds必须是1~100项的数组')
+    }
+    taskIds = [...new Set(record.taskIds.map((value) => requireIdentifier(value, 'taskId')))]
+  }
+  return { batchId: requireIdentifier(record.batchId, 'batchId'), taskIds }
+}
+
+export function parseCustomerTaskDashboardRequest(input: unknown): { batchId?: string } {
+  if (input === undefined || input === null) {
+    return {}
+  }
+  const record = requireRecord(input, 'customerTaskDashboard请求')
+  return { batchId: record.batchId === undefined ? undefined : requireIdentifier(record.batchId, 'batchId') }
+}
+
+export function parseCustomerTaskFailuresRequest(input: unknown): {
+  batchId: string
+  offset: number
+  limit: number
+} {
+  const record = requireRecord(input, 'customerTaskFailures请求')
+  const offset = record.offset === undefined ? 0 : requireNonNegativeInteger(record.offset, 'offset')
+  const limit = record.limit === undefined ? 50 : requireNonNegativeInteger(record.limit, 'limit')
+  if (limit < 1 || limit > 100) {
+    throw invalidPayload('limit必须是1~100之间的整数')
+  }
+  return { batchId: requireIdentifier(record.batchId, 'batchId'), offset, limit }
+}
+
+export function parseClearWeiboRequestCacheRequest(input: unknown): { targetUid: string } {
+  const record = requireRecord(input, 'clearWeiboRequestCache请求')
+  if (typeof record.targetUid !== 'string' || /^\d{1,32}$/.test(record.targetUid) === false) {
+    throw invalidPayload('targetUid必须是数字字符串')
+  }
+  return { targetUid: record.targetUid }
 }
 
 export function parseFileReadRequest(input: unknown): { uri: string } {

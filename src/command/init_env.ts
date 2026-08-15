@@ -38,7 +38,7 @@ class InitEnv extends Base {
       this.log('重建数据库')
       this.log('删除旧数据库')
       await knex.destroy()
-      shelljs.rm(DatabaseConfig.uri)
+      await removeDatabaseForRebase(DatabaseConfig.uri)
       this.log('旧数据库删除完毕')
     }
     this.log('初始化数据库')
@@ -76,6 +76,23 @@ class InitEnv extends Base {
       this.log(`更新说明:${remoteVersionConfig.releaseNote}`)
       return
     }
+  }
+}
+
+async function removeDatabaseForRebase(databasePath: string): Promise<void> {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      fs.unlinkSync(databasePath)
+      return
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (code === 'ENOENT') return
+      if ((code !== 'EBUSY' && code !== 'EPERM') || attempt === 9) throw error
+      await new Promise<void>((resolve) => setTimeout(resolve, 100))
+    }
+  }
+  if (fs.existsSync(databasePath)) {
+    throw new Error(`数据库删除失败: ${databasePath}`)
   }
 }
 
