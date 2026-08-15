@@ -3,8 +3,8 @@ import { runWithLegacyRuntime } from '~/src/application/legacy/legacy_runtime_br
 import { createRunContext } from '~/src/shared/runtime/run_context.js'
 import { createTestSandbox } from '../helpers/sandbox.js'
 
-describe('legacy runtime bridge', () => {
-  it('serializes concurrent legacy adapters that mutate global paths', async () => {
+describe('旧版运行时桥接器', () => {
+  it('串行执行会修改全局路径的并发旧版适配器', async () => {
     const firstSandbox = createTestSandbox('legacy-first')
     const secondSandbox = createTestSandbox('legacy-second')
     const events: string[] = []

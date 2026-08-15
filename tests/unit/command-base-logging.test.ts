@@ -11,7 +11,7 @@ class TestCommand extends Base {
   }
 }
 
-describe('旧 command 日志脱敏边界', () => {
+describe('旧命令日志脱敏边界', () => {
   let sandbox: TestSandbox | undefined
   const originalLogPath = PathConfig.logPath
 
@@ -22,7 +22,7 @@ describe('旧 command 日志脱敏边界', () => {
     vi.restoreAllMocks()
   })
 
-  it('对象保持结构进入 Logger，正文、cookie 与 header 不会落盘', async () => {
+  it('对象保持结构进入日志器，正文、会话凭证与请求头不会落盘', async () => {
     sandbox = createTestSandbox('base-log-redaction')
     PathConfig.setLogPath(sandbox.logPath)
     vi.spyOn(console, 'log').mockImplementation(() => undefined)

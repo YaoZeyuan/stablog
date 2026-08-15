@@ -21,8 +21,8 @@ function fixture(name: string): unknown {
   )
 }
 
-describe('微博 canonical adapter', () => {
-  it('稳定映射 ID、北京时间、用户、图片与递归转发', () => {
+describe('微博规范模型适配器', () => {
+  it('稳定映射标识、北京时间、用户、图片与递归转发', () => {
     const response = parseSearchProfileResponse(fixture('search-profile.redacted.json'))
     const [mblog] = adaptSearchProfileResponse(response)
 
@@ -51,7 +51,7 @@ describe('微博 canonical adapter', () => {
     })
   })
 
-  it('严格拒绝接口约定之外或不存在的 created_at', () => {
+  it('严格拒绝接口约定之外或不存在的发布时间', () => {
     expect(parseWeiboCreatedAt('Wed Feb 01 12:34:56 +0800 2017'))
       .toBe(Date.parse('2017-02-01T12:34:56+08:00') / 1000)
     expect(() => parseWeiboCreatedAt('2017-02-01 12:34:56')).toThrow()
@@ -59,7 +59,7 @@ describe('微博 canonical adapter', () => {
     expect(() => parseWeiboCreatedAt('Mon Feb 01 12:34:56 +0800 2017')).toThrow()
   })
 
-  it('普通长文直接合并，Markdown 转为带样式作用域的 HTML', () => {
+  it('普通长文直接合并，标记语法转为带样式作用域的网页内容', () => {
     const [mblog] = adaptSearchProfileResponse(
       parseSearchProfileResponse(fixture('search-profile.redacted.json')),
     )
@@ -79,7 +79,7 @@ describe('微博 canonical adapter', () => {
     expect(markdown.text).toContain('<li>first</li>')
   })
 
-  it('解析现行、scheme 和旧文章 URL 并适配文章结构', () => {
+  it('解析现行格式、自定义协议和旧文章地址并适配文章结构', () => {
     expect(extractWeiboArticleId(
       'https://card.weibo.com/article/m/show/id/2309404080000000000001',
     )).toBe('2309404080000000000001')

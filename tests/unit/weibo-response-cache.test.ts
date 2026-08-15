@@ -33,7 +33,7 @@ function request(loginUid = '1000000009'): WeiboResponseCacheRequest {
   }
 }
 
-describe('微博 HTTP JSON 缓存', () => {
+describe('微博接口结构化响应缓存', () => {
   let sandbox: TestSandbox | undefined
 
   afterEach(() => {
@@ -41,7 +41,7 @@ describe('微博 HTTP JSON 缓存', () => {
     sandbox = undefined
   })
 
-  it('按登录身份隔离、只写通过 schema 的响应且不落凭证', async () => {
+  it('按登录身份隔离、只写通过校验的响应且不落凭证', async () => {
     sandbox = createTestSandbox('weibo-cache')
     const cache = new WeiboResponseCache(sandbox.cachePath)
     const firstRequest = request()
@@ -65,7 +65,7 @@ describe('微博 HTTP JSON 缓存', () => {
     )).rejects.toThrow()
   })
 
-  it('损坏缓存按 miss 回退，prefer-cache 命中不调用网络，refresh 覆盖', async () => {
+  it('损坏缓存按未命中回源，优先缓存命中不调用网络，强制刷新覆盖', async () => {
     sandbox = createTestSandbox('weibo-cache-modes')
     const cache = new WeiboResponseCache(sandbox.cachePath)
     const cacheRequest = request()
@@ -149,7 +149,7 @@ describe('微博 HTTP JSON 缓存', () => {
     })).toBe(false)
   })
 
-  it('拒绝把敏感请求参数加入缓存键或落盘内容', () => {
+  it('拒绝把敏感请求参数加入缓存标识或落盘内容', () => {
     sandbox = createTestSandbox('weibo-cache-sensitive')
     const cache = new WeiboResponseCache(sandbox.cachePath)
     expect(() => cache.getCachePath({

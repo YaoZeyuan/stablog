@@ -6,7 +6,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ESNext"],
-    "jsx": "react",
+    "jsx": "react-jsx",
     "resolveJsonModule": true,
     "noEmit": true,
     "strict": true,

@@ -32,7 +32,7 @@ function validTaskConfig(): Record<string, unknown> {
   }
 }
 
-describe('任务配置 schema', () => {
+describe('任务配置校验规则', () => {
   let sandbox: TestSandbox | undefined
 
   afterEach(() => {
@@ -70,7 +70,7 @@ describe('任务配置 schema', () => {
       .toThrowError(ApplicationError)
   })
 
-  it('运行配置拒绝带空白、无法直接用于接口和缓存身份的 UID', () => {
+  it('运行配置拒绝带空白、无法直接用于接口和缓存身份的用户编号', () => {
     const input = validTaskConfig()
     input.configList = [{ uid: ' 10001 ', rawInputText: '', comment: '' }]
     expect(() => assertRunnableCustomerTaskConfig(parseCustomerTaskConfig(input)))

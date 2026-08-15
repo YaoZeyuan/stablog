@@ -11,7 +11,7 @@ import {
 import { ApplicationError, AppErrorCode, ServiceLevel } from '../../src/shared/error/application_error.js'
 
 describe('结构化日志契约', () => {
-  it('补充稳定 schema、时间、事件码和 source', () => {
+  it('补充稳定格式、时间、事件码和来源', () => {
     const record = createStructuredLogRecord({
       stage: LogStage.FETCH,
       status: LogStatus.START,
@@ -26,7 +26,7 @@ describe('结构化日志契约', () => {
     })
   })
 
-  it('递归脱敏 cookie、headers、正文、URL query 和循环引用', () => {
+  it('递归脱敏会话凭证、请求头、正文、地址查询参数和循环引用', () => {
     const input: Record<string, unknown> = {
       cookie: 'SUB=secret-cookie',
       nested: {
@@ -47,7 +47,7 @@ describe('结构化日志契约', () => {
     expect(JSON.stringify(result)).not.toContain('secret')
   })
 
-  it('序列化 Error 与非 Error 均不抛异常', () => {
+  it('序列化异常对象与普通值均不抛异常', () => {
     expect(serializeLogError(Object.assign(new Error('failed'), { code: 'E_TEST' }))).toMatchObject({
       name: 'Error',
       message: 'failed',
@@ -56,7 +56,7 @@ describe('结构化日志契约', () => {
     expect(serializeLogError({ cookie: 'private' }).name).toBe('NonError')
   })
 
-  it('序列化并脱敏 ApplicationError cause', () => {
+  it('序列化并脱敏应用错误的原始原因', () => {
     const cause = Object.assign(new Error('request failed: authorization=Bearer private-token'), {
       code: 'E_REQUEST',
       cause: { cookie: 'SUB=private-cookie', responseBody: 'private-content' },

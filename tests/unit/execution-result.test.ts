@@ -19,7 +19,7 @@ function failure(message: string) {
   }), { entityType: 'page' })
 }
 
-describe('workflow 执行结果契约', () => {
+describe('工作流执行结果契约', () => {
   it('聚合成功与局部失败并保留计数', () => {
     const failedItem = failure('第 2 页失败').failures[0]
     const result = mergeExecutionResults([
@@ -39,8 +39,7 @@ describe('workflow 执行结果契约', () => {
       .toBe(ExecutionStatus.FAILURE)
   })
 
-  it('拒绝没有失败摘要的 partial_success', () => {
+  it('拒绝没有失败摘要的局部成功状态', () => {
     expect(() => createExecutionPartial(undefined, 1, [])).toThrow('至少一个失败项')
   })
 })
-

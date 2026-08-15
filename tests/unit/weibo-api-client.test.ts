@@ -43,7 +43,7 @@ function immediateLimiter(): WeiboRequestLimiter {
   })
 }
 
-describe('微博 API client', () => {
+describe('微博接口客户端', () => {
   let sandbox: TestSandbox | undefined
 
   afterEach(() => {
@@ -51,7 +51,7 @@ describe('微博 API client', () => {
     sandbox = undefined
   })
 
-  it('通过同一可注入 transport 发起 profile、检索、长文与文章请求', async () => {
+  it('通过同一可注入传输层发起用户资料、检索、长文与文章请求', async () => {
     sandbox = createTestSandbox('weibo-api-client')
     const transport = new QueueTransport([
       fixture('profile-info.redacted.json'),
@@ -126,7 +126,7 @@ describe('微博 API client', () => {
     })
   })
 
-  it('所有响应先经过 schema，错误业务响应不会伪装为空结果', async () => {
+  it('所有响应先经过校验，错误业务响应不会伪装为空结果', async () => {
     const transport = new QueueTransport([
       { ok: 0, data: { list: [], total: 0 } },
     ])
@@ -145,7 +145,7 @@ describe('微博 API client', () => {
     })).rejects.toThrow()
   })
 
-  it('将鉴权失败转换为不携带请求 Cookie 或响应正文的稳定错误', async () => {
+  it('将鉴权失败转换为不携带请求会话凭证或响应正文的稳定错误', async () => {
     const transportError = Object.assign(new Error('axios-like request failure'), {
       response: { status: 401, data: { secret: 'raw-response-secret' } },
       config: { headers: { cookie: 'SUB=must-not-leak' } },
@@ -179,7 +179,7 @@ describe('微博 API client', () => {
       .rejects.toMatchObject({ kind: 'authentication' })
   })
 
-  it('可缓存检索命中时跳过 transport 和限流时隙', async () => {
+  it('可缓存检索命中时跳过传输层和限流时隙', async () => {
     sandbox = createTestSandbox('weibo-api-cache-hit')
     const transport = new QueueTransport([fixture('search-profile.redacted.json')])
     const cache = new WeiboResponseCache(sandbox.cachePath)
@@ -214,7 +214,7 @@ describe('微博 API client', () => {
     expect(transport.requests).toHaveLength(1)
   })
 
-  it('独立解析当前 Cookie 的登录 UID，不写配置且同样走限流器', async () => {
+  it('独立解析当前会话的登录用户编号，不写配置且同样走限流器', async () => {
     const transport = new QueueTransport([
       { ok: 1, data: { login: true, uid: '1000000009' } },
       { ok: 1, data: { login: true, uid: 1000000009 } },

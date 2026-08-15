@@ -14,8 +14,8 @@ function fixture(name: string): unknown {
   )
 }
 
-describe('微博 API 响应 schema', () => {
-  it('校验精简 searchProfile fixture、归一化 total 并透传新增字段', () => {
+describe('微博接口响应校验', () => {
+  it('校验精简的用户微博检索样本、归一化总数并透传新增字段', () => {
     const response = parseSearchProfileResponse(fixture('search-profile.redacted.json'))
 
     expect(response.data.total).toBe(1)
@@ -32,7 +32,7 @@ describe('微博 API 响应 schema', () => {
     '1.0',
     ' 1',
     '9007199254740992',
-  ])('拒绝非法 total：%j', (total) => {
+  ])('拒绝非法的微博总数', (total) => {
     const response = fixture('search-profile.redacted.json') as {
       data: { total: unknown }
     }
@@ -72,7 +72,7 @@ describe('微博 API 响应 schema', () => {
     expect(() => parseSearchProfileResponse(response)).toThrow()
   })
 
-  it('校验 profile、长文、文章与登录身份响应', () => {
+  it('校验用户资料、长文、文章与登录身份响应', () => {
     expect(parseProfileInfoResponse(fixture('profile-info.redacted.json')).data.user.idstr)
       .toBe('1000000001')
     expect(parseLongTextResponse(fixture('longtext-plain.redacted.json')).data.isMarkdown)

@@ -42,8 +42,8 @@ function validTaskConfig(): Record<string, unknown> {
   }
 }
 
-describe('IPC schema 与结果封包', () => {
-  it('校验 trace、任务与文件请求', () => {
+describe('进程通信数据结构与结果封包', () => {
+  it('校验链路标识、任务与文件请求', () => {
     expect(parseIpcTraceMetadata({ traceId: 'trace-1' })).toEqual({ traceId: 'trace-1' })
     expect(parseStartCustomerTaskRequest({ config: validTaskConfig() }).config.configList[0].uid).toBe('10001')
     expect(parseFileReadRequest({ uri: 'config.json' })).toEqual({ uri: 'config.json' })
@@ -72,7 +72,7 @@ describe('IPC schema 与结果封包', () => {
       .toThrowError(ApplicationError)
   })
 
-  it('拒绝不完整请求并标记 IPC 错误码', () => {
+  it('拒绝不完整请求并标记进程通信错误码', () => {
     try {
       parseFileWriteRequest({ uri: 'config.json' })
       throw new Error('预期请求校验失败')
@@ -81,7 +81,7 @@ describe('IPC schema 与结果封包', () => {
     }
   })
 
-  it('只接受固定微博主页与数字 uid', () => {
+  it('只接受固定微博主页与数字用户编号', () => {
     expect(parseResolveWeiboUidRequest({ rawInputUrl: 'https://weibo.com/u/12345' }))
       .toEqual({ rawInputUrl: 'https://weibo.com/u/12345' })
     expect(parseWeiboUserInfoRequest({ uid: '12345' })).toEqual({ uid: '12345' })
@@ -92,7 +92,7 @@ describe('IPC schema 与结果封包', () => {
     expect(() => parseWeiboUserInfoRequest({ uid: '../123' })).toThrowError(ApplicationError)
   })
 
-  it('校验数据导入导出的 JSON 路径与范围', () => {
+  it('校验数据导入导出的结构化数据文件路径与范围', () => {
     expect(parseDataTransferExportRequest({
       exportUri: 'D:/backup.json',
       uid: '12345',

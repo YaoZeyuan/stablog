@@ -7,8 +7,8 @@ import viteConfig from '../../client/vite.config.mts'
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
-describe('client build configuration', () => {
-  it('uses a relative production base and the fixed Electron development address', () => {
+describe('客户端构建配置', () => {
+  it('生产环境使用相对基础路径且开发环境使用固定桌面端地址', () => {
     const config = viteConfig as UserConfig
 
     expect(config.root).toBe(path.resolve(repositoryRoot, 'client'))
@@ -24,7 +24,7 @@ describe('client build configuration', () => {
     })
   })
 
-  it('keeps the renderer independent from Umi and Node global polyfills', () => {
+  it('渲染进程不依赖旧前端框架与运行时全局变量填充', () => {
     const packageJson = JSON.parse(
       fs.readFileSync(path.resolve(repositoryRoot, 'client/package.json'), 'utf8'),
     ) as {

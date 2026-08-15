@@ -18,8 +18,8 @@ function fixture(name: string): unknown {
   )
 }
 
-describe('canonical 微博 HTML 输出', () => {
-  it('保留作者、正文、日期、媒体、转发和 Markdown 文章语义', async () => {
+describe('规范微博网页输出', () => {
+  it('保留作者、正文、日期、媒体、转发和标记语法文章语义', async () => {
     const [adapted] = adaptSearchProfileResponse(
       parseSearchProfileResponse(fixture('search-profile.redacted.json')),
     )
@@ -42,7 +42,7 @@ describe('canonical 微博 HTML 输出', () => {
     expect(html).toContain('Fixture article')
   })
 
-  it('顶层已删除记录缺少 user 时仍可生成占位内容', () => {
+  it('顶层已删除记录缺少用户信息时仍可生成占位内容', () => {
     const [adapted] = adaptSearchProfileResponse(
       parseSearchProfileResponse(fixture('search-profile.redacted.json')),
     )

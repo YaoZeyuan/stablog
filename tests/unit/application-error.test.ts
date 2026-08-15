@@ -8,7 +8,7 @@ import {
 } from '../../src/shared/error/application_error.js'
 
 describe('结构化应用错误', () => {
-  it('序列化并还原服务等级、阶段、重试属性与 cause', () => {
+  it('序列化并还原服务等级、阶段、重试属性与原始原因', () => {
     const source = new ApplicationError({
       code: AppErrorCode.DATABASE_FAILED,
       message: '写入失败',
@@ -31,7 +31,7 @@ describe('结构化应用错误', () => {
     expect((restored.cause as Error & { code?: string }).code).toBe('SQLITE_BUSY')
   })
 
-  it('将任意异常包装为稳定 ApplicationError', () => {
+  it('将任意异常包装为稳定的应用错误', () => {
     const error = ApplicationError.from(new Error('network down'), {
       code: AppErrorCode.FETCH_FAILED,
       serviceLevel: ServiceLevel.S1,

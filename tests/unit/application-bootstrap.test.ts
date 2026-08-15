@@ -3,8 +3,8 @@ import { bootstrapApplication } from '~/src/application/bootstrap/application_bo
 import { AppErrorCode, ServiceLevel } from '~/src/shared/error/application_error.js'
 import { LogEventCode, LogStatus } from '~/src/shared/logging/log_contract.js'
 
-describe('application bootstrap', () => {
-  it('initializes before creating the window and records startup success', async () => {
+describe('应用启动流程', () => {
+  it('先完成初始化再创建窗口并记录启动成功', async () => {
     const order: string[] = []
     const event = vi.fn()
     await bootstrapApplication({
@@ -30,7 +30,7 @@ describe('application bootstrap', () => {
     }))
   })
 
-  it('short-circuits window creation and reports an S0 startup failure', async () => {
+  it('初始化失败时不创建窗口并报告最高等级启动故障', async () => {
     const createWindow = vi.fn()
     const event = vi.fn()
     await expect(bootstrapApplication({

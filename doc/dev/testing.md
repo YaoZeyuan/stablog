@@ -15,6 +15,10 @@ corepack pnpm debug-build
 
 `pnpm tsc` 同时检查主进程/CLI 和 `client/tsconfig.json`。`test:unit`、`test:integration` 可用于快速定位，`pnpm test` 是带 V8 coverage 的全量复跑。`build-dist` 清理并重建主进程、CLI 和 client，再把 `client/dist` 复制到 `dist/client/dist`；Electron/IPC/GUI 改动还要用 `debug-build` 验证 Windows unpacked 应用可打包。不要用 `pnpm start` 代替构建，`start` 只运行已有 `dist/index.js`。只改 renderer 时可先运行 `corepack pnpm --dir client build`，最终仍以根命令为准。
 
+## 单元测试命名
+
+`tests/unit` 下所有 `describe`、`it`、`test` 及其参数化变体的说明文本统一使用简体中文，不得新增英文或中英混排标题。接口名、字段名、状态值等代码标识应在标题中改写为清晰的中文含义，精确拼写只保留在测试主体与断言中；参数化用例的标题也必须遵守同一规则。
+
 ## 离线与数据隔离
 
 Vitest 4 分为 unit 和 integration 两个 Node project，均加载 `tests/setup/offline.ts`、启用 isolate 并关闭文件并行。离线守卫会阻止 `fetch`、Node HTTP(S) request/get 和 TCP connect/createConnection；自动化测试出现真实网络访问即失败，不得临时关闭全局守卫。
